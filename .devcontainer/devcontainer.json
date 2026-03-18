@@ -16,6 +16,10 @@
     // In Codespaces neither variable is set but GitHub configures Git automatically.
     "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached,readonly"
   ],
+  "features": {
+    // GitHub CLI — lets Copilot and shell scripts query Actions runs, PRs, releases, etc.
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
   "build": {
     "dockerfile": "Dockerfile",
     "context": "..",
@@ -29,13 +33,32 @@
     4321
   ],
   "containerEnv": {
-    "npm_config_save_exact": "true"
+    "npm_config_save_exact": "true",
+    // Pass the host GITHUB_TOKEN into the container so `gh` and the MCP server
+    // authenticate automatically. In Codespaces this is set automatically.
+    // Locally: export GITHUB_TOKEN=<your PAT> before opening the devcontainer.
+    "GITHUB_TOKEN": "${localEnv:GITHUB_TOKEN}"
   },
   "customizations": {
     "vscode": {
       "settings": {
         "files.eol": "\n",
         "terminal.integrated.defaultProfile.linux": "bash"
+      },
+      // GitHub MCP server — gives Copilot structured access to GitHub APIs
+      // (issues, PRs, Actions runs, releases) without needing to parse CLI output.
+      // Requires GITHUB_TOKEN to be set (see containerEnv above).
+      "mcp": {
+        "servers": {
+          "github": {
+            "type": "stdio",
+            "command": "npx",
+            "args": ["-y", "@modelcontextprotocol/server-github@latest"],
+            "env": {
+              "GITHUB_PERSONAL_ACCESS_TOKEN": "${localEnv:GITHUB_TOKEN}"
+            }
+          }
+        }
       },
       "extensions": [
         "Anthropic.claude-code",
