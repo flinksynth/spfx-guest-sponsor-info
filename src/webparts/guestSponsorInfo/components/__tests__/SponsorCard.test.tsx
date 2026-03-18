@@ -257,4 +257,69 @@ describe('SponsorCard', () => {
       expect(dialog.textContent).toContain('CTO');
     });
   });
+
+  describe('copy-to-clipboard buttons', () => {
+    let clipboardWriteText: jest.Mock;
+
+    beforeEach(() => {
+      clipboardWriteText = jest.fn().mockResolvedValue(undefined);
+      Object.defineProperty(navigator, 'clipboard', {
+        value: { writeText: clipboardWriteText },
+        configurable: true,
+      });
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    it('renders a copy button for the email address', () => {
+      render(BASE_SPONSOR, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      const copyBtn = dialog.querySelector('button[aria-label="Copy email address"]');
+      expect(copyBtn).not.toBeNull();
+    });
+
+    it('renders a copy button for the work phone', () => {
+      render(BASE_SPONSOR, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      const copyBtn = dialog.querySelector('button[aria-label="Copy work phone"]');
+      expect(copyBtn).not.toBeNull();
+    });
+
+    it('renders a copy button for the office location', () => {
+      render(BASE_SPONSOR, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      const copyBtn = dialog.querySelector('button[aria-label="Copy work location"]');
+      expect(copyBtn).not.toBeNull();
+    });
+
+    it('copies the email to the clipboard when the copy button is clicked', async () => {
+      render(BASE_SPONSOR, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      const copyBtn = dialog.querySelector('button[aria-label="Copy email address"]') as HTMLElement;
+      await act(async () => { copyBtn.click(); });
+      expect(clipboardWriteText).toHaveBeenCalledWith('alice@contoso.com');
+    });
+
+    it('switches to Copied! state after clicking and reverts after 1500 ms', async () => {
+      render(BASE_SPONSOR, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      const copyBtn = dialog.querySelector('button[aria-label="Copy email address"]') as HTMLElement;
+
+      await act(async () => { copyBtn.click(); });
+      expect(copyBtn.getAttribute('aria-label')).toBe('Copied!');
+
+      act(() => { jest.advanceTimersByTime(1500); });
+      expect(dialog.querySelector('button[aria-label="Copy email address"]')).not.toBeNull();
+    });
+
+    it('renders a copy button for the mobile phone when present', () => {
+      const sponsor: ISponsor = { ...BASE_SPONSOR, businessPhones: [], mobilePhone: '+1 555 0199' };
+      render(sponsor, 'test-tenant-id', true);
+      const dialog = container.querySelector('[role="dialog"]')!;
+      expect(dialog.querySelector('button[aria-label="Copy mobile number"]')).not.toBeNull();
+    });
+  });
 });

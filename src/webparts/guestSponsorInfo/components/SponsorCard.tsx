@@ -55,6 +55,36 @@ const PRESENCE_LABELS: Record<string, string> = {
   PresenceUnknown: '',
 };
 
+/**
+ * Small copy-to-clipboard button shown at the trailing edge of each contact row.
+ * Switches to a checkmark for 1.5 s after a successful copy.
+ */
+const CopyButton: React.FC<{ value: string; label: string }> = ({ value, label }) => {
+  const [copied, setCopied] = React.useState(false);
+
+  const handleCopy = (e: React.MouseEvent | React.KeyboardEvent): void => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(value).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }).catch(() => { /* clipboard access denied – silently ignore */ });
+  };
+
+  return (
+    <button
+      type="button"
+      className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+      onClick={handleCopy}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCopy(e); }}
+      aria-label={copied ? 'Copied!' : `Copy ${label}`}
+      title={copied ? 'Copied!' : `Copy ${label}`}
+    >
+      <Icon iconName={copied ? 'Accept' : 'Copy'} className={styles.copyIcon} aria-hidden="true" />
+    </button>
+  );
+};
+
 interface ISponsorCardProps {
   sponsor: ISponsor;
   /** AAD tenant ID of the host tenant — used to build Teams guest-context deep links. */
@@ -231,39 +261,43 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             <div className={styles.richSectionTitle}>Contact information</div>
             <div className={styles.richSection}>
               {sponsor.mail && (
-                <a href={`mailto:${sponsor.mail}`} className={styles.richInfoRow}>
+                <div className={styles.richInfoRow}>
                   <Icon iconName="Mail" className={styles.richInfoIcon} aria-hidden="true" />
-                  <div>
+                  <div className={styles.richInfoText}>
                     <div className={styles.richInfoMeta}>Email</div>
-                    <div className={styles.richInfoValue}>{sponsor.mail}</div>
+                    <a href={`mailto:${sponsor.mail}`} className={styles.richInfoValue}>{sponsor.mail}</a>
                   </div>
-                </a>
+                  <CopyButton value={sponsor.mail} label="email address" />
+                </div>
               )}
               {sponsor.businessPhones?.map(phone => (
-                <a key={phone} href={`tel:${phone}`} className={styles.richInfoRow}>
+                <div key={phone} className={styles.richInfoRow}>
                   <Icon iconName="Phone" className={styles.richInfoIcon} aria-hidden="true" />
-                  <div>
+                  <div className={styles.richInfoText}>
                     <div className={styles.richInfoMeta}>Work phone</div>
-                    <div className={styles.richInfoValue}>{phone}</div>
+                    <a href={`tel:${phone}`} className={styles.richInfoValue}>{phone}</a>
                   </div>
-                </a>
+                  <CopyButton value={phone} label="work phone" />
+                </div>
               ))}
               {sponsor.mobilePhone && (
-                <a href={`tel:${sponsor.mobilePhone}`} className={styles.richInfoRow}>
+                <div className={styles.richInfoRow}>
                   <Icon iconName="CellPhone" className={styles.richInfoIcon} aria-hidden="true" />
-                  <div>
+                  <div className={styles.richInfoText}>
                     <div className={styles.richInfoMeta}>Mobile</div>
-                    <div className={styles.richInfoValue}>{sponsor.mobilePhone}</div>
+                    <a href={`tel:${sponsor.mobilePhone}`} className={styles.richInfoValue}>{sponsor.mobilePhone}</a>
                   </div>
-                </a>
+                  <CopyButton value={sponsor.mobilePhone} label="mobile number" />
+                </div>
               )}
               {sponsor.officeLocation && (
                 <div className={styles.richInfoRow}>
                   <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-                  <div>
+                  <div className={styles.richInfoText}>
                     <div className={styles.richInfoMeta}>Work location</div>
                     <div className={styles.richInfoValue}>{sponsor.officeLocation}</div>
                   </div>
+                  <CopyButton value={sponsor.officeLocation} label="work location" />
                 </div>
               )}
             </div>

@@ -298,14 +298,22 @@
   display: flex;
   gap: 12px;
   padding: 5px 20px;
-  align-items: flex-start;
-  text-decoration: none;
+  align-items: center;
   color: inherit;
 
   &:hover {
     background-color: "[theme:neutralLighter, default: #f3f2f1]";
     background-color: var(--neutralLighter, #f3f2f1);
+
+    .copyButton {
+      opacity: 1;
+    }
   }
+}
+
+.richInfoText {
+  flex: 1;
+  min-width: 0;
 }
 
 .richInfoIcon {
@@ -313,7 +321,6 @@
   flex-shrink: 0;
   width: 20px;
   text-align: center;
-  margin-top: 3px;
   color: "[theme:neutralSecondary, default: #666666]";
   color: var(--neutralSecondary);
 }
@@ -329,6 +336,54 @@
   color: "[theme:link, default: #0078d4]";
   color: var(--link, #0078d4);
   word-break: break-all;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.copyButton {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 80ms ease, background-color 80ms ease;
+  color: "[theme:neutralSecondary, default: #666666]";
+  color: var(--neutralSecondary);
+
+  &:hover {
+    background-color: "[theme:neutralLight, default: #edebe9]";
+    background-color: var(--neutralLight, #edebe9);
+    color: "[theme:bodyText, default: #323130]";
+    color: var(--bodyText, #323130);
+  }
+
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid "[theme:themePrimary, default: #0078d4]";
+    outline: 2px solid var(--themePrimary, #0078d4);
+    outline-offset: 1px;
+  }
+}
+
+.copyIcon {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.copyButtonCopied {
+  opacity: 1 !important;
+  color: "[theme:successText, default: #107C10]";
+  color: var(--successText, #107C10);
 }
 
 /* Manager row */
