@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Callout, DirectionalHint, Icon } from '@fluentui/react';
+import { Callout, DirectionalHint, Icon, TooltipHost } from '@fluentui/react';
 import * as strings from 'GuestSponsorInfoWebPartStrings';
 import { ISponsor } from '../services/ISponsor';
 import styles from './GuestSponsorInfo.module.scss';
@@ -73,16 +73,17 @@ const CopyButton: React.FC<{ value: string; ariaLabel: string }> = ({ value, ari
   };
 
   return (
-    <button
-      type="button"
-      className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
-      onClick={handleCopy}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCopy(e); }}
-      aria-label={copied ? strings.CopiedFeedback : ariaLabel}
-      title={copied ? strings.CopiedFeedback : ariaLabel}
-    >
-      <Icon iconName={copied ? 'Accept' : 'Copy'} className={styles.copyIcon} aria-hidden="true" />
-    </button>
+    <TooltipHost content={copied ? strings.CopiedFeedback : ariaLabel}>
+      <button
+        type="button"
+        className={`${styles.copyButton}${copied ? ` ${styles.copyButtonCopied}` : ''}`}
+        onClick={handleCopy}
+        onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') handleCopy(e); }}
+        aria-label={copied ? strings.CopiedFeedback : ariaLabel}
+      >
+        <Icon iconName={copied ? 'Accept' : 'Copy'} className={styles.copyIcon} aria-hidden="true" />
+      </button>
+    </TooltipHost>
   );
 };
 

@@ -12,6 +12,9 @@ jest.mock('@fluentui/react', () => ({
   Icon: ({ iconName, className }: { iconName: string; className?: string }) => (
     <i className={className} data-icon-name={iconName} />
   ),
+  // Render children directly; tooltip callout behaviour is tested in Fluent UI itself.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  TooltipHost: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 import * as React from 'react';
