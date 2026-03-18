@@ -3,7 +3,7 @@
   "solution": {
     "name": "guest-sponsor-info-client-side-solution",
     "id": "6cdf9494-9c67-40af-8ac8-7b36be245848",
-    "version": "1.0.0.0",
+    "version": "0.1.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": true,
     "isDomainIsolated": false,
@@ -41,7 +41,7 @@
         "title": "guest-sponsor-info Feature",
         "description": "The feature that activates elements of the guest-sponsor-info solution.",
         "id": "b7d00abc-0ce7-45d6-9b8e-ffd7b2139cee",
-        "version": "1.0.0.0"
+        "version": "0.1.0.0"
       }
     ]
   },

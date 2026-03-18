@@ -47,7 +47,7 @@ console.log('config/package-solution.json → ' + ver);
 "
 
 if [[ "${DO_COMMIT}" == "true" ]]; then
-  git add package.json config/package-solution.json
+  git add package.json package-lock.json config/package-solution.json
   git commit -m "chore: release ${VTAG}"
   git tag -a "${VTAG}" -m "Release ${VTAG}"
   echo ""
