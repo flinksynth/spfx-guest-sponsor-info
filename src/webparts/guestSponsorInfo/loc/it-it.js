@@ -23,7 +23,7 @@ define([], function() {
 
     "ContactDetailsAriaLabel": "Dettagli di contatto di {0}",
     "ContactActionsAriaLabel": "Azioni di contatto",
-    "ChatTitle": "Chatta dall\u2019account Teams principale",
+    "ChatTitle": "Chatta in Microsoft Teams",
     "ChatGuestTitle": "Chatta come ospite nel tenant dello sponsor",
     "EmailTitle": "Invia e-mail",
     "CallTitle": "Chiama",

@@ -214,7 +214,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
               <div className={styles.richActions} role="toolbar" aria-label={strings.ContactActionsAriaLabel}>
                 {sponsor.mail && (
                   <a
-                    href={`https://teams.cloud.microsoft/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}`}
+                    href={`https://teams.microsoft.com/l/chat/0/0?tenantId=${encodeURIComponent(hostTenantId)}&users=${encodeURIComponent(sponsor.mail)}`}
                     className={styles.richAction}
                     target="_blank"
                     rel="noreferrer noopener"
@@ -222,18 +222,6 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
                   >
                     <Icon iconName="TeamsLogo" className={styles.richActionIcon} aria-hidden="true" />
                     <span className={styles.richActionLabel}>{strings.ChatLabel}</span>
-                  </a>
-                )}
-                {sponsor.mail && (
-                  <a
-                    href={`https://teams.cloud.microsoft/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}&tenantId=${encodeURIComponent(hostTenantId)}`}
-                    className={styles.richAction}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    title={strings.ChatGuestTitle}
-                  >
-                    <Icon iconName="Chat" className={styles.richActionIcon} aria-hidden="true" />
-                    <span className={styles.richActionLabel}>{strings.ChatGuestLabel}</span>
                   </a>
                 )}
                 {sponsor.mail && (

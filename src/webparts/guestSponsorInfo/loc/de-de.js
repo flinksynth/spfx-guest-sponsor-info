@@ -23,7 +23,7 @@ define([], function() {
 
     "ContactDetailsAriaLabel": "Kontaktdetails f\u00fcr {0}",
     "ContactActionsAriaLabel": "Kontaktaktionen",
-    "ChatTitle": "Chat \u00fcber Ihr Heim-Teams-Konto",
+    "ChatTitle": "In Microsoft Teams chatten",
     "ChatGuestTitle": "Chat als Gast im Mandanten des Sponsors",
     "EmailTitle": "E-Mail senden",
     "CallTitle": "Anrufen",

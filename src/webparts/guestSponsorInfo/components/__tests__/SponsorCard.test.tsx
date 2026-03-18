@@ -202,26 +202,21 @@ describe('SponsorCard', () => {
       expect(links).toHaveLength(0);
     });
 
-    it('renders Teams home-tenant chat link when mail is present', () => {
-      render(BASE_SPONSOR, 'aaaabbbb-0000-0000-0000-000000000001', true);
-      const links = Array.from(container.querySelectorAll('[role="dialog"] a[href*="teams.cloud.microsoft"]'));
-      const homeLink = links.find(l => !l.getAttribute('href')!.includes('tenantId'));
-      expect(homeLink).not.toBeNull();
-      expect(homeLink!.getAttribute('href')).toContain(encodeURIComponent('alice@contoso.com'));
-    });
-
-    it('renders Teams guest-tenant chat link with correct tenantId', () => {
+    it('renders a Teams chat link with correct tenantId when mail is present', () => {
       const tenantId = 'aaaabbbb-0000-0000-0000-000000000001';
       render(BASE_SPONSOR, tenantId, true);
-      const links = Array.from(container.querySelectorAll('[role="dialog"] a[href*="teams.cloud.microsoft"]'));
-      const guestLink = links.find(l => l.getAttribute('href')!.includes('tenantId'));
-      expect(guestLink).not.toBeNull();
-      expect(guestLink!.getAttribute('href')).toContain(encodeURIComponent(tenantId));
+      const links = Array.from(container.querySelectorAll('[role="dialog"] a[href*="teams.microsoft.com"]'));
+      expect(links).toHaveLength(1);
+      expect(links[0].getAttribute('href')).toContain(`tenantId=${encodeURIComponent(tenantId)}`);
+      expect(links[0].getAttribute('href')).toContain(encodeURIComponent('alice@contoso.com'));
+      // tenantId must appear before users per the Teams deep link spec
+      const href = links[0].getAttribute('href')!;
+      expect(href.indexOf('tenantId')).toBeLessThan(href.indexOf('users'));
     });
 
     it('does not render Teams links when mail is absent', () => {
       render({ ...BASE_SPONSOR, mail: undefined }, 'test-tenant-id', true);
-      const links = container.querySelectorAll('[role="dialog"] a[href*="teams.cloud.microsoft"]');
+      const links = container.querySelectorAll('[role="dialog"] a[href*="teams.microsoft.com"]');
       expect(links).toHaveLength(0);
     });
   });

@@ -24,7 +24,7 @@ module.exports = {
 
   ContactDetailsAriaLabel: 'Contact details for {0}',
   ContactActionsAriaLabel: 'Contact actions',
-  ChatTitle: 'Chat via your home Teams account',
+  ChatTitle: 'Chat in Microsoft Teams',
   ChatGuestTitle: "Chat as guest in sponsor's tenant",
   EmailTitle: 'Send email',
   CallTitle: 'Call',
