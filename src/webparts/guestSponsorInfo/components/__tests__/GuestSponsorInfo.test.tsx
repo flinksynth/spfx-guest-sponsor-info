@@ -63,6 +63,7 @@ afterEach(() => {
 function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
   const defaults: IGuestSponsorInfoProps = {
     loginName: 'guest_contoso.com#EXT#@fabrikam.onmicrosoft.com',
+    isExternalGuestUser: true,
     displayMode: DisplayMode.Read,
     graphClient: {} as never, // The actual client object is irrelevant; getSponsors is mocked.
     title: 'My Sponsors',
@@ -97,6 +98,7 @@ describe('GuestSponsorInfo', () => {
         renderWebPart({
           displayMode: DisplayMode.Edit,
           loginName: 'member@fabrikam.onmicrosoft.com',
+          isExternalGuestUser: false,
         });
       });
       expect(container.textContent).toContain('only visible to guest users');
@@ -114,14 +116,14 @@ describe('GuestSponsorInfo', () => {
     it('renders nothing so the web part is invisible to members', () => {
       mockIsGuestUser.mockReturnValue(false);
       act(() => {
-        renderWebPart({ loginName: 'member@fabrikam.onmicrosoft.com' });
+        renderWebPart({ loginName: 'member@fabrikam.onmicrosoft.com', isExternalGuestUser: false });
       });
       expect(container.firstChild).toBeNull();
     });
 
     it('never calls getSponsors for a non-guest visitor', () => {
       mockIsGuestUser.mockReturnValue(false);
-      act(() => { renderWebPart({ loginName: 'member@fabrikam.onmicrosoft.com' }); });
+      act(() => { renderWebPart({ loginName: 'member@fabrikam.onmicrosoft.com', isExternalGuestUser: false }); });
       expect(mockGetSponsors).not.toHaveBeenCalled();
     });
   });
