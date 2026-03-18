@@ -123,7 +123,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({ sponsor, hostTenantId }) => 
           {sponsor.mail && (
             <div className={styles.teamsChatLinks}>
               <a
-                href={`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}`}
+                href={`https://teams.cloud.microsoft/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}`}
                 className={styles.teamsChatLink}
                 target="_blank"
                 rel="noreferrer noopener"
@@ -133,7 +133,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({ sponsor, hostTenantId }) => 
                 💬 Chat (home)
               </a>
               <a
-                href={`https://teams.microsoft.com/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}&tenantId=${encodeURIComponent(hostTenantId)}`}
+                href={`https://teams.cloud.microsoft/l/chat/0/0?users=${encodeURIComponent(sponsor.mail)}&tenantId=${encodeURIComponent(hostTenantId)}`}
                 className={styles.teamsChatLink}
                 target="_blank"
                 rel="noreferrer noopener"

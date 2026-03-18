@@ -164,7 +164,7 @@ describe('SponsorCard', () => {
       render(BASE_SPONSOR, 'aaaabbbb-0000-0000-0000-000000000001');
       const card = container.querySelector('[role="article"]') as HTMLElement;
       fireEvent(card, 'mouseenter');
-      const links = Array.from(container.querySelectorAll('[role="tooltip"] a[href*="teams.microsoft.com"]'));
+      const links = Array.from(container.querySelectorAll('[role="tooltip"] a[href*="teams.cloud.microsoft"]'));
       const homeLink = links.find(l => !l.getAttribute('href')!.includes('tenantId'));
       expect(homeLink).not.toBeNull();
       expect(homeLink!.getAttribute('href')).toContain(encodeURIComponent('alice@contoso.com'));
@@ -175,7 +175,7 @@ describe('SponsorCard', () => {
       render(BASE_SPONSOR, tenantId);
       const card = container.querySelector('[role="article"]') as HTMLElement;
       fireEvent(card, 'mouseenter');
-      const links = Array.from(container.querySelectorAll('[role="tooltip"] a[href*="teams.microsoft.com"]'));
+      const links = Array.from(container.querySelectorAll('[role="tooltip"] a[href*="teams.cloud.microsoft"]'));
       const guestLink = links.find(l => l.getAttribute('href')!.includes('tenantId'));
       expect(guestLink).not.toBeNull();
       expect(guestLink!.getAttribute('href')).toContain(encodeURIComponent(tenantId));
@@ -185,7 +185,7 @@ describe('SponsorCard', () => {
       render({ ...BASE_SPONSOR, mail: undefined });
       const card = container.querySelector('[role="article"]') as HTMLElement;
       fireEvent(card, 'mouseenter');
-      const links = container.querySelectorAll('[role="tooltip"] a[href*="teams.microsoft.com"]');
+      const links = container.querySelectorAll('[role="tooltip"] a[href*="teams.cloud.microsoft"]');
       expect(links).toHaveLength(0);
     });
   });
