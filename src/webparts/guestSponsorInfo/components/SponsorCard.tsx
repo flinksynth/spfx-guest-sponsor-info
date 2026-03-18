@@ -220,7 +220,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
                       target="_blank"
                       rel="noreferrer noopener"
                     >
-                      <Icon iconName="TeamsLogo" className={styles.richActionIcon} aria-hidden="true" />
+                      <Icon iconName="Chat" className={styles.richActionIcon} aria-hidden="true" />
                       <span className={styles.richActionLabel}>{strings.ChatLabel}</span>
                     </a>
                   </TooltipHost>

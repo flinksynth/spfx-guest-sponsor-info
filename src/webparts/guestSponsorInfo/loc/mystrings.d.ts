@@ -25,11 +25,9 @@ declare interface IGuestSponsorInfoWebPartStrings {
   ContactDetailsAriaLabel: string;  // contains "{0}" placeholder for the name
   ContactActionsAriaLabel: string;
   ChatTitle: string;
-  ChatGuestTitle: string;
   EmailTitle: string;
   CallTitle: string;
   ChatLabel: string;
-  ChatGuestLabel: string;
   EmailLabel: string;
   CallLabel: string;
 
