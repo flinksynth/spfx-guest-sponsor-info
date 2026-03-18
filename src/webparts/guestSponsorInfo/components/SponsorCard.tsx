@@ -213,36 +213,39 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             {(sponsor.mail || primaryPhone) && (
               <div className={styles.richActions} role="toolbar" aria-label={strings.ContactActionsAriaLabel}>
                 {sponsor.mail && (
-                  <a
-                    href={`https://teams.microsoft.com/l/chat/0/0?tenantId=${encodeURIComponent(hostTenantId)}&users=${encodeURIComponent(sponsor.mail)}`}
-                    className={styles.richAction}
-                    target="_blank"
-                    rel="noreferrer noopener"
-                    title={strings.ChatTitle}
-                  >
-                    <Icon iconName="TeamsLogo" className={styles.richActionIcon} aria-hidden="true" />
-                    <span className={styles.richActionLabel}>{strings.ChatLabel}</span>
-                  </a>
+                  <TooltipHost content={strings.ChatTitle}>
+                    <a
+                      href={`https://teams.microsoft.com/l/chat/0/0?tenantId=${encodeURIComponent(hostTenantId)}&users=${encodeURIComponent(sponsor.mail)}`}
+                      className={styles.richAction}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      <Icon iconName="TeamsLogo" className={styles.richActionIcon} aria-hidden="true" />
+                      <span className={styles.richActionLabel}>{strings.ChatLabel}</span>
+                    </a>
+                  </TooltipHost>
                 )}
                 {sponsor.mail && (
-                  <a
-                    href={`mailto:${sponsor.mail}`}
-                    className={styles.richAction}
-                    title={strings.EmailTitle}
-                  >
-                    <Icon iconName="Mail" className={styles.richActionIcon} aria-hidden="true" />
-                    <span className={styles.richActionLabel}>{strings.EmailLabel}</span>
-                  </a>
+                  <TooltipHost content={strings.EmailTitle}>
+                    <a
+                      href={`mailto:${sponsor.mail}`}
+                      className={styles.richAction}
+                    >
+                      <Icon iconName="Mail" className={styles.richActionIcon} aria-hidden="true" />
+                      <span className={styles.richActionLabel}>{strings.EmailLabel}</span>
+                    </a>
+                  </TooltipHost>
                 )}
                 {primaryPhone && (
-                  <a
-                    href={`tel:${primaryPhone}`}
-                    className={styles.richAction}
-                    title={strings.CallTitle}
-                  >
-                    <Icon iconName="Phone" className={styles.richActionIcon} aria-hidden="true" />
-                    <span className={styles.richActionLabel}>{strings.CallLabel}</span>
-                  </a>
+                  <TooltipHost content={strings.CallTitle}>
+                    <a
+                      href={`tel:${primaryPhone}`}
+                      className={styles.richAction}
+                    >
+                      <Icon iconName="Phone" className={styles.richActionIcon} aria-hidden="true" />
+                      <span className={styles.richActionLabel}>{strings.CallLabel}</span>
+                    </a>
+                  </TooltipHost>
                 )}
               </div>
             )}
