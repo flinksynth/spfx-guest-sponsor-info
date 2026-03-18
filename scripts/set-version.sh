@@ -33,7 +33,7 @@ SPFX_VER="${SEMVER}.0"  # SPFx requires four-part version (major.minor.patch.bui
 
 echo "Stamping version: semver=${SEMVER}  spfx=${SPFX_VER}"
 
-npm version "$SEMVER" --no-git-tag-version
+npm version "$SEMVER" --no-git-tag-version --allow-same-version
 
 SPFX_VER="$SPFX_VER" node -e "
 const fs  = require('fs');
