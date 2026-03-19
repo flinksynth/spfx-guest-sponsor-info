@@ -28,7 +28,7 @@ param tags object = {}
 
 var storageAccountName = toLower(replace(functionAppName, '-', ''))
 var appServicePlanName = '${functionAppName}-plan'
-var logAnalyticsWorkspaceName = '${functionAppName}-logs'
+var logAnalyticsWorkspaceName = length('${functionAppName}-logs') > 63 ? '${substring(functionAppName, 0, 58)}-logs' : '${functionAppName}-logs'
 var appInsightsName = '${functionAppName}-insights'
 
 // ── Storage Account (required by Azure Functions runtime) ────────────────────
