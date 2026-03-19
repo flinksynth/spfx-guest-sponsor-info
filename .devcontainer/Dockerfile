@@ -40,7 +40,7 @@ RUN curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsof
   && dpkg -i /tmp/ms-prod.deb \
   && rm /tmp/ms-prod.deb \
   && apt-get update \
-  && apt-get install -y --no-install-recommends powershell \
+  && apt-get install -y --no-install-recommends powershell azure-cli \
   && rm -rf /var/lib/apt/lists/*
 
 # Azure Functions Core Tools v4 — enables `func start` for local function development.
