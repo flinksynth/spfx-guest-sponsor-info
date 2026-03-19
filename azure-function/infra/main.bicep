@@ -169,7 +169,7 @@ var storageTableDataContributorRoleId = '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
 
 resource storageBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: storageAccount
-  name: guid(storageAccount.id, functionApp.identity.principalId, storageBlobDataOwnerRoleId)
+  name: guid(storageAccount.id, functionApp.id, storageBlobDataOwnerRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageBlobDataOwnerRoleId)
     principalId: functionApp.identity.principalId
@@ -179,7 +179,7 @@ resource storageBlobRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = 
 
 resource storageQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: storageAccount
-  name: guid(storageAccount.id, functionApp.identity.principalId, storageQueueDataContributorRoleId)
+  name: guid(storageAccount.id, functionApp.id, storageQueueDataContributorRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageQueueDataContributorRoleId)
     principalId: functionApp.identity.principalId
@@ -189,7 +189,7 @@ resource storageQueueRole 'Microsoft.Authorization/roleAssignments@2022-04-01' =
 
 resource storageTableRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   scope: storageAccount
-  name: guid(storageAccount.id, functionApp.identity.principalId, storageTableDataContributorRoleId)
+  name: guid(storageAccount.id, functionApp.id, storageTableDataContributorRoleId)
   properties: {
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageTableDataContributorRoleId)
     principalId: functionApp.identity.principalId
