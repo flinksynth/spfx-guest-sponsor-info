@@ -38,8 +38,8 @@ The two Graph permissions must be approved by a tenant administrator in the
 - **Guest-only in view mode** – renders `null` for member users; they see nothing
 - **Edit-mode placeholder** – always visible to page authors regardless of guest status,
   so the web part can be positioned and configured on the page
-- **Deleted-sponsor handling** – existence is verified without `User.Read.All`; accounts
-  that have been deleted are counted and a friendly message is shown when all sponsors are gone
+- **Unavailable-sponsor handling** – sponsors whose accounts are deleted, soft-deleted, or
+  disabled are not rendered; a friendly message is shown when all assigned sponsors are gone
 - **Multilingual** – English · German · French · Spanish · Italian
 - **Theme-aware** – `supportsThemeVariants: true` honours the site theme
 - **Least-privilege Graph permissions** – `User.ReadBasic.All` instead of `User.Read.All`
@@ -104,96 +104,302 @@ See [docs/architecture.md](docs/architecture.md) for the different testing scena
 
 ## Guest Access Requirements
 
-Because the web part's JavaScript bundle is served from the **App Catalog site collection**,
-guest users must be able to reach that site.
-By default they cannot, which causes the web part to fail silently or show
-"Something went wrong" errors only for guests.
+The web part's JavaScript and CSS bundle is packaged with `includeClientSideAssets: true`
+and re-hosted by SharePoint. By default, guest users cannot reach those assets, which causes
+the web part to fail silently or show "Something went wrong" errors for guests only.
 
-### Step 1 – Verify the All Users claim (modern tenants: already enabled)
+**Step 1** has two options — choose the one that fits your environment; the remaining steps
+are always required regardless of which option you choose.
 
-`ShowAllUsersClaim` defaults to `$true` in all modern SharePoint Online tenants
-(provisioned after ~2018). No action is needed unless your tenant is unusually old or the
-setting was explicitly disabled.
+### Step 1 – Make web part assets accessible to guests
 
-To verify the current value:
+#### Option A – SharePoint Public CDN (recommended)
+
+When the **Public CDN** is enabled with the `*/CLIENTSIDEASSETS` origin, SharePoint
+automatically rewrites asset URLs to `https://publiccdn.sharepointonline.com/…` — a
+publicly accessible edge cache — instead of serving them from the App Catalog site
+collection. Guest users (including those with no App Catalog permissions, and even
+anonymous users on sites that allow public access) can download the bundle without any
+further configuration.
+
+This is the **simplest and most performant** option. No claim setting changes are needed.
+No App Catalog permissions need to be assigned.
 
 ```powershell
-Connect-SPOService -Url "https://<tenant>-admin.sharepoint.com"
-(Get-SPOTenant).ShowAllUsersClaim   # should return: True
+# Install PnP PowerShell once (PowerShell 7+, cross-platform):
+# Install-Module PnP.PowerShell -Scope CurrentUser
+
+Connect-PnPOnline -Url "https://<tenant>-admin.sharepoint.com" -Interactive
+
+# Enable the Public CDN (idempotent — safe to run even if already enabled).
+Set-PnPTenantCdnEnabled -CdnType Public -Enable $true
+
+# Add the SPFx asset library as a public origin.
+# Microsoft may have added this automatically when CDN was first enabled; the command is idempotent.
+Add-PnPTenantCdnOrigin -CdnType Public -OriginUrl "*/CLIENTSIDEASSETS"
+
+# Verify the origin is registered (propagation takes ≈ 15–30 min).
+Get-PnPTenantCdnOrigin -CdnType Public
 ```
 
-If it returns `False`, re-enable it:
+Wait for `*/CLIENTSIDEASSETS` to appear in the output with status `OK`.
+Once propagated, SharePoint rewrites all asset URLs automatically on the next page load —
+no redeployment of the `.sppkg` is required.
+
+> **Skip Option B entirely** if you use Option A. Steps 2 and 3 below still apply.
+
+#### Option B – App Catalog permissions (alternative)
+
+Use this option only if the Public CDN cannot be enabled in your tenant (for example,
+your organisation has a policy against public CDN origins for SharePoint).
+
+##### Step 1b-i – Enable the Everyone claim
+
+`ShowEveryoneClaim` controls the **"Everyone"** group in SharePoint's People Picker.
+When enabled, this group covers all authenticated users in the tenant's Microsoft Entra ID,
+**including B2B guests who have accepted their invitation**.
+
+On tenants provisioned after March 2018 this setting defaults to `$false`.
+Check the current value:
 
 ```powershell
-Set-SPOTenant -ShowAllUsersClaim $true
+# Install PnP PowerShell once (PowerShell 7+, cross-platform):
+# Install-Module PnP.PowerShell -Scope CurrentUser
+
+Connect-PnPOnline -Url "https://<tenant>-admin.sharepoint.com" -Interactive
+(Get-PnPTenant).ShowEveryoneClaim   # should return: True
 ```
 
-This makes the **"All Users (membership)"** SharePoint claim available for use in permission
-assignments. That claim covers every authenticated user including B2B guests.
+If it returns `False`, enable it:
 
-### Step 2 – Grant guests Read access to the App Catalog
+```powershell
+Set-PnPTenant -ShowEveryoneClaim $true
+```
 
-Two things must be done: enable external sharing on the App Catalog site itself, then
-grant the Read permission.
+This makes the **"Everyone"** SharePoint claim available for permission assignments.
 
-#### Step 2a – Enable external sharing on the App Catalog site
+> **Why not `ShowAllUsersClaim`?**
+> Many older SharePoint guides recommend checking or enabling `ShowAllUsersClaim` for
+> guest access. That setting controls the legacy *All Users (membership)* and
+> *All Users (windows)* groups — Windows/NTLM-era claims from the on-premises SharePoint
+> era. Those groups cover only organisation members authenticated via those older methods
+> and do **not** include B2B guests.
+> `ShowEveryoneClaim` and the *Everyone* group are the modern equivalent, and the only
+> built-in claim that includes B2B guests.
+> A third setting, `ShowEveryoneExceptExternalUsersClaim` (default `$true`), controls the
+> *Everyone except external users* group that Microsoft 365 services such as Teams and
+> M365 Groups use internally — as the name says, it explicitly excludes B2B guests.
 
-The App Catalog is a regular site collection and obeys SharePoint's site-level sharing
-settings. If external sharing is disabled on it, guests receive HTTP 403 even after the
-permission in Step 2b has been granted.
+##### Step 1b-ii – Enable external sharing on the App Catalog site
+
+The App Catalog obeys SharePoint's site-level sharing settings. If external sharing is
+disabled on it, guests receive HTTP 403 even after the permission below is granted.
 
 1. Go to **SharePoint Admin Center → Sites → Active sites**.
 2. Open the App Catalog site (typically named `appcatalog`).
 3. Click **Policies** → **External sharing** and set it to at least **Existing guests**.
 
-#### Step 2b – Grant Read permission
+##### Step 1b-iii – Grant Read permission
 
 1. Navigate to your App Catalog site
    (typically `https://<tenant>.sharepoint.com/sites/appcatalog`).
 2. **Site Settings → People and Groups → App Catalog Visitors**.
 3. **New → Add Users** and add one of the following:
-   - **All Users (membership)** – covers every authenticated user including B2B guests.
-     This is the broadest option and the simplest to configure.
+   - **Everyone** – covers every authenticated user including B2B guests who have accepted
+     their invitation. This is the broadest option and the simplest to configure.
+     Requires `ShowEveryoneClaim = $true` (see Step 1b-i above).
    - A **specific Microsoft 365 or security group** that contains the guest accounts
-     who need access. This is the more targeted, least-privilege alternative.
+     who need access. This is the more targeted, least-privilege alternative and does
+     not require any claim setting change.
 4. Set the permission level to **Read**.
 
-> **Pitfall – "Everyone except external users"**
-> SharePoint shows two similarly named built-in groups. *Everyone except external users*
-> explicitly **excludes** B2B guests — despite the name sounding inclusive.
-> Only *All Users (membership)* (or a named group that contains your guests) will work.
+> **Pitfall – confusingly similar group names**
+> SharePoint shows several built-in groups with similar-sounding names:
+>
+> - *Everyone* — includes B2B guests who have accepted their invitation. Use this one. ✓
+> - *Everyone except external users* — explicitly **excludes** B2B guests. ✗
+> - *All Users (membership)* / *All Users (windows)* — cover organisation members only;
+>   B2B guests are **not** included. ✗
 
-This allows authenticated guest users to download the web part bundle from the App Catalog.
-
-> **Why is this needed?**
-> `includeClientSideAssets: true` packages all JavaScript and CSS directly into the `.sppkg`.
-> SharePoint then re-hosts those assets on the App Catalog site collection.
-> A guest user loading the web part will make a request to the App Catalog to fetch that bundle;
-> without Read access the request returns 403 and the web part never loads.
-
-### Step 3 – Verify external sharing on the landing page site
+### Step 2 – Verify external sharing on the landing page site
 
 External sharing must be enabled at both the tenant level and at each relevant site:
 
-- **SharePoint Admin Center → Policies → Sharing** – set to at least *New and existing guests*.
+- **SharePoint Admin Center → Policies → Sharing** – set to at least *Existing guests only*.
 - Open each site where the web part is placed and confirm external sharing is enabled
   there too (same setting, per-site).
 - The **App Catalog site** is covered by Step 2a above.
 
+### Step 3 – Deploy the Sponsor API
+
+The Microsoft Graph `/me/sponsors` API requires the calling user to hold a directory role
+in addition to the `User.Read` delegated permission — a requirement that is impractical to
+meet at scale for guest accounts (see [docs/architecture.md](docs/architecture.md#azure-function-proxy)
+for the full analysis). The recommended solution is an **Azure Function proxy** that calls
+Graph with application permissions on behalf of the user.
+
+#### Pre-step: create the App Registration
+
+The Azure Function uses EasyAuth (Azure App Service Authentication) to validate the caller.
+EasyAuth needs an Entra App Registration as its identity provider.
+
+Run the included script (requires `Microsoft.Graph` PowerShell module):
+
+```powershell
+./azure-function/infra/setup-app-registration.ps1 -TenantId "<your-tenant-id>"
+```
+
+Copy the **Client ID** printed at the end — you will need it in the next step.
+
+Alternatively, create the App Registration manually in the Azure Portal:
+
+1. **Microsoft Entra admin center → App registrations → New registration**.
+2. Name: `Guest Sponsor Info Proxy`; Supported account types: *Accounts in this organizational
+   directory only*.
+3. After creation, open **Expose an API** → **Set** Application ID URI:
+   `api://guest-sponsor-info-proxy/<clientId>`.
+4. Copy the **Client ID**.
+
+#### Deploy to Azure
+
+Click the button below to open the Azure Portal with the ARM template pre-loaded:
+
+[![Deploy to Azure](https://aka.ms/deploytoazure)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2Fjpawlowski%2Fspfx-guest-sponsor-info%2Fmain%2Fazure-function%2Finfra%2Fazuredeploy.json)
+
+Fill in the parameters:
+
+| Parameter | Description |
+|---|---|
+| `tenantId` | Your Entra tenant ID (GUID) |
+| `tenantName` | Your tenant name without domain suffix, e.g. `contoso` |
+| `functionAppName` | Globally unique name for the Function App |
+| `functionClientId` | Client ID from the pre-step above |
+| `packageUrl` | Leave as default (points to the latest GitHub Release ZIP) |
+| `location` | Azure region |
+
+After deployment, note the **Managed Identity Object ID** shown in the output.
+
+#### Grant Graph permissions to the Managed Identity
+
+```powershell
+./azure-function/infra/setup-graph-permissions.ps1 \
+  -ManagedIdentityObjectId "<oid-from-deployment-output>" \
+  -TenantId "<your-tenant-id>"
+```
+
+This grants `User.Read.All` and `Presence.Read.All` application permissions to the
+Function App's system-assigned Managed Identity.
+
+#### Configure the web part
+
+In the property pane of the web part (edit the page → edit the web part → **Azure Function** group):
+
+- **Sponsor API URL**: paste the function endpoint, e.g.
+  `https://guest-sponsor-info-xyz.azurewebsites.net/api/getGuestSponsors`
+- **Sponsor API Client ID**: paste the Client ID from the pre-step
+
+#### Updating the function
+
+When a new release includes an updated function package:
+
+1. Open the Function App in the Azure Portal.
+2. **Configuration → Application settings → `WEBSITE_RUN_FROM_PACKAGE`**.
+3. Replace the URL with the new release asset URL (e.g.
+   `https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/download/vX.Y.Z/guest-sponsor-info-function.zip`).
+4. **Save**. The Function App picks up the new package on next cold start.
+
+#### Security assessment of the Azure Function approach
+
+- The **Managed Identity** never exposes credentials — no secrets are stored anywhere.
+- `User.Read.All` is an **application permission**: unlike the delegated approach, the guest
+  user never holds this permission themselves. The function enforces that it only ever returns
+  the calling user's own sponsors (OID is taken from the EasyAuth-validated token).
+- **EasyAuth** ensures unauthenticated requests are rejected by Azure before the function code
+  runs. There is no custom JWT validation code to maintain.
+- Because guests do not need any Entra directory role assignment, none of the role-assignable
+  group limitations, dynamic membership restrictions, or third-party SaaS trust issues described
+  in Option A/B below apply.
+
+**Overall risk level: Low.** This is the recommended approach for production deployments.
+
+#### Legacy option (no Azure Function): assign a directory role to guests
+
+If you cannot deploy the Azure Function, guests need a directory role to call `/me/sponsors`
+directly. See the legacy instructions below.
+
+<details>
+<summary>Legacy Option A – Custom role (requires Entra ID P1 or P2)</summary>
+
+A custom role scoped to exactly `microsoft.directory/users/sponsors/read` is the
+least-privilege approach among the legacy options.
+
+1. **Microsoft Entra admin center → Roles and admins → Roles → New custom role**.
+2. Name it e.g. `Sponsor Viewer`.
+3. On the *Permissions* step, search for `sponsors` and add
+   `microsoft.directory/users/sponsors/read`.
+4. Save the role.
+5. Open the new role → **Add assignments** → select the security group containing your guests.
+
+**Note:** Role-assignable groups require `isAssignableToRole = true` (cannot be set on an
+existing group). Dynamic membership is not supported. Every new guest must be added manually
+or via automation with `RoleManagement.ReadWrite.Directory` permissions.
+
+**Privacy note:** This permission is not self-scoped — a guest with this role can also read
+the sponsor relationships of other guest accounts. See the security assessment below.
+
+</details>
+
+<details>
+<summary>Legacy Option B – Directory Readers built-in role (no P1/P2 required)</summary>
+
+If your tenant does not have Entra ID P1 or P2:
+
+1. **Microsoft Entra admin center → Roles and admins → Directory Readers**.
+2. **Add assignments** → select the security group containing your guests.
+
+**Warning:** Directory Readers grants much broader directory read access than just sponsors.
+Only use this as a last resort and document it in your risk register.
+
+</details>
+
 ### Security assessment of these settings
 
-**`ShowAllUsersClaim`**
-This setting only controls whether the *All Users (membership)* claim is selectable in
-SharePoint permission UIs — it does not grant anyone any new access by itself.
-It is `True` by default on all modern tenants, so enabling it does not change the
-security posture for the vast majority of organizations. Without it, SharePoint admins
-cannot assign permissions to a group that includes guests; they would have to invite every
-guest account individually to the App Catalog.
-The blast radius is purely administrative: the claim becomes usable for permission
-assignments across the entire tenant.
+**Public CDN (`*/CLIENTSIDEASSETS` origin)** *(Option A)*
+Enabling the Public CDN makes the compiled JavaScript and CSS bundle available at
+`publiccdn.sharepointonline.com` without authentication. This is intentional and safe:
+the bundle contains only compiled code — no credentials, no user data, no secrets.
+Environment-specific values such as Graph endpoint URLs are public Microsoft URLs;
+tenant-specific IDs are obtained at runtime from `pageContext` and are never embedded
+in the bundle.
+Enabling the Public CDN is a tenant-wide change that affects all SPFx solutions using
+`includeClientSideAssets: true`. If your organisation publishes SPFx solutions that embed
+sensitive configuration data directly in the bundle, review those solutions before enabling
+this; this web part itself is safe to serve publicly.
 
-**Read permission for All Users (membership) on the App Catalog**
-"All Users (membership)" covers every authenticated identity accepted by the tenant:
+**`ShowEveryoneClaim`** *(Option B only)*
+This setting controls whether the *Everyone* claim group is visible in SharePoint's People
+Picker. The *Everyone* group covers all authenticated users in the tenant's Microsoft Entra
+ID, **including B2B guests who have accepted their invitation** — which is exactly why it is
+needed here. It defaults to `$false` on tenants provisioned after March 2018.
+Enabling it is a tenant-wide change: *Everyone* becomes selectable as a permission target
+anywhere in the tenant. The setting itself does not grant access — it only makes the claim
+group available for permission assignments.
+The blast radius is purely administrative.
+
+Do not confuse this with the two other claim settings:
+
+- `ShowAllUsersClaim` (`$true` by default) — controls the legacy *All Users (membership)*
+  and *All Users (windows)* groups, left over from on-premises SharePoint's Windows/NTLM
+  authentication. They cover only organisation members authenticated via those methods and
+  do **not** include B2B guests. Many older guides recommend this setting for "everyone"
+  access — for modern B2B guest access it is the wrong setting.
+- `ShowEveryoneExceptExternalUsersClaim` (`$true` by default) — controls *Everyone except
+  external users*, which Microsoft 365 services (Teams, M365 Groups, Planner) rely on
+  internally. Despite being always on, it explicitly **excludes** B2B guests — the opposite
+  of what is needed here.
+
+**Read permission for Everyone on the App Catalog** *(Option B only)*
+"Everyone" covers every authenticated identity accepted by the tenant:
 full members, licensed guests, and B2B guests who have accepted their invitation.
 Anonymous (unauthenticated) users are explicitly excluded.
 
@@ -214,10 +420,34 @@ The compiled bundle itself contains no secrets. Environment-specific values such
 endpoints are public Microsoft URLs; tenant-specific IDs (used for Teams deep links) are
 obtained at runtime from `pageContext` and never hard-coded in the bundle.
 
-**Overall risk level: Low.**
-The configuration widens read access to non-sensitive deployment metadata for authenticated
-identities only. Regular security reviews of the App Catalog Visitors group are recommended
-to ensure no overly broad permissions accumulate over time.
+**`Sponsor Viewer` custom role / Directory Readers (legacy Step 3 options)**
+The `microsoft.directory/users/sponsors/read` role permission is not scoped to "only my own
+sponsors". A guest who holds this role — whether via the custom `Sponsor Viewer` role or the
+broader `Directory Readers` role — can also call `/users/{other-id}/sponsors` and read the
+sponsor relationships of *other* guest accounts in the tenant, e.g. via Graph Explorer.
+
+This privacy concern is the primary motivation for the recommended **Azure Function proxy**
+approach (Step 3 above): with the proxy, guests never hold any Entra directory role, and
+the function enforces server-side that only the caller's own sponsors are returned.
+
+If you are using the legacy options:
+
+What this exposes:
+
+- Which internal employee(s) are responsible for a given guest — an internal accountability
+  relationship that guests would not otherwise be able to enumerate.
+- No additional profile data beyond what `User.ReadBasic.All` already allows (name, mail,
+  job title). Sensitive fields such as `accountEnabled` or group memberships remain inaccessible.
+
+`Directory Readers` (Legacy Option B) makes this significantly worse: it grants read access
+to practically all directory objects and their relationships, not just sponsor assignments.
+The custom `Sponsor Viewer` role (Legacy Option A) limits the extra exposure to sponsor
+relationships only — it is the better choice from a data-minimisation perspective.
+
+**Overall risk level (legacy options): Low** for Legacy Option A (custom role),
+**Low–Medium** for Legacy Option B (Directory Readers, due to broader directory read access).
+Organisations with strict data-minimisation requirements should use the Azure Function proxy
+instead and document the rationale in their data processing register.
 
 ### Tenant-wide deployment vs. per-site-collection
 

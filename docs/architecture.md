@@ -30,11 +30,32 @@ configurations.
 
 ## Sponsor Retrieval
 
+The web part supports two data paths:
+
+### With Azure Function Proxy (recommended)
+
+When `functionUrl` and `functionClientId` are configured in the web part property pane,
+the web part calls the Azure Function proxy instead of Graph directly:
+
+1. SPFx acquires an AAD token for the Function App's client ID via `aadHttpClientFactory`.
+2. The request is sent to the function endpoint with the Bearer token.
+3. EasyAuth validates the token and sets `X-MS-CLIENT-PRINCIPAL-ID` (the caller OID).
+4. The function calls `GET /users/{callerOid}/sponsors` via its Managed Identity
+   (application permission `User.Read.All`).
+5. Profile photos, sponsor existence/accountEnabled checks, manager data, and manager photos
+   are fetched via Graph `$batch`; presence is fetched in parallel via a single presence call.
+6. The function returns `{ activeSponsors, unavailableCount }` — identical to the fallback path.
+
+This path requires no Entra directory role for the calling guest user.
+
+### Fallback: Direct Graph (legacy)
+
+When no function is configured, the web part calls Graph directly with delegated permissions:
+
 **Endpoint used:** `GET /v1.0/me/sponsors`
 
-**Assumption:** The `/me/sponsors` endpoint is available and returns the list of assigned
-sponsors in the resource tenant. This endpoint was added to Microsoft Graph in 2023 and is
-generally available in v1.0.
+**Assumption:** The signed-in guest holds a qualifying Entra directory role
+(see `README.md → Step 4` for options and their trade-offs).
 
 **Properties selected:** `id`, `displayName`, `mail`, `jobTitle`, `department`, `officeLocation`, `businessPhones`, `mobilePhone`
 
@@ -56,12 +77,29 @@ silently ignored and the initials-based fallback is shown instead.
 
 ## Required Microsoft Graph Permissions
 
+### With Azure Function Proxy (recommended)
+
+The function uses application permissions granted to its Managed Identity.
+No delegated permissions need to be approved by an admin in the SharePoint API access panel.
+
+| Permission | Context | Why it is needed |
+|---|---|---|
+| `User.Read.All` | Azure Function (application) | Read any user's sponsors, profile data, and photos via `/users/{oid}/sponsors` |
+| `Presence.Read.All` | Azure Function (application) | Read sponsor presence status via `/communications/getPresencesByUserId` |
+
+These are granted automatically by the `azd up` post-provision hook. They are never
+exposed to the calling guest user. The function enforces server-side that only the
+calling user's own sponsors are returned. It also filters out sponsor and manager accounts
+whose `accountEnabled` flag is `false`.
+
+### Fallback: Direct Graph (legacy)
+
 The following delegated permissions must be granted by a tenant administrator in the
 SharePoint Admin Center → API access panel after the `.sppkg` is uploaded.
 
 | Permission | Why it is needed | Can it be reduced? |
 |---|---|---|
-| `User.Read` | Read the signed-in user's own `/me/sponsors` relationship. | No – this is the smallest delegated scope in Graph. |
+| `User.Read` | Read the signed-in user's own `/me/sponsors` relationship. | No – this is the smallest delegated scope in Graph. Note: in addition to this permission, the signed-in user must hold the **Directory Readers** role in Microsoft Entra. Without a qualifying role the API returns HTTP 403 regardless of consented scopes. |
 | `User.ReadBasic.All` | Read whether each sponsor's directory object still exists (HTTP 404 detection) and load their profile photos via `/users/{id}/photo/$value`. | No – there is no narrower scope that covers reading *other* users' objects. `ReadBasic` exposes only: displayName, first/last name, mail, and photo. It does **not** grant access to sensitive properties like `accountEnabled`, licences, group memberships, etc. |
 
 ### Why `*.All` does not mean "full access"
@@ -102,30 +140,176 @@ If this limitation becomes critical, a future iteration can:
 - Use an admin-side automation to remove the sponsor assignment from the guest user
   object at the time of account deactivation.
 
+## Azure Function Proxy
+
+### Why Entra directory roles are not viable at scale
+
+The `/me/sponsors` API requires the calling user to hold one of these Entra directory roles:
+Directory Readers, Guest Inviter, Directory Writers, User Administrator, or a custom role with
+`microsoft.directory/users/sponsors/read`. Assigning roles to B2B guest accounts at scale has
+several structural problems:
+
+1. **Role-assignable groups required** — Entra roles can only be assigned to security groups
+   created with `isAssignableToRole = true`. This flag cannot be set on existing groups.
+2. **No dynamic membership** — role-assignable groups do not support dynamic membership rules.
+   Every new guest must be added manually or via automation.
+3. **High-privilege automation** — tools that auto-add guests to the role-assignable group
+   need `RoleManagement.ReadWrite.Directory` (effectively Global Admin access), which is
+   unacceptable for third-party tools.
+4. **Not self-scoped** — the `microsoft.directory/users/sponsors/read` permission allows the
+   guest to read sponsor relationships of *other* guests, not just their own. This is a
+   GDPR/DSGVO consideration.
+
+### Architecture
+
+```text
+[Guest User Browser]
+      │
+      │  1. SPFx acquires AAD token for the function App Registration
+      │     via context.aadHttpClientFactory.getClient(functionClientId)
+      ▼
+[Azure Function: getGuestSponsors]
+  - EasyAuth validates the Bearer token
+  - Reads caller OID from X-MS-CLIENT-PRINCIPAL-ID header
+  - Calls Graph as Managed Identity (app permissions)
+      │
+      │  2. ISponsor[] JSON
+      ▼
+[SPFx web part → renders SponsorCard components]
+```
+
+### Token flow
+
+- SPFx calls `aadHttpClientFactory.getClient(functionClientId)` — the factory acquires a
+  delegated token for the function's App ID URI using the user's existing SharePoint session.
+  No extra sign-in prompt is required.
+- EasyAuth validates the Bearer token before the function code runs. The caller OID is read
+  from the `X-MS-CLIENT-PRINCIPAL-ID` header that EasyAuth sets after validation.
+- The Function App's system-assigned Managed Identity calls Graph with application permissions.
+  No client secrets are stored anywhere.
+
+### Security properties
+
+- Guests never hold any Entra directory role — no role management overhead.
+- The function enforces that only the calling user's own sponsors are returned. Callers cannot
+  pass another OID — it comes from the EasyAuth-validated token.
+- `User.Read.All` as an application permission does not mean the guest has that permission;
+  it belongs to the function's identity. The function is the only party that can use it.
+- Function logs redact the caller OID instead of writing the full GUID into logs.
+- CORS is restricted to the tenant's SharePoint origin.
+- Graph calls use short, environment-configurable fail-fast timeouts. Presence and manager
+   photos degrade gracefully when they are slow; the core sponsor lookup fails with HTTP 504.
+- No storage account keys are stored anywhere. The Function App's Managed Identity accesses
+  its own storage account via three RBAC role assignments (Storage Blob Data Owner, Storage
+  Queue Data Contributor, Storage Table Data Contributor) deployed by Bicep.
+- Unauthenticated requests (missing or invalid Bearer token) are rejected with HTTP 401 by
+  EasyAuth before the function code runs. CORS OPTIONS preflights are handled by the Azure
+  platform's CORS module before EasyAuth, so they succeed without a token — this is required
+  for the browser's preflight flow and carries no meaningful attack surface.
+
+### Data filtering rules
+
+- A sponsor is returned only when the object still resolves via the active `/users/{id}` view
+   and `accountEnabled !== false`.
+- A sponsor that is hard-deleted, soft-deleted, or disabled is excluded and counted in
+   `unavailableCount`.
+- A manager is returned only when the manager relationship resolves via the active Graph view
+   and `accountEnabled !== false`.
+- A soft-deleted manager or sponsor is treated as unavailable through the normal active-user
+   endpoints; querying `directory/deletedItems` is not required for this UI scenario.
+
+### Runtime characteristics
+
+- A guest can have at most 5 sponsors; the function enforces this cap at the Graph query level.
+- The function uses one sponsor lookup, one presence call, one sponsor-detail batch, and one
+   optional manager-photo batch. This keeps network round-trips low while preserving the data
+   needed by the web part.
+- Timeout values can be tuned via app settings:
+   `SPONSOR_LOOKUP_TIMEOUT_MS`, `BATCH_TIMEOUT_MS`, `PRESENCE_TIMEOUT_MS`,
+   `PHOTO_BATCH_TIMEOUT_MS`.
+- Authenticated callers are rate-limited to **20 requests per 60 seconds per user** using an
+  in-memory sliding window. Excess requests receive HTTP 429 with a `Retry-After` header.
+  The counter is per Function App instance; on a Consumption plan that briefly scales to
+  multiple instances the effective limit per user rises proportionally, which remains
+  acceptable for this use case (one page load = one request).
+
+### Deployment
+
+The recommended way to deploy the Azure Function proxy is via the
+[Azure Developer CLI](https://learn.microsoft.com/en-us/azure/developer/azure-developer-cli/)
+(`azd`). One command handles all steps end-to-end.
+
+**Prerequisites:** Azure Developer CLI and Azure CLI installed; `az login` completed.
+
+```bash
+azd up
+```
+
+`azd up` runs the following steps in sequence:
+
+1. **Pre-provision hook** — creates (or reuses) the Entra App Registration for EasyAuth,
+   detects the SharePoint tenant name from the organisation's default verified domain,
+   and generates a Function App name from the azd environment name.
+2. **Bicep deployment** — provisions the storage account, App Service plan, Function App
+   (with system-assigned Managed Identity and EasyAuth), three storage role assignments,
+   and all app settings. No storage account keys are used.
+3. **Post-provision hook** — grants `User.Read.All` and `Presence.Read.All` to the Managed
+   Identity, then prints the Sponsor API URL and Function Client ID to paste into the SPFx
+   web part property pane.
+
+> **First-deploy note:** Azure RBAC role assignment propagation can take 1–2 minutes after
+> Bicep completes. If the function returns errors immediately after `azd up`, wait a moment
+> and retry — no redeployment needed.
+>
+> **Required deployer permission:** Creating role assignments in Bicep requires the deploying
+> principal to hold the **Owner** role (or a custom role with
+> `Microsoft.Authorization/roleAssignments/write`) on the target resource group or subscription.
+
+The `infra/setup-app-registration.ps1` and `infra/setup-graph-permissions.ps1` scripts
+remain available as a manual fallback for environments where `azd` cannot be used.
+
+### Local development
+
+```bash
+cd azure-function
+cp local.settings.json.example local.settings.json  # fill in TENANT_ID etc.
+npm install && npm start
+# EasyAuth is absent locally; pass the guest OID via X-Dev-User-OID header.
+# This header is only accepted when NODE_ENV !== 'production'.
+# Optional: tune GRAPH call timeouts via *_TIMEOUT_MS values in local.settings.json.
+# AzureWebJobsStorage uses Azurite (UseDevelopmentStorage=true) in local.settings.json;
+# the MI-based storage config in Bicep only applies to the deployed Azure environment.
+```
+
 ## App Catalog Access for Guest Users
 
 All JavaScript and CSS assets are bundled *inside* the `.sppkg` file
-(`includeClientSideAssets: true`). SharePoint re-hosts those assets on the **App Catalog
-site collection** and serves them from there at runtime.
+(`includeClientSideAssets: true`). SharePoint re-hosts those assets at runtime.
+Guest users have no default access to those assets, which causes HTTP 403 errors
+and the web part never initialises.
 
-When a guest user loads a page that contains this web part, the browser requests the bundle
-from the App Catalog origin. Because guest users have no default access to the App Catalog,
-the request fails with HTTP 403 and the web part never initialises.
+There are two ways to resolve this. Both are described step-by-step in
+[README – Guest Access Requirements](../README.md#guest-access-requirements).
 
-**Required one-time tenant configuration (admin):**
+### Option A – SharePoint Public CDN (recommended)
 
-1. Verify that `ShowAllUsersClaim` is `$true` (it is the default on all modern tenants —
-   only needs attention on tenants provisioned before ~2018 or if it was explicitly disabled).
-2. **Enable external sharing on the App Catalog site** (SharePoint Admin Center → Sites →
-   Active sites → App Catalog → Policies → External sharing → *Existing guests*).
-   Without this, guests receive HTTP 403 even when Read permission has been granted.
-3. Grant *Read* permission on the App Catalog site to **All Users (membership)** or to a
-   specific security group that contains the guest accounts.
-   Note: *Everyone except external users* explicitly excludes B2B guests and will not work.
+When the Public CDN is enabled and the `*/CLIENTSIDEASSETS` origin is registered, SharePoint
+automatically rewrites asset URLs to `https://publiccdn.sharepointonline.com/…` — served
+from an edge cache without authentication. Guest users (and even anonymous users) can
+download the bundle with no App Catalog permissions at all. No `ShowAllUsersClaim`
+configuration is required.
 
-This is entirely a SharePoint/Entra configuration concern and requires no code changes.
-See [README – Guest Access Requirements](../README.md#guest-access-requirements) for the
-full step-by-step procedure.
+This is the preferred approach: it is simpler, faster (edge caching), and requires no
+ongoing permission management as new guests are added.
+
+### Option B – App Catalog permissions (alternative)
+
+If the Public CDN cannot be enabled:
+
+1. Verify `ShowAllUsersClaim` is `$true` (default for modern tenants).
+2. Enable external sharing on the App Catalog site (*Existing guests* minimum).
+3. Grant *Read* permission to **All Users (membership)** or a specific security group.
+   Note: *Everyone except external users* explicitly excludes B2B guests.
 
 **Why not `isDomainIsolated: true`?**
 Domain-isolated web parts use a separate Microsoft Entra application and an isolated frame.
