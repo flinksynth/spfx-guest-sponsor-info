@@ -24,6 +24,48 @@ const RATE_LIMIT_MAX_REQUESTS = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const rateLimitMap = new Map<string, number[]>();
 
+/**
+ * Cached result of permission detection for MailboxSettings.Read.
+ * undefined = not yet checked; true/false = result cached for the lifetime
+ * of this warm function instance.
+ */
+let cachedHasMailboxSettings: boolean | undefined;
+
+/**
+ * Inspects the JWT access token obtained by the Managed Identity to determine
+ * whether the MailboxSettings.Read application permission has been granted.
+ *
+ * The token is already fetched by the Azure Identity SDK for Graph API calls;
+ * calling getToken() here returns the same cached token — no extra network
+ * request is made.  The result is cached at module level so the check only
+ * runs once per warm function instance.
+ *
+ * When this permission is present the caller can add mailboxSettings to the
+ * per-sponsor $select and use userPurpose to filter out non-user mailboxes
+ * (shared, room, equipment, …).  When it is absent the filter is silently
+ * skipped — the function degrades gracefully without any error.
+ */
+async function detectMailboxSettingsPermission(
+  credential: ManagedIdentityCredential,
+  context: InvocationContext
+): Promise<boolean> {
+  if (cachedHasMailboxSettings !== undefined) return cachedHasMailboxSettings;
+  try {
+    const token = await credential.getToken('https://graph.microsoft.com/.default');
+    // JWT payload is the second segment, base64url-encoded.
+    const payloadJson = Buffer.from(token.token.split('.')[1], 'base64url').toString('utf8');
+    const payload = JSON.parse(payloadJson) as { roles?: unknown };
+    const roles = Array.isArray(payload.roles) ? (payload.roles as string[]) : [];
+    cachedHasMailboxSettings = roles.includes('MailboxSettings.Read');
+    context.log(`MailboxSettings.Read permission: ${cachedHasMailboxSettings}`);
+  } catch (error) {
+    // If token inspection fails for any reason, degrade gracefully.
+    context.warn('Could not inspect token roles — mailbox filter disabled.', error);
+    cachedHasMailboxSettings = false;
+  }
+  return cachedHasMailboxSettings;
+}
+
 function checkRateLimit(userId: string): { allowed: boolean; retryAfterSeconds?: number } {
   const now = Date.now();
   const windowStart = now - RATE_LIMIT_WINDOW_MS;
@@ -304,6 +346,7 @@ export async function getGuestSponsors(
   context.log(`Fetching sponsors for caller ${redactGuid(callerOid)}`);
 
   const credential = new ManagedIdentityCredential();
+  const hasMailboxSettings = await detectMailboxSettingsPermission(credential, context);
   const authProvider = new TokenCredentialAuthenticationProvider(credential, {
     scopes: ['https://graph.microsoft.com/.default'],
   });
@@ -351,7 +394,7 @@ export async function getGuestSponsors(
       {
         id: `exists-${index}`,
         method: 'GET',
-        url: `/users/${sponsor.id}?$select=id,accountEnabled,assignedPlans`,
+        url: `/users/${sponsor.id}?$select=id,accountEnabled,assignedPlans${hasMailboxSettings ? ',mailboxSettings' : ''}`,
       },
       {
         id: `manager-${index}`,
@@ -376,8 +419,27 @@ export async function getGuestSponsors(
       const sponsorEnabled = existsBody !== undefined
         ? getBooleanValue(existsBody, 'accountEnabled')
         : undefined;
-      // Treat missing, soft-deleted, or disabled sponsors as unavailable.
-      const exists = existsResponse?.status === 404 ? false : sponsorEnabled !== false;
+      // Determine userPurpose from mailboxSettings when the permission is available.
+      // Accepted values: 'user' (cloud mailbox) and 'linked' (on-premises mailbox).
+      // Any other value (shared, room, equipment, …) means this is not a real person
+      // that should appear as a sponsor.  When mailboxSettings is absent (permission
+      // not granted or user has no Exchange mailbox object) we fail-open so that a
+      // missing permission never silently hides sponsors.
+      let hasUserMailbox = true;
+      if (hasMailboxSettings && existsBody !== undefined) {
+        const mb = existsBody['mailboxSettings'];
+        if (mb !== null && mb !== undefined) {
+          const userPurpose = typeof (mb as Record<string, unknown>)['userPurpose'] === 'string'
+            ? (mb as Record<string, unknown>)['userPurpose'] as string
+            : undefined;
+          if (userPurpose !== undefined) {
+            hasUserMailbox = userPurpose === 'user' || userPurpose === 'linked';
+          }
+        }
+      }
+      // Treat missing, soft-deleted, disabled, or non-user-mailbox sponsors as unavailable.
+      const exists = existsResponse?.status === 404 ? false
+        : sponsorEnabled !== false && hasUserMailbox;
 
       const hasTeams = assignedPlansHaveTeams(existsBody?.['assignedPlans']);
 
