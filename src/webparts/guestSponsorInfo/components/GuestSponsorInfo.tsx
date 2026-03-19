@@ -60,16 +60,10 @@ const sponsorCardShimmer = (
       { type: ShimmerElementType.gap,    width: 32, height: 72 },
       // gap between avatar and name
       { type: ShimmerElementType.gap, width: '100%', height: 8 },
-      // name: always reserve 2 lines (36px) to match .cardName min-height and prevent layout shift
-      // line 1: ~90px wide
+      // name line: 1 line (18px) — matches the single-line truncation used when a job title is present
       { type: ShimmerElementType.gap,  width: 23, height: 18 },
       { type: ShimmerElementType.line, width: 90, height: 18 },
       { type: ShimmerElementType.gap,  width: 23, height: 18 },
-      // inter-line gap + line 2: slightly shorter (looks like a wrapped second word)
-      { type: ShimmerElementType.gap,  width: '100%', height: 2 },
-      { type: ShimmerElementType.gap,  width: 38, height: 16 },
-      { type: ShimmerElementType.line, width: 60, height: 16 },
-      { type: ShimmerElementType.gap,  width: 38, height: 16 },
       // gap between name and job title
       { type: ShimmerElementType.gap, width: '100%', height: 8 },
       // job title line (~68px centered): (136-68)/2 = 34px each side; height = 12px font × 1.3 line-height ≈ 16px

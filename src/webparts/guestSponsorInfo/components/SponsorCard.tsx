@@ -330,7 +330,9 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             />
           )}
         </div>
-        <div className={styles.cardName}>{sponsor.displayName}</div>
+        <div className={sponsor.jobTitle ? `${styles.cardName} ${styles.cardNameWithJobTitle}` : styles.cardName}>
+          {sponsor.displayName}
+        </div>
         {sponsor.jobTitle && (
           <div className={styles.cardJobTitle}>{sponsor.jobTitle}</div>
         )}

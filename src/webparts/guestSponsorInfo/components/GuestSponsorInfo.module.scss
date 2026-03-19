@@ -106,7 +106,7 @@
 .card {
   position: relative;
   width: 136px;
-  min-height: 164px; // 12 padding + 72 avatar + 8 gap + 36 name (2 lines) + 8 gap + 16 job title + 12 padding
+  min-height: 146px; // 12 padding + 72 avatar + 8 gap + 18 name + 8 gap + 16 job title + 12 padding
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -183,16 +183,24 @@
   color: var(--bodyText);
   color: "[theme:bodyText, default: #323130]";
   line-height: 1.3;
-
-  // Always reserve 2 lines (36px) so cards with 1-line names stay the same
-  // height as cards with 2-line names — no layout shift between skeletons and
-  // real content, and no reflow when a longer name wraps.
-  min-height: calc(1.3em * 2);
   max-width: 100%;
+
+  // Default (no job title): wrap up to 2 lines — the freed job-title slot gives
+  // enough vertical room so the overall card height stays within min-height.
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+// When a job title is present, constrain the name to a single line with an
+// ellipsis so the card height is exactly: name row + gap + job-title row.
+.cardNameWithJobTitle {
+  display: block;
+
+  // override -webkit-box from .cardName
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .cardJobTitle {
