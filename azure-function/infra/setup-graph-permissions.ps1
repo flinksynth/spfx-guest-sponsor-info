@@ -174,6 +174,21 @@ if (-not $alreadyPreAuthorized) {
     Write-Host "  ✓ SharePoint Online Web Client Extensibility already pre-authorized." -ForegroundColor Yellow
 }
 
+# Ensure appRoleAssignmentRequired is false on the Service Principal (Enterprise App).
+# If this were true, every user (including guests) would need to be individually assigned
+# to the Enterprise App before they could acquire tokens — even with pre-authorization in place.
+$sp = Get-MgServicePrincipal -Filter "appId eq '$FunctionAppClientId'" -ErrorAction Stop
+if (-not $sp) {
+    throw "Service Principal for App Registration '$FunctionAppClientId' not found. Was the App Registration created in tenant '$TenantId'?"
+}
+if ($sp.AppRoleAssignmentRequired) {
+    Write-Host "  Disabling appRoleAssignmentRequired on the Enterprise App (was: true) ..." -ForegroundColor Cyan
+    Update-MgServicePrincipal -ServicePrincipalId $sp.Id -AppRoleAssignmentRequired:$false -ErrorAction Stop
+    Write-Host "  ✓ appRoleAssignmentRequired set to false — all users (including guests) can acquire tokens without individual assignment." -ForegroundColor Green
+} else {
+    Write-Host "  ✓ appRoleAssignmentRequired is already false — no user assignment needed." -ForegroundColor Yellow
+}
+
 Write-Host "`nDone. The Managed Identity can now call Microsoft Graph with:" -ForegroundColor Green
 foreach ($r in $assignedRoles) {
     Write-Host "  - $r" -ForegroundColor Green
