@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { ManagedIdentityCredential } from '@azure/identity';
-import { Client, GraphError, MiddlewareFactory } from '@microsoft/microsoft-graph-client';
+import { Client, GraphError } from '@microsoft/microsoft-graph-client';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
 
 /**
@@ -447,12 +447,10 @@ export async function getGuestSponsors(
     const authProvider = new TokenCredentialAuthenticationProvider(credential, {
       scopes: ['https://graph.microsoft.com/.default'],
     });
-    // Build a middleware chain that includes automatic retry with exponential
-    // back-off for 429 (throttled) and transient 5xx responses (up to 3 retries,
-    // starting at 3 s — the library default).  RedirectHandler and the auth
-    // handler are also included via the factory's default chain.
-    const middleware = MiddlewareFactory.getDefaultMiddlewareChain(authProvider);
-    const client = Client.initWithMiddleware({ middleware: middleware[0] });
+    // Let the Graph SDK create its default middleware pipeline from authProvider
+    // (includes auth + default handlers). Passing middleware[0] was invalid and
+    // caused runtime failures: "Cannot read properties of undefined (reading 'execute')".
+    const client = Client.initWithMiddleware({ authProvider });
     const response = await withTimeout(
       client
         .api(`/users/${callerOid}/sponsors`)
