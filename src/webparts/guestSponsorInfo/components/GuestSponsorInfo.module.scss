@@ -7,6 +7,13 @@
   overflow: visible; // Allow the card details overlay to extend beyond the grid
 }
 
+// Reserve minimum height while displaying loading skeletons or error messages
+// to prevent layout shift when transitioning between states.
+// Matches the height of a single shimmer card (~186px) plus title and margins.
+.webPartContent {
+  min-height: 200px;
+}
+
 .title {
   font-size: 20px;
   font-weight: 600;

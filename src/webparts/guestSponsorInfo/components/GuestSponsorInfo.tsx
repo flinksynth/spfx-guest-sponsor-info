@@ -296,8 +296,9 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   }
 
   // View mode + guest user: render the sponsor list.
+  const contentClassNames = (loading || error) ? `${styles.webPart} ${styles.webPartContent}` : styles.webPart;
   return (
-    <section className={styles.webPart}>
+    <section className={contentClassNames}>
       {title && <h2 className={styles.title}>{title}</h2>}
       {loading && <SponsorGridSkeleton />}
       {!loading && error && (
