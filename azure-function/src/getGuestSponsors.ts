@@ -179,6 +179,7 @@ function describeRequestAnomaly(userAgent: string | null, method: string): strin
     parts.push(`non-get-method:${method}`);
   }
   return parts.join(' | ') || 'none';
+}
 
 async function withTimeout<T>(
   promise: Promise<T>,
