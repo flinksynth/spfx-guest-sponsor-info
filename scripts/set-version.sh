@@ -35,6 +35,12 @@ echo "Stamping version: semver=${SEMVER}  spfx=${SPFX_VER}"
 
 npm version "$SEMVER" --no-git-tag-version --allow-same-version
 
+# Stamp azure-function/package.json if it exists
+if [[ -f "azure-function/package.json" ]]; then
+  npm version "$SEMVER" --no-git-tag-version --allow-same-version --prefix azure-function
+  echo "azure-function/package.json → ${SEMVER}"
+fi
+
 SPFX_VER="$SPFX_VER" node -e "
 const fs  = require('fs');
 const ver = process.env.SPFX_VER;
@@ -48,6 +54,9 @@ console.log('config/package-solution.json → ' + ver);
 
 if [[ "${DO_COMMIT}" == "true" ]]; then
   git add package.json package-lock.json config/package-solution.json
+  if [[ -f "azure-function/package.json" ]]; then
+    git add azure-function/package.json azure-function/package-lock.json 2>/dev/null || true
+  fi
   git commit -m "chore: release ${VTAG}"
   git tag -a "${VTAG}" -m "Release ${VTAG}"
   echo ""
