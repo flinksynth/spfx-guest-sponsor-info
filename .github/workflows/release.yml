@@ -78,6 +78,16 @@ jobs:
           npm ci
           npm run package
 
+      # Compile the Bicep infra template to ARM JSON for the Deploy-to-Azure button.
+      - name: Install Bicep CLI
+        run: |
+          curl -sLo /usr/local/bin/bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x /usr/local/bin/bicep
+          bicep --version
+
+      - name: Compile Bicep to ARM JSON
+        run: bicep build azure-function/infra/main.bicep --outfile azure-function/infra/azuredeploy.json
+
       # Create the GitHub Release and attach the .sppkg as a downloadable asset.
       # Delete first if it already exists so the step is idempotent on re-runs
       # (--clobber was removed from newer gh versions).
@@ -90,4 +100,5 @@ jobs:
             --title "v${{ steps.ver.outputs.semver }}" \
             --notes-file RELEASE_NOTES.md \
             sharepoint/solution/guest-sponsor-info.sppkg \
-            azure-function/guest-sponsor-info-function.zip
+            azure-function/guest-sponsor-info-function.zip \
+            azure-function/infra/azuredeploy.json
