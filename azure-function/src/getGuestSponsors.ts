@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { ManagedIdentityCredential } from '@azure/identity';
-import { Client } from '@microsoft/microsoft-graph-client';
+import { Client, ResponseType } from '@microsoft/microsoft-graph-client';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
 
 /**
@@ -12,7 +12,7 @@ const MAX_SPONSORS = 5;
 const DEFAULT_SPONSOR_LOOKUP_TIMEOUT_MS = 5000;
 const DEFAULT_PRESENCE_TIMEOUT_MS = 2500;
 const DEFAULT_BATCH_TIMEOUT_MS = 4000;
-const DEFAULT_PHOTO_BATCH_TIMEOUT_MS = 2500;
+const DEFAULT_PHOTO_TIMEOUT_MS = 2500;
 
 /**
  * In-memory sliding-window rate limiter (per caller OID, per warm instance).
@@ -255,10 +255,22 @@ function getBooleanValue(source: Record<string, unknown>, key: string): boolean 
   return typeof value === 'boolean' ? value : undefined;
 }
 
-function getPhotoFromBatchResponse(item: IBatchResponseItem | undefined): string | undefined {
-  const photoBody = item?.body;
-  const base64 = photoBody !== undefined ? getStringValue(photoBody, 'value') : undefined;
-  return base64 !== undefined ? `data:image/jpeg;base64,${base64}` : undefined;
+async function fetchPhoto(
+  client: Client,
+  userId: string,
+  timeoutMs: number,
+  label: string
+): Promise<string | undefined> {
+  try {
+    const buffer: ArrayBuffer = await withTimeout(
+      client.api(`/users/${userId}/photo/$value`).responseType(ResponseType.ARRAYBUFFER).get(),
+      timeoutMs,
+      label
+    );
+    return arrayBufferToDataUrl(buffer);
+  } catch {
+    return undefined;
+  }
 }
 
 /**
@@ -360,16 +372,13 @@ export async function getGuestSponsors(
         url: `/users/${sponsor.id}?$select=id,accountEnabled`,
       },
       {
-        id: `photo-${index}`,
-        method: 'GET',
-        url: `/users/${sponsor.id}/photo/$value`,
-      },
-      {
         id: `manager-${index}`,
         method: 'GET',
         url: `/users/${sponsor.id}/manager?$select=id,displayName,jobTitle,accountEnabled`,
       },
     ]));
+
+    const photoTimeoutMs = getTimeoutMs('PHOTO_TIMEOUT_MS', DEFAULT_PHOTO_TIMEOUT_MS);
 
     const [presenceMap, sponsorBatchResults] = await Promise.all([
       fetchPresences(client, sponsorIds, context),
@@ -381,38 +390,25 @@ export async function getGuestSponsors(
       ),
     ]);
 
-    const managerPhotoRequests: IBatchRequest[] = [];
-    const managerPhotoRequestIds = new Map<string, string>();
+    // Graph JSON batching does not support binary endpoints (photo/$value) — responses
+    // for those are returned as raw bytes that cannot be embedded in the JSON envelope.
+    // Fetch sponsor and manager photos individually with ARRAYBUFFER response type instead.
+    const perSponsorPhotos = await Promise.all(
+      candidates.map(async (sponsor, index) => {
+        const managerBody = sponsorBatchResults.get(`manager-${index}`)?.body;
+        const managerId = managerBody !== undefined ? getStringValue(managerBody, 'id') : undefined;
+        const managerEnabled = managerBody !== undefined ? getBooleanValue(managerBody, 'accountEnabled') : undefined;
+        const hasManager = managerId !== undefined && isValidGuid(managerId) && managerEnabled !== false;
 
-    for (const [index, sponsor] of candidates.entries()) {
-      const managerBody = sponsorBatchResults.get(`manager-${index}`)?.body;
-      if (managerBody === undefined) continue;
-
-      const managerId = getStringValue(managerBody, 'id');
-      const managerEnabled = getBooleanValue(managerBody, 'accountEnabled');
-      if (!managerId || !isValidGuid(managerId) || managerEnabled === false) continue;
-
-      const requestId = `manager-photo-${index}`;
-      managerPhotoRequests.push({
-        id: requestId,
-        method: 'GET',
-        url: `/users/${managerId}/photo/$value`,
-      });
-      managerPhotoRequestIds.set(sponsor.id, requestId);
-    }
-
-    let managerPhotoBatchResults = new Map<string, IBatchResponseItem>();
-    try {
-      managerPhotoBatchResults = await executeBatch(
-        client,
-        managerPhotoRequests,
-        getTimeoutMs('PHOTO_BATCH_TIMEOUT_MS', DEFAULT_PHOTO_BATCH_TIMEOUT_MS),
-        'Graph manager photo batch'
-      );
-    } catch (error) {
-      // Manager photos are supplemental — degrade to initials if the photo batch is slow or fails.
-      context.warn('Manager photo batch degraded.', error);
-    }
+        const [photoUrl, managerPhotoUrl] = await Promise.all([
+          fetchPhoto(client, sponsor.id, photoTimeoutMs, `sponsor photo ${index}`),
+          hasManager
+            ? fetchPhoto(client, managerId as string, photoTimeoutMs, `manager photo ${index}`)
+            : Promise.resolve(undefined),
+        ]);
+        return { photoUrl, managerPhotoUrl };
+      })
+    );
 
     const perSponsorResults = candidates.map((sponsor, index) => {
       const existsResponse = sponsorBatchResults.get(`exists-${index}`);
@@ -424,23 +420,16 @@ export async function getGuestSponsors(
       const exists = existsResponse?.status === 404 ? false : sponsorEnabled !== false;
 
       const managerBody = sponsorBatchResults.get(`manager-${index}`)?.body;
-      const photoUrl = getPhotoFromBatchResponse(sponsorBatchResults.get(`photo-${index}`));
+      const { photoUrl, managerPhotoUrl } = perSponsorPhotos[index];
 
       let managerDisplayName: string | undefined;
       let managerJobTitle: string | undefined;
-      let managerPhotoUrl: string | undefined;
 
       if (managerBody !== undefined) {
         const managerEnabled = getBooleanValue(managerBody, 'accountEnabled');
-        // Managers are shown only when they still resolve through the active user view
-        // and are not disabled.
         if (managerEnabled !== false) {
           managerDisplayName = getStringValue(managerBody, 'displayName');
           managerJobTitle = getStringValue(managerBody, 'jobTitle');
-          const managerPhotoRequestId = managerPhotoRequestIds.get(sponsor.id);
-          managerPhotoUrl = managerPhotoRequestId !== undefined
-            ? getPhotoFromBatchResponse(managerPhotoBatchResults.get(managerPhotoRequestId))
-            : undefined;
         }
       }
 

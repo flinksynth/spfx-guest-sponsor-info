@@ -124,7 +124,7 @@ resource functionApp 'Microsoft.Web/sites@2023-01-01' = {
           value: '2500'
         }
         {
-          name: 'PHOTO_BATCH_TIMEOUT_MS'
+          name: 'PHOTO_TIMEOUT_MS'
           value: '2500'
         }
         {
