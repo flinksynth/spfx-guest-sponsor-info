@@ -60,16 +60,22 @@ const sponsorCardShimmer = (
       { type: ShimmerElementType.gap,    width: 32, height: 72 },
       // gap between avatar and name
       { type: ShimmerElementType.gap, width: '100%', height: 8 },
-      // name line (~90px centered): (136-90)/2 = 23px each side
-      { type: ShimmerElementType.gap,  width: 23, height: 14 },
-      { type: ShimmerElementType.line, width: 90, height: 14 },
-      { type: ShimmerElementType.gap,  width: 23, height: 14 },
+      // name: always reserve 2 lines (36px) to match .cardName min-height and prevent layout shift
+      // line 1: ~90px wide
+      { type: ShimmerElementType.gap,  width: 23, height: 18 },
+      { type: ShimmerElementType.line, width: 90, height: 18 },
+      { type: ShimmerElementType.gap,  width: 23, height: 18 },
+      // inter-line gap + line 2: slightly shorter (looks like a wrapped second word)
+      { type: ShimmerElementType.gap,  width: '100%', height: 2 },
+      { type: ShimmerElementType.gap,  width: 38, height: 16 },
+      { type: ShimmerElementType.line, width: 60, height: 16 },
+      { type: ShimmerElementType.gap,  width: 38, height: 16 },
       // gap between name and job title
       { type: ShimmerElementType.gap, width: '100%', height: 8 },
-      // job title line (~68px centered): (136-68)/2 = 34px each side
-      { type: ShimmerElementType.gap,  width: 34, height: 12 },
-      { type: ShimmerElementType.line, width: 68, height: 12 },
-      { type: ShimmerElementType.gap,  width: 34, height: 12 },
+      // job title line (~68px centered): (136-68)/2 = 34px each side; height = 12px font × 1.3 line-height ≈ 16px
+      { type: ShimmerElementType.gap,  width: 34, height: 16 },
+      { type: ShimmerElementType.line, width: 68, height: 16 },
+      { type: ShimmerElementType.gap,  width: 34, height: 16 },
       // bottom padding 12px
       { type: ShimmerElementType.gap, width: '100%', height: 12 },
     ]}

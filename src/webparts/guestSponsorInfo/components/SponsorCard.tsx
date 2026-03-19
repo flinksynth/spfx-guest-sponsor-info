@@ -146,12 +146,11 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
       <div className={styles.richHeader}>
         <div className={styles.richAvatarWrapper}>
           <div className={styles.richAvatar}>
-            {sponsor.photoUrl ? (
+            <div className={styles.initials} style={{ backgroundColor: bgColor, fontSize: '30px' }}>
+              {initials}
+            </div>
+            {sponsor.photoUrl && (
               <img src={sponsor.photoUrl} alt="" className={styles.photo} />
-            ) : (
-              <div className={styles.initials} style={{ backgroundColor: bgColor, fontSize: '30px' }}>
-                {initials}
-              </div>
             )}
           </div>
           {presenceColor && sponsor.hasTeams !== false && (
@@ -273,15 +272,14 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
           <div className={styles.richSection}>
             <div className={styles.managerRow}>
               <div className={styles.managerAvatar}>
-                {sponsor.managerPhotoUrl ? (
+                <div
+                  className={styles.initials}
+                  style={{ backgroundColor: managerBgColor, fontSize: '14px' }}
+                >
+                  {managerInitials}
+                </div>
+                {sponsor.managerPhotoUrl && (
                   <img src={sponsor.managerPhotoUrl} alt="" className={styles.photo} />
-                ) : (
-                  <div
-                    className={styles.initials}
-                    style={{ backgroundColor: managerBgColor, fontSize: '14px' }}
-                  >
-                    {managerInitials}
-                  </div>
                 )}
               </div>
               <div className={styles.managerText}>
@@ -317,12 +315,11 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
       >
         <div className={styles.avatarWrapper}>
           <div className={styles.avatar}>
-            {sponsor.photoUrl ? (
+            <div className={styles.initials} style={{ backgroundColor: bgColor }}>
+              {initials}
+            </div>
+            {sponsor.photoUrl && (
               <img src={sponsor.photoUrl} alt="" className={styles.photo} />
-            ) : (
-              <div className={styles.initials} style={{ backgroundColor: bgColor }}>
-                {initials}
-              </div>
             )}
           </div>
           {presenceColor && sponsor.hasTeams !== false && (

@@ -148,12 +148,15 @@ describe('SponsorCard', () => {
       expect(container.querySelector('[class="initials"]')!.textContent).toBe('MA');
     });
 
-    it('renders an <img> element and no initials box when photoUrl is provided', () => {
+    it('renders an <img> element overlaid on the initials when photoUrl is provided', () => {
+      // Initials are always rendered as the base layer; the photo fades in on top
+      // via CSS absolute positioning so there is no pop-in layout shift.
       render({ ...BASE_SPONSOR, photoUrl: 'data:image/jpeg;base64,/9j/4AAQ' });
       const img = container.querySelector('img');
       expect(img).not.toBeNull();
       expect(img!.getAttribute('src')).toBe('data:image/jpeg;base64,/9j/4AAQ');
-      expect(container.querySelector('[class="initials"]')).toBeNull();
+      // Initials div must still be present (it is the background layer).
+      expect(container.querySelector('[class="initials"]')).not.toBeNull();
     });
   });
 
