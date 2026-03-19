@@ -349,8 +349,28 @@ In the property pane of the web part (edit the page → edit the web part → **
 
 #### Updating the function
 
-The simplest way to update is to re-run the deployment — it is idempotent and only
-updates what has changed. From [Azure Cloud Shell](https://shell.azure.com):
+The Function App is configured with `WEBSITE_RUN_FROM_PACKAGE` pointing to
+`/releases/latest/download/guest-sponsor-info-function.zip`. This means **a restart is all
+that is needed for a pure code update** — Azure pulls the new ZIP automatically on next cold
+start.
+
+From [Azure Cloud Shell](https://shell.azure.com) (no local tooling, no repo clone required):
+
+```bash
+az functionapp restart \
+  --resource-group <your-resource-group> \
+  --name <your-function-app-name>
+```
+
+Or from the Azure Portal: open the Function App → **Overview → Restart**.
+
+<details>
+<summary>Infrastructure changed (rare)? Re-run the full deployment instead</summary>
+
+If a new release explicitly states that the Azure infrastructure was updated (e.g. new
+environment variables, changed permissions, new resources), re-run the ARM deployment —
+it is idempotent and only applies what has changed. From
+[Azure Cloud Shell](https://shell.azure.com):
 
 ```bash
 az deployment group create \
@@ -363,25 +383,9 @@ az deployment group create \
       functionClientId=<your-client-id>
 ```
 
-<details>
-<summary>If you deployed as a Deployment Stack: update and teardown</summary>
-
-Re-run the same `az stack group create` command (with your original parameters). The stack
-automatically removes any resources that were deleted from the template in this version.
-
-```bash
-az stack group create \
-  --name guest-sponsor-info \
-  --resource-group <your-resource-group> \
-  --template-uri https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/latest/download/azuredeploy.json \
-  --parameters \
-      tenantId=<your-tenant-id> \
-      tenantName=<your-tenant-name> \
-      functionAppName=<your-function-app-name> \
-      functionClientId=<your-client-id> \
-  --action-on-unmanage deleteResources \
-  --deny-settings-mode none
-```
+If you deployed as a Deployment Stack, use `az stack group create` with the same parameters
+instead (see the initial deployment section above). The stack automatically reconciles any
+resource changes.
 
 To remove all deployed resources:
 
@@ -394,14 +398,6 @@ az stack group delete \
 ```
 
 </details>
-
-Alternatively, update only the function package via the Azure Portal:
-
-1. Open the Function App in the Azure Portal.
-2. **Configuration → Application settings → `WEBSITE_RUN_FROM_PACKAGE`**.
-3. Replace the URL with the new release asset URL (e.g.
-   `https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/download/vX.Y.Z/guest-sponsor-info-function.zip`).
-4. **Save**. The Function App picks up the new package on next cold start.
 
 #### Security assessment of the Azure Function approach
 
