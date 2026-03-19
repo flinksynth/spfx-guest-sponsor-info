@@ -1,6 +1,6 @@
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { ManagedIdentityCredential } from '@azure/identity';
-import { Client } from '@microsoft/microsoft-graph-client';
+import { Client, MiddlewareFactory } from '@microsoft/microsoft-graph-client';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
 
 /**
@@ -350,7 +350,12 @@ export async function getGuestSponsors(
   const authProvider = new TokenCredentialAuthenticationProvider(credential, {
     scopes: ['https://graph.microsoft.com/.default'],
   });
-  const client = Client.initWithMiddleware({ authProvider });
+  // Build a middleware chain that includes automatic retry with exponential
+  // back-off for 429 (throttled) and transient 5xx responses (up to 3 retries,
+  // starting at 3 s — the library default).  RedirectHandler and the auth
+  // handler are also included via the factory's default chain.
+  const middleware = MiddlewareFactory.getDefaultMiddlewareChain(authProvider);
+  const client = Client.initWithMiddleware({ middleware: middleware[0] });
 
   try {
     const response = await withTimeout(
