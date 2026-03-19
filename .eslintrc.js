@@ -316,6 +316,18 @@ module.exports = {
         '**/test/*.tsx'
       ],
       rules: {}
+    },
+    {
+      // Azure Function source code uses its own tsconfig.json in azure-function/
+      // This override ensures ESLint uses the correct TypeScript project configuration.
+      files: ['azure-function/src/**/*.ts'],
+      parser: '@typescript-eslint/parser',
+      'parserOptions': {
+        'project': './azure-function/tsconfig.json',
+        'ecmaVersion': 2018,
+        'sourceType': 'module'
+      },
+      rules: {}
     }
   ]
 };
