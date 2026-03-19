@@ -201,9 +201,16 @@ foreach ($spAppId in $spWebClientAppIds) {
 # Ensure appRoleAssignmentRequired is false on the Service Principal (Enterprise App).
 # If this were true, every user (including guests) would need to be individually assigned
 # to the Enterprise App before they could acquire tokens — even with pre-authorization in place.
-$sp = Get-MgServicePrincipal -Filter "appId eq '$FunctionAppClientId'" -ErrorAction Stop
+# Ensure the Service Principal (Enterprise App) exists for the EasyAuth App Registration.
+# Normally created on first user sign-in, but since we run this script before any user
+# has consented, we create it explicitly here.
+$sp = Get-MgServicePrincipal -Filter "appId eq '$FunctionAppClientId'" -ErrorAction SilentlyContinue
 if (-not $sp) {
-    throw "Service Principal for App Registration '$FunctionAppClientId' not found. Was the App Registration created in tenant '$TenantId'?"
+    Write-Host "  Service Principal not found — creating it now (no user has signed in yet)..." -ForegroundColor Cyan
+    $sp = New-MgServicePrincipal -AppId $FunctionAppClientId -ErrorAction Stop
+    Write-Host "  ✓ Service Principal created (Object ID: $($sp.Id))." -ForegroundColor Green
+} else {
+    Write-Host "  ✓ Service Principal already exists (Object ID: $($sp.Id))." -ForegroundColor Yellow
 }
 if ($sp.AppRoleAssignmentRequired) {
     Write-Host "  Disabling appRoleAssignmentRequired on the Enterprise App (was: true) ..." -ForegroundColor Cyan
