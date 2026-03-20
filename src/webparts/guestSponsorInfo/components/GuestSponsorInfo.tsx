@@ -22,19 +22,31 @@ interface ISponsorListProps {
   showMobilePhone: boolean;
   showWorkLocation: boolean;
   showManager: boolean;
+  onActiveCardChange?: (hasActiveCard: boolean) => void;
 }
 
-const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, showBusinessPhones, showMobilePhone, showWorkLocation, showManager }) => {
+const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, showBusinessPhones, showMobilePhone, showWorkLocation, showManager, onActiveCardChange }) => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const hideTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const activate = (id: string): void => {
     if (hideTimeout.current) { clearTimeout(hideTimeout.current); hideTimeout.current = null; }
     setActiveId(id);
+    onActiveCardChange?.(true);
   };
   const scheduleDeactivate = (): void => {
-    hideTimeout.current = setTimeout(() => setActiveId(null), 150);
+    hideTimeout.current = setTimeout(() => {
+      setActiveId(null);
+      onActiveCardChange?.(false);
+    }, 150);
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (hideTimeout.current) clearTimeout(hideTimeout.current);
+      onActiveCardChange?.(false);
+    };
+  }, [onActiveCardChange]);
 
   return (
     <ul className={styles.sponsorGrid}>
@@ -139,6 +151,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   const [error, setError] = React.useState<string | undefined>(undefined);
   const [proxyStatus, setProxyStatus] = React.useState<ProxyStatus>('checking');
   const [retryCount, setRetryCount] = React.useState(0);
+  const [hasActiveCard, setHasActiveCard] = React.useState(false);
 
   // Ref that always holds the IDs of currently displayed sponsors.
   // The presence refresh interval reads this without capturing sponsors in its closure.
@@ -185,7 +198,9 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
     loadFn()
       .then(result => {
         if (!cancelled) {
-          const active = result.activeSponsors;
+          // Photo rendering is always client-side from direct Graph photo endpoints.
+          // Strip proxy-provided photo fields defensively to keep this contract explicit.
+          const active = result.activeSponsors.map(({ photoUrl: _photoUrl, managerPhotoUrl: _managerPhotoUrl, ...s }) => s);
           setSponsors(active);
           sponsorIdsRef.current = active.map(s => s.id);
           // All unavailable = sponsors were assigned but every account is disabled/deleted.
@@ -231,30 +246,67 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
     return () => { cancelled = true; };
   }, [isGuest, isEditMode, graphClient, mockMode, functionUrl, aadHttpClient, retryCount]);
 
-  // Presence refresh: re-fetch only presence every 5 minutes so that availability
-  // indicators stay current without a full sponsor reload.
+  // Presence refresh: poll faster while a card is actively open and the tab is visible,
+  // but back off when the tab is hidden to reduce Graph traffic.
   // Uses graphClient directly for both proxy and direct paths — graphClient is
   // always acquired in onInit regardless of whether the proxy is configured.
-  const PRESENCE_REFRESH_MS = 5 * 60 * 1000;
+  const PRESENCE_REFRESH_ACTIVE_MS = 30 * 1000;
+  const PRESENCE_REFRESH_VISIBLE_MS = 2 * 60 * 1000;
+  const PRESENCE_REFRESH_HIDDEN_MS = 5 * 60 * 1000;
   React.useEffect(() => {
     if (isEditMode || mockMode || !isGuest || loading || error) return;
     if (!graphClient) return;
 
-    const id = setInterval(() => {
+    const refreshPresence = (): void => {
       const ids = sponsorIdsRef.current;
       if (ids.length === 0) return;
       fetchPresences(graphClient, ids)
         .then(presenceMap => {
-          setSponsors(prev => prev.map(s => ({ ...s, presence: presenceMap.get(s.id) ?? s.presence })));
+          setSponsors(prev => prev.map(s => {
+            const snapshot = presenceMap.get(s.id);
+            return {
+              ...s,
+              presence: snapshot?.availability ?? s.presence,
+              presenceActivity: snapshot?.activity ?? s.presenceActivity,
+            };
+          }));
         })
         .catch((err: unknown) => {
           // Presence refresh failures are silent — the existing data stays on screen.
           console.warn('[GuestSponsorInfo] Presence refresh failed:', err);
         });
-    }, PRESENCE_REFRESH_MS);
+    };
 
-    return () => clearInterval(id);
-  }, [isEditMode, mockMode, isGuest, loading, error, graphClient]);
+    const getRefreshIntervalMs = (): number => {
+      if (document.visibilityState !== 'visible') return PRESENCE_REFRESH_HIDDEN_MS;
+      return hasActiveCard ? PRESENCE_REFRESH_ACTIVE_MS : PRESENCE_REFRESH_VISIBLE_MS;
+    };
+
+    let id = setInterval(refreshPresence, getRefreshIntervalMs());
+
+    const restartInterval = (): void => {
+      clearInterval(id);
+      id = setInterval(refreshPresence, getRefreshIntervalMs());
+    };
+
+    const onVisibilityChange = (): void => {
+      restartInterval();
+      if (document.visibilityState === 'visible') {
+        refreshPresence();
+      }
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    if (document.visibilityState === 'visible' && hasActiveCard) {
+      refreshPresence();
+    }
+
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [isEditMode, mockMode, isGuest, loading, error, graphClient, hasActiveCard]);
 
   // Edit mode: always show a lightweight placeholder so page authors can position the web part.
   if (isEditMode) {
@@ -311,7 +363,15 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
         <p className={styles.statusMessage}>{strings.NoSponsorsMessage}</p>
       )}
       {!loading && !error && sponsors.length > 0 && (
-        <SponsorList sponsors={sponsors} hostTenantId={hostTenantId} showBusinessPhones={showBusinessPhones} showMobilePhone={showMobilePhone} showWorkLocation={showWorkLocation} showManager={showManager} />
+        <SponsorList
+          sponsors={sponsors}
+          hostTenantId={hostTenantId}
+          showBusinessPhones={showBusinessPhones}
+          showMobilePhone={showMobilePhone}
+          showWorkLocation={showWorkLocation}
+          showManager={showManager}
+          onActiveCardChange={setHasActiveCard}
+        />
       )}
     </section>
   );

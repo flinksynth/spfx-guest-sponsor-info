@@ -42,8 +42,9 @@ the web part calls the Azure Function proxy instead of Graph directly:
 3. EasyAuth validates the token and sets `X-MS-CLIENT-PRINCIPAL-ID` (the caller OID).
 4. The function calls `GET /users/{callerOid}/sponsors` via its Managed Identity
    (application permission `User.Read.All`).
-5. Profile photos, sponsor existence/accountEnabled checks, manager data, and manager photos
-   are fetched via Graph `$batch`; presence is fetched in parallel via a single presence call.
+5. Sponsor existence/accountEnabled checks, manager data, and presence are fetched by the
+   function. Profile photos and manager photos are fetched directly by the SPFx client via
+   delegated Graph calls (`/users/{id}/photo/$value`) after the base sponsor list loads.
 6. The function returns `{ activeSponsors, unavailableCount }` — identical to the fallback path.
 
 This path requires no Entra directory role for the calling guest user.
@@ -65,6 +66,9 @@ Entra. The web part handles this gracefully and shows a "no sponsors" message.
 ## Profile Photos
 
 **Endpoint used:** `GET /v1.0/users/{id}/photo/$value`
+
+**Data path:** Always direct from the SPFx client (delegated Graph token), even when
+the Azure Function proxy is enabled for sponsor/presence data.
 
 **Assumption:** The signed-in guest user has read access to the profile photos of their
 sponsors. The `User.ReadBasic.All` delegated permission grants this access.
