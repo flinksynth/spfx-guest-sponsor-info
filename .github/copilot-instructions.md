@@ -3,6 +3,8 @@
 This repository contains a SharePoint Online web part built with SharePoint Framework.
 Authoritative versions are in `package.json` (`engines`, `dependencies`, `devDependencies`).
 
+> **For AI coding agents:** See [.github/AGENTS.md](.github/AGENTS.md) for recommended tools and workflows.
+
 ## After every code change
 
 Always validate your changes before considering a task done:
