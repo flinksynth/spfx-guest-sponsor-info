@@ -1,5 +1,5 @@
+
 #!/bin/bash
 set -euo pipefail
 
-npm run fix
-npm run lint
+npx lint-staged
