@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "17449951186294661586"
+      "templateHash": "2061374383801800991"
     },
     "name": "Guest Sponsor Info – Azure Function Proxy",
     "description": "Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights."
@@ -173,6 +173,14 @@
       "minValue": 0,
       "metadata": {
         "description": "Minimum successful requests required before likely-attack info alert fires (avoid pure outage overlap)."
+      }
+    },
+    "dailyMemoryTimeQuotaGBs": {
+      "type": "int",
+      "defaultValue": 10000,
+      "minValue": 0,
+      "metadata": {
+        "description": "Azure Consumption plan daily memory-time budget in GB-seconds. When hit, the Function App is suspended until midnight UTC — the primary cost guard. 0 = unlimited (not recommended). Default 10 000 GB-s ≈ 13 000 typical invocations/day, stays within the monthly free tier (400 000 GB-s/month)."
       }
     },
     "operationalActionGroupResourceIds": {
@@ -360,6 +368,7 @@
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
         "httpsOnly": true,
+        "dailyMemoryTimeQuota": "[parameters('dailyMemoryTimeQuotaGBs')]",
         "siteConfig": {
           "appSettings": [
             {
