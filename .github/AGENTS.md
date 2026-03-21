@@ -25,6 +25,7 @@ The following CLI tools are pre-installed in `.devcontainer/Dockerfile` and shou
 ## Recommended Agent Usage Patterns
 
 ### 1. **Searching Code**
+
 ```bash
 # ✅ Good: Using rg for fast search
 rg "SponsorService" src/ --type ts
@@ -34,6 +35,7 @@ grep -r "SponsorService" src/
 ```
 
 ### 2. **Finding Files**
+
 ```bash
 # ✅ Good: Using fd for clean syntax
 fd "GuestSponsorInfo\.tsx"
@@ -43,6 +45,7 @@ find . -name "*GuestSponsorInfo*" -type f
 ```
 
 ### 3. **Reading Configuration**
+
 ```bash
 # ✅ Good: Using yq/jq for structured parsing
 yq eval '.engines' package.json
@@ -52,6 +55,7 @@ grep "engines" package.json | cut -d '"'
 ```
 
 ### 4. **Previewing Files in Terminals**
+
 ```bash
 # ✅ Good: Using bat for syntax highlighting
 bat src/webparts/guestSponsorInfo/GuestSponsorInfo.tsx
@@ -63,14 +67,18 @@ cat src/webparts/guestSponsorInfo/GuestSponsorInfo.tsx
 ## Git Workflow
 
 ### Pre-commit Hook
+
 The `.husky/pre-commit` hook automatically:
+
 1. Runs `npm run fix` (auto-corrects formatting issues)
 2. Runs `npm run lint` (validates code quality)
 
 **Do not** skip this hook (`--no-verify`) except for meta-changes (infrastructure-only commits).
 
 ### Commit Message Format
+
 Use Conventional Commits (enforced by `commitlint`):
+
 ```
 chore(i18n): normalize locale files to UTF-8
 feat(sponsor): add sponsor card caching
@@ -81,6 +89,7 @@ docs: update README configuration section
 ## When to Use npm Scripts vs Direct Commands
 
 ### ✅ Use `npm` Scripts (Managed + Linted)
+
 ```bash
 npm run lint        # ESLint + Stylelint + Markdownlint
 npm run fix         # Auto-correct formatting
@@ -91,6 +100,7 @@ npm run build       # Full production build + packaging
 ```
 
 ### ⚠️ Avoid Raw Commands Unless Necessary
+
 ```bash
 # ❌ Don't run raw heft commands
 npx heft build
