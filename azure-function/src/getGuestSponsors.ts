@@ -24,16 +24,17 @@ const RATE_LIMIT_MAX_REQUESTS = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const rateLimitMap = new Map<string, number[]>();
 
-/**
- * Cached result of permission detection for MailboxSettings.Read.
- * undefined = not yet checked; true/false = result cached for the lifetime
- * of this warm function instance.
- */
-let cachedMailboxSettingsDetection: Promise<boolean> | undefined;
+/** Cached optional-permission flags for MailboxSettings.Read and Presence.Read.All. */
+interface IOptionalPermissions {
+  hasMailboxSettings: boolean;
+  hasPresenceReadAll: boolean;
+}
+
+let cachedOptionalPermissions: Promise<IOptionalPermissions> | undefined;
 
 /**
  * Inspects the JWT access token obtained by the Managed Identity to determine
- * whether the MailboxSettings.Read application permission has been granted.
+ * which optional application permissions have been granted.
  *
  * The token is already fetched by the Azure Identity SDK for Graph API calls;
  * calling getToken() here returns the same cached token — no extra network
@@ -43,19 +44,14 @@ let cachedMailboxSettingsDetection: Promise<boolean> | undefined;
  * The result is stored as a Promise so that concurrent invocations during
  * a cold start share a single in-flight token inspection instead of each
  * starting their own (eliminates the require-atomic-updates race pattern).
- *
- * When this permission is present the caller can add mailboxSettings to the
- * per-sponsor $select and use userPurpose to filter out non-user mailboxes
- * (shared, room, equipment, …).  When it is absent the filter is silently
- * skipped — the function degrades gracefully without any error.
  */
-async function detectMailboxSettingsPermission(
+async function detectOptionalPermissions(
   credential: ManagedIdentityCredential,
   context: InvocationContext
-): Promise<boolean> {
+): Promise<IOptionalPermissions> {
   // Assign synchronously before any await so concurrent callers share one promise.
-  if (!cachedMailboxSettingsDetection) {
-    cachedMailboxSettingsDetection = (async (): Promise<boolean> => {
+  if (!cachedOptionalPermissions) {
+    cachedOptionalPermissions = (async (): Promise<IOptionalPermissions> => {
       try {
         const token = await credential.getToken('https://graph.microsoft.com/.default');
         // JWT payload is the second segment, base64url-encoded.
@@ -66,22 +62,21 @@ async function detectMailboxSettingsPermission(
         const hasUserReadBasicAll = roles.includes('User.ReadBasic.All');
         const hasPresenceReadAll = roles.includes('Presence.Read.All');
         const hasDirectoryReadAll = roles.includes('Directory.Read.All');
-        const result = roles.includes('MailboxSettings.Read');
+        const hasMailboxSettings = roles.includes('MailboxSettings.Read');
         context.log(
           `Graph app roles: User.Read.All=${hasUserReadAll}, ` +
           `User.ReadBasic.All=${hasUserReadBasicAll}, Presence.Read.All=${hasPresenceReadAll}, ` +
-          `Directory.Read.All=${hasDirectoryReadAll}, MailboxSettings.Read=${result}, count=${roles.length}`
+          `Directory.Read.All=${hasDirectoryReadAll}, MailboxSettings.Read=${hasMailboxSettings}, count=${roles.length}`
         );
-        context.log(`MailboxSettings.Read permission: ${result}`);
-        return result;
+        return { hasMailboxSettings, hasPresenceReadAll };
       } catch (error) {
         // If token inspection fails for any reason, degrade gracefully.
-        context.warn('Could not inspect token roles — mailbox filter disabled.', error);
-        return false;
+        context.warn('Could not inspect token roles — optional features disabled.', error);
+        return { hasMailboxSettings: false, hasPresenceReadAll: false };
       }
     })();
   }
-  return cachedMailboxSettingsDetection;
+  return cachedOptionalPermissions;
 }
 
 function checkRateLimit(userId: string): { allowed: boolean; retryAfterSeconds?: number } {
@@ -340,7 +335,7 @@ function getValidHttpStatus(code: unknown): number {
  * that EasyAuth sets after validating the Bearer token.
  *
  * The Managed Identity of the Function App is used to call Microsoft Graph
- * with application permissions (User.Read.All, Presence.Read.All).
+ * with application permissions (User.Read.All and optionally Presence.Read.All).
  * No client secrets are stored anywhere.
  */
 export async function getGuestSponsors(
@@ -382,7 +377,7 @@ export async function getGuestSponsors(
 
   try {
     const credential = new ManagedIdentityCredential();
-    const hasMailboxSettings = await detectMailboxSettingsPermission(credential, context);
+    const { hasMailboxSettings, hasPresenceReadAll } = await detectOptionalPermissions(credential, context);
     const authProvider = new TokenCredentialAuthenticationProvider(credential, {
       scopes: ['https://graph.microsoft.com/.default'],
     });
@@ -452,7 +447,7 @@ export async function getGuestSponsors(
     }));
 
     const [presenceMap, sponsorBatchResults] = await Promise.all([
-      fetchPresences(client, sponsorIds, context),
+      hasPresenceReadAll ? fetchPresences(client, sponsorIds, context) : Promise.resolve(new Map<string, { availability?: string; activity?: string }>()),
       executeBatch(
         client,
         sponsorBatchRequests,

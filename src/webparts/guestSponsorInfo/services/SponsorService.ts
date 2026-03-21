@@ -84,9 +84,9 @@ async function userExists(client: MSGraphClientV3, userId: string): Promise<bool
  */
 /**
  * Fetches presence for a list of user IDs in a single batched Graph call.
- * Requires the Presence.Read.All delegated permission.
+ * Uses the Presence.Read.All delegated permission when consented.
  * Returns a map of userId → availability/activity strings.
- * Silently returns an empty map on any error (presence is non-critical).
+ * Silently returns an empty map on any error (presence is optional).
  */
 export async function fetchPresences(
   client: MSGraphClientV3,
@@ -196,7 +196,7 @@ export async function getSponsors(client: MSGraphClientV3): Promise<ISponsorsRes
 /**
  * Fetches sponsor data via the Azure Function proxy instead of calling Graph directly.
  * The proxy authenticates the caller via EasyAuth and calls Graph with application
- * permissions (User.Read.All, Presence.Read.All) using its Managed Identity.
+ * permissions (User.Read.All, optionally Presence.Read.All) using its Managed Identity.
  *
  * @param proxyUrl     - Full URL of the Azure Function endpoint.
  * @param aadHttpClient - Pre-acquired AAD HTTP client scoped to the function App Registration.

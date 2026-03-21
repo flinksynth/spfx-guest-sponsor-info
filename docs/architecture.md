@@ -48,7 +48,7 @@ Requires the guest to hold an Entra directory role (e.g. Directory Readers) — 
 | Permission | Purpose |
 |---|---|
 | `User.Read.All` | `/users/{oid}/sponsors`, `$batch` profile checks, `accountEnabled` |
-| `Presence.Read.All` | `/communications/getPresencesByUserId` |
+| `Presence.Read.All` | **Optional.** `/communications/getPresencesByUserId`. Requires Teams licensing. Skipped when absent — sponsors render without presence indicator. |
 | `MailboxSettings.Read` | **Optional.** Filter shared/room/equipment mailboxes. Skipped when absent. |
 
 ### Direct path (delegated, via SharePoint API access panel)
@@ -57,6 +57,7 @@ Requires the guest to hold an Entra directory role (e.g. Directory Readers) — 
 |---|---|
 | `User.Read` | `/me/sponsors`. Also requires Directory Readers role. |
 | `User.ReadBasic.All` | Existence checks (`/users/{id}`), profile photos |
+| `Presence.Read.All` | **Optional.** Presence status for sponsor cards. Skipped when not consented. |
 
 ### Why no `User.Read.All` on the delegated path
 

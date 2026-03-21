@@ -50,7 +50,7 @@ The two Graph permissions must be approved by a tenant administrator in the
 |---|---|---|
 | `User.Read` | Microsoft Graph | Read the signed-in user's own profile and sponsor list |
 | `User.ReadBasic.All` | Microsoft Graph | Fetch sponsor name, mail, job title, department, and phone |
-| `Presence.Read.All` | Microsoft Graph | Show the online presence status of sponsors |
+| `Presence.Read.All` | Microsoft Graph | **Optional.** Show the online presence status of sponsors |
 
 > **Why not `User.Read.All`?**
 > Sponsor profiles are publicly visible within the organisation.

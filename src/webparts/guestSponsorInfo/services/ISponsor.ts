@@ -22,13 +22,13 @@ export interface ISponsor {
    * Microsoft Graph presence availability string for this user.
    * Possible values: Available, AvailableIdle, Away, BeRightBack, Busy, BusyIdle,
    * DoNotDisturb, Offline, PresenceUnknown.
-   * Requires the Presence.Read.All delegated permission.
+   * Populated when Presence.Read.All is granted (optional).
    */
   presence?: string;
   /**
    * Microsoft Graph presence activity string for this user.
    * Example values: InAMeeting, InACall, Presenting.
-   * Requires the Presence.Read.All delegated permission.
+   * Populated when Presence.Read.All is granted (optional).
    */
   presenceActivity?: string;
   /** Display name of the sponsor's direct manager. */
