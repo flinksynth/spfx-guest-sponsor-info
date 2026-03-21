@@ -37,6 +37,9 @@ fi
 # Install project dependencies and set up git hooks (husky prepare script).
 npm install
 
+# Ensure Husky git hooks are properly initialized in dev-container.
+npm run prepare
+
 echo "Node version: $(node --version)"
 echo "npm version: $(npm --version)"
 echo "Yeoman version: $(yo --version)"
