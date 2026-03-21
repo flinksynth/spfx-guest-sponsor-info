@@ -32,6 +32,74 @@ param deployAzureMaps bool = true
 @description('Optional custom Azure Maps account name. Leave empty to auto-generate.')
 param azureMapsAccountName string = ''
 
+@description('Enable operational email alert for probable service outage (5xx/504 spike or low success rate).')
+param enableServiceOutageAlert bool = true
+
+@description('Enable operational email alert for auth/config regressions (AUTH_CONFIG_* reason codes).')
+param enableAuthConfigRegressionAlert bool = true
+
+@description('Enable info-only alert for likely attack/noise spikes (high 401/403 from many IPs).')
+param enableLikelyAttackInfoAlert bool = true
+
+@description('KQL alert evaluation frequency in minutes.')
+@minValue(1)
+param alertEvaluationFrequencyInMinutes int = 5
+
+@description('KQL alert lookback window in minutes.')
+@minValue(5)
+param alertWindowInMinutes int = 15
+
+@description('Minimum total requests in window before service outage alert can fire.')
+@minValue(1)
+param serviceOutageMinRequests int = 20
+
+@description('5xx/504 count threshold for service outage alert.')
+@minValue(1)
+param serviceOutageFailureCountThreshold int = 10
+
+@description('Success-rate percentage threshold below which service outage alert can fire.')
+@minValue(1)
+@maxValue(99)
+param serviceOutageSuccessRatePercentThreshold int = 70
+
+@description('AUTH_CONFIG_* trace count threshold for config-regression alert.')
+@minValue(1)
+param authConfigRegressionHitsThreshold int = 1
+
+@description('401/403 count threshold for likely-attack info alert.')
+@minValue(1)
+param likelyAttackDeniedCountThreshold int = 50
+
+@description('Unique client IP threshold for likely-attack info alert.')
+@minValue(1)
+param likelyAttackUniqueIpThreshold int = 20
+
+@description('Denied-rate percentage threshold for likely-attack info alert.')
+@minValue(1)
+@maxValue(100)
+param likelyAttackDenyRatePercentThreshold int = 80
+
+@description('Minimum successful requests required before likely-attack info alert fires (avoid pure outage overlap).')
+@minValue(0)
+param likelyAttackMinSuccessThreshold int = 1
+
+@description('Action group resource IDs for operational email alerts. Leave empty to create alert rules without notifications.')
+param operationalActionGroupResourceIds array = []
+
+@description('Action group resource IDs for info-only alerts. Leave empty to create alert rules without notifications.')
+param infoActionGroupResourceIds array = []
+
+@description('Optional notification email used to auto-create default operational/info action groups. Leave empty to skip auto-creation.')
+param defaultAlertNotificationEmail string = ''
+
+@description('Short name for the auto-created operational action group (max 12 chars).')
+@maxLength(12)
+param defaultOperationalActionGroupShortName string = 'GSIOps'
+
+@description('Short name for the auto-created info action group (max 12 chars).')
+@maxLength(12)
+param defaultInfoActionGroupShortName string = 'GSIInfo'
+
 var storageAccountName = toLower(replace(functionAppName, '-', ''))
 var appServicePlanName = '${functionAppName}-plan'
 var logAnalyticsWorkspaceName = '${functionAppName}-logs'
@@ -39,6 +107,98 @@ var appInsightsName = '${functionAppName}-insights'
 var azureMapsName = empty(azureMapsAccountName)
   ? toLower('maps${uniqueString(resourceGroup().id, functionAppName)}')
   : toLower(azureMapsAccountName)
+// KQL queries use triple-quoted raw strings (no interpolation) with replace() for parameters.
+var serviceOutageAlertQueryRaw = '''
+let window = __WINDOW__m;
+let req = requests
+| where timestamp > ago(window)
+| where name contains "getGuestSponsors";
+let total = toscalar(req | count);
+let failures5xx = toscalar(req | where resultCode startswith "5" or resultCode == "504" | count);
+let success = toscalar(req | where resultCode startswith "2" | count);
+print total=total, failures5xx=failures5xx, success=success,
+      successRatePct = iff(total == 0, 100.0, todouble(success) * 100.0 / todouble(total))
+| where total >= __MIN_REQUESTS__
+| where failures5xx >= __FAILURE_COUNT__ or successRatePct < __SUCCESS_RATE_PCT__
+'''
+#disable-next-line prefer-interpolation
+var serviceOutageAlertQuery = replace(replace(replace(replace(serviceOutageAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)), '__MIN_REQUESTS__', string(serviceOutageMinRequests)), '__FAILURE_COUNT__', string(serviceOutageFailureCountThreshold)), '__SUCCESS_RATE_PCT__', string(serviceOutageSuccessRatePercentThreshold))
+
+var authConfigRegressionAlertQueryRaw = '''
+let window = __WINDOW__m;
+traces
+| where timestamp > ago(window)
+| where message has "Client validation ("
+| extend reasonCode = tostring(customDimensions.reasonCode)
+| where reasonCode in ("AUTH_CONFIG_TENANT_MISSING", "AUTH_CONFIG_AUDIENCE_MISSING")
+| summarize hits = count() by reasonCode
+| where hits >= __HITS_THRESHOLD__
+'''
+#disable-next-line prefer-interpolation
+var authConfigRegressionAlertQuery = replace(replace(authConfigRegressionAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)), '__HITS_THRESHOLD__', string(authConfigRegressionHitsThreshold))
+
+var likelyAttackInfoAlertQueryRaw = '''
+let window = __WINDOW__m;
+let req = requests
+| where timestamp > ago(window)
+| where name contains "getGuestSponsors";
+let denied = req
+| where resultCode in ("401", "403")
+| summarize deniedCount = count(), uniqueIps = dcount(client_IP);
+let total = toscalar(req | count);
+let success = toscalar(req | where resultCode startswith "2" | count);
+denied
+| extend denyRatePct = iff(total == 0, 0.0, todouble(deniedCount) * 100.0 / todouble(total))
+| where deniedCount >= __DENIED_COUNT__
+| where uniqueIps >= __UNIQUE_IP__
+| where denyRatePct >= __DENY_RATE_PCT__
+| where success >= __MIN_SUCCESS__
+'''
+#disable-next-line prefer-interpolation
+var likelyAttackInfoAlertQuery = replace(replace(replace(replace(replace(likelyAttackInfoAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)), '__DENIED_COUNT__', string(likelyAttackDeniedCountThreshold)), '__UNIQUE_IP__', string(likelyAttackUniqueIpThreshold)), '__DENY_RATE_PCT__', string(likelyAttackDenyRatePercentThreshold)), '__MIN_SUCCESS__', string(likelyAttackMinSuccessThreshold))
+var createDefaultActionGroups = !empty(defaultAlertNotificationEmail)
+
+resource defaultOperationalActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (createDefaultActionGroups) {
+  name: '${functionAppName}-ops-ag'
+  location: 'global'
+  tags: tags
+  properties: {
+    groupShortName: defaultOperationalActionGroupShortName
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'ops-email'
+        emailAddress: defaultAlertNotificationEmail
+        useCommonAlertSchema: true
+      }
+    ]
+  }
+}
+
+resource defaultInfoActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (createDefaultActionGroups) {
+  name: '${functionAppName}-info-ag'
+  location: 'global'
+  tags: tags
+  properties: {
+    groupShortName: defaultInfoActionGroupShortName
+    enabled: true
+    emailReceivers: [
+      {
+        name: 'info-email'
+        emailAddress: defaultAlertNotificationEmail
+        useCommonAlertSchema: true
+      }
+    ]
+  }
+}
+
+var effectiveOperationalActionGroupResourceIds = createDefaultActionGroups
+  ? concat(operationalActionGroupResourceIds, [defaultOperationalActionGroup.id])
+  : operationalActionGroupResourceIds
+
+var effectiveInfoActionGroupResourceIds = createDefaultActionGroups
+  ? concat(infoActionGroupResourceIds, [defaultInfoActionGroup.id])
+  : infoActionGroupResourceIds
 
 // ── Storage Account (required by Azure Functions runtime) ────────────────────
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -274,6 +434,97 @@ resource storageTableRole 'Microsoft.Authorization/roleAssignments@2022-04-01' =
     roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', storageTableDataContributorRoleId)
     principalId: functionApp.identity.principalId
     principalType: 'ServicePrincipal'
+  }
+}
+
+// ── Optional KQL alerts (low false-positive model) ───────────────────────────
+resource serviceOutageAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableServiceOutageAlert) {
+  name: '${functionAppName}-service-outage-kql'
+  location: location
+  tags: tags
+  properties: {
+    description: 'Operational email alert for probable service outage (5xx/504 spike or low success rate).'
+    enabled: true
+    scopes: [
+      appInsights.id
+    ]
+    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
+    windowSize: 'PT${alertWindowInMinutes}M'
+    severity: 2
+    criteria: {
+      allOf: [
+        {
+          query: serviceOutageAlertQuery
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+        }
+      ]
+    }
+    actions: {
+      actionGroups: effectiveOperationalActionGroupResourceIds
+    }
+    autoMitigate: true
+  }
+}
+
+resource authConfigRegressionAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableAuthConfigRegressionAlert) {
+  name: '${functionAppName}-auth-config-regression-kql'
+  location: location
+  tags: tags
+  properties: {
+    description: 'Operational email alert for auth/config regressions (AUTH_CONFIG_* reason codes).'
+    enabled: true
+    scopes: [
+      appInsights.id
+    ]
+    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
+    windowSize: 'PT${alertWindowInMinutes}M'
+    severity: 2
+    criteria: {
+      allOf: [
+        {
+          query: authConfigRegressionAlertQuery
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+        }
+      ]
+    }
+    actions: {
+      actionGroups: effectiveOperationalActionGroupResourceIds
+    }
+    autoMitigate: true
+  }
+}
+
+resource likelyAttackInfoAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableLikelyAttackInfoAlert) {
+  name: '${functionAppName}-likely-attack-info-kql'
+  location: location
+  tags: tags
+  properties: {
+    description: 'Info-only alert for likely attack/noise spikes (high 401/403 from many IPs).'
+    enabled: true
+    scopes: [
+      appInsights.id
+    ]
+    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
+    windowSize: 'PT${alertWindowInMinutes}M'
+    severity: 4
+    criteria: {
+      allOf: [
+        {
+          query: likelyAttackInfoAlertQuery
+          timeAggregation: 'Count'
+          operator: 'GreaterThan'
+          threshold: 0
+        }
+      ]
+    }
+    actions: {
+      actionGroups: effectiveInfoActionGroupResourceIds
+    }
+    autoMitigate: true
   }
 }
 

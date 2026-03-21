@@ -19,6 +19,15 @@
     },
     "azureMapsAccountName": {
       "value": ""
+    },
+    "defaultAlertNotificationEmail": {
+      "value": ""
+    },
+    "defaultOperationalActionGroupShortName": {
+      "value": "GSIOps"
+    },
+    "defaultInfoActionGroupShortName": {
+      "value": "GSIInfo"
     }
   }
 }
