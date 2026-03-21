@@ -170,6 +170,28 @@ Timeout app settings: `SPONSOR_LOOKUP_TIMEOUT_MS`, `BATCH_TIMEOUT_MS`,
 
 Manual fallback: `infra/setup-app-registration.ps1` + `infra/setup-graph-permissions.ps1`.
 
+### Hosting Plan Options
+
+The `hostingPlan` parameter controls the Azure Functions pricing tier:
+
+| | **Consumption** (default) | **Flex Consumption** (opt-in) |
+|---|---|---|
+| SKU | Y1 / Dynamic | FC1 / FlexConsumption |
+| Free tier | 1M exec + 400K GB-s/month | None |
+| Cold starts | ~2–5 s after ~20 min idle | Greatly reduced; eliminated with `alwaysReadyInstances=1` |
+| OS | Windows | Linux only |
+| ZIP deployment | `WEBSITE_RUN_FROM_PACKAGE` (GitHub URL) | Blob container (AZD / az CLI) |
+| "Deploy to Azure" button | Supported | Not supported |
+| Cost guard | `dailyMemoryTimeQuota` (GB-s budget) | `maximumFlexInstances` (hard instance cap, required) |
+| Estimated cost | Free (within grant) | ~€2–5/month with 1 warm instance |
+
+**Default is Consumption** — it covers the typical use case (internal SPFx tool, hundreds of
+guest users/day) at zero cost and supports the simplest deployment paths.
+
+Choose **Flex Consumption** when cold-start latency is unacceptable for your users and you
+are deploying via AZD or Azure CLI. Set `alwaysReadyInstances=1` (the default for Flex) to
+keep one instance warm.
+
 ### Debugging Client Authorization Failures
 
 When a client authorization failure occurs (HTTP 403), the function logs a structured warning

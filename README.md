@@ -315,8 +315,48 @@ Fill in the parameters:
 | `tenantName` | Your tenant name without domain suffix, e.g. `contoso` |
 | `functionAppName` | Globally unique name for the Function App |
 | `functionClientId` | Client ID from the pre-step above |
-| `packageUrl` | Leave as default (points to the latest GitHub Release ZIP) |
+| `appVersion` | Function package version to deploy. `"latest"` (default) = always pull the newest GitHub Release at provisioning time. SemVer without `v` prefix, e.g. `"1.4.2"` = pin to that specific release. On Flex Consumption, changing this value triggers the provisioning script to re-upload the ZIP. |
 | `location` | Azure region |
+
+Optional hosting plan parameters:
+
+| Parameter | Description |
+|---|---|
+| `hostingPlan` | `Consumption` (default) or `FlexConsumption`. Consumption includes the Azure free tier (1M executions/month) and supports the "Deploy to Azure" button. Flex Consumption (Linux-only) greatly reduces cold starts; set `alwaysReadyInstances=1` to eliminate them (~€2–5/month). Flex uses a provisioning script to upload the function ZIP automatically — no manual upload needed. Not all Azure regions support Flex — check [aka.ms/flex-region](https://aka.ms/flex-region). |
+| `alwaysReadyInstances` | Number of pre-warmed instances (Flex Consumption only). `1` = one instance kept warm (eliminates cold starts). `0` = on-demand. Ignored when `hostingPlan=Consumption`. Default: `1`. |
+| `maximumFlexInstances` | **Required for Flex.** Hard upper bound on scale-out instances — acts as a cost ceiling (scale stops here regardless of demand). Valid: 1–1000. Ignored when `hostingPlan=Consumption`. |
+| `instanceMemoryMB` | Memory per Flex Consumption instance in MB. `512` or `2048`. More memory allows more concurrent requests per instance but costs more per GB-second. Default: `2048`. Ignored when `hostingPlan=Consumption`. |
+| `dailyMemoryTimeQuotaGBs` | Consumption plan only. Daily GB-second budget — Function App is suspended when hit (cost guard). Default `10000`. Ignored for Flex. |
+
+#### Deploying with Flex Consumption plan
+
+The "Deploy to Azure" button and the `az deployment group create` commands above work for
+Flex Consumption too — just add the extra parameters. Check
+[aka.ms/flex-region](https://aka.ms/flex-region) first to confirm your target region supports
+Flex.
+
+Minimum required extra parameters:
+
+```bash
+az deployment group create \
+  --resource-group <your-resource-group> \
+  --template-uri https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/latest/download/azuredeploy.json \
+  --parameters \
+      tenantId=<your-tenant-id> \
+      tenantName=<your-tenant-name> \
+      functionAppName=<globally-unique-name> \
+      functionClientId=<client-id-from-pre-step> \
+      hostingPlan=FlexConsumption \
+      maximumFlexInstances=10
+```
+
+**The initial ZIP upload is automated.** A short-lived Azure CLI container runs as part of the
+ARM deployment (∼2–5 min): it downloads the function package for the specified `appVersion`
+and uploads it to the `app-package` blob container in the Storage Account. The Function App
+detects the new blob and starts serving traffic automatically — no manual upload is needed.
+
+The deployment script resource (`<functionAppName>-deploy-zip`) is retained in the resource
+group for 2 hours for troubleshooting, then removed automatically.
 
 Optional parameters for map preview:
 
@@ -393,10 +433,9 @@ In the property pane of the web part (edit the page → edit the web part → **
 
 #### Updating the function
 
-The Function App is configured with `WEBSITE_RUN_FROM_PACKAGE` pointing to
-`/releases/latest/download/guest-sponsor-info-function.zip`. This means **a restart is all
-that is needed for a pure code update** — Azure pulls the new ZIP automatically on next cold
-start.
+**Consumption plan:** The Function App is configured with `WEBSITE_RUN_FROM_PACKAGE` pointing
+to the latest GitHub Release ZIP. A restart is all that is needed — Azure pulls the current
+ZIP from the URL automatically on next cold start.
 
 From [Azure Cloud Shell](https://shell.azure.com) (no local tooling, no repo clone required):
 
@@ -407,6 +446,58 @@ az functionapp restart \
 ```
 
 Or from the Azure Portal: open the Function App → **Overview → Restart**.
+
+**Flex Consumption plan:** The function ZIP lives in the `app-package` blob container. The
+simplest update path is to re-deploy the ARM template with a pinned `appVersion` — the
+provisioning script re-runs only when this value changes:
+
+```bash
+az deployment group create \
+  --resource-group <your-resource-group> \
+  --template-uri https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/latest/download/azuredeploy.json \
+  --parameters \
+      tenantId=<your-tenant-id> \
+      tenantName=<your-tenant-name> \
+      functionAppName=<your-function-app-name> \
+      functionClientId=<your-client-id> \
+      hostingPlan=FlexConsumption \
+      maximumFlexInstances=10 \
+      appVersion=1.x.y
+```
+
+<details>
+<summary>Manual upload via Azure Portal or CLI</summary>
+
+**Via the Azure Portal:**
+
+1. Open the Storage Account → **Containers** → `app-package`.
+2. Click **Upload**.
+3. Download the ZIP from the [Releases page](https://github.com/jpawlowski/spfx-guest-sponsor-info/releases)
+   and select it.
+4. Expand **Advanced** → set **Blob name** to `function.zip`.
+5. Enable **Overwrite if files already exist** → **Upload**.
+6. The Function App detects the new blob and redeploys within seconds.
+
+**Via Azure CLI ([Cloud Shell](https://shell.azure.com)):**
+
+```bash
+# Download the new release
+curl -sSfL -o function.zip \
+  https://github.com/jpawlowski/spfx-guest-sponsor-info/releases/latest/download/guest-sponsor-info-function.zip
+
+# Storage account name is shown in the deployment output as "deploymentStorageAccountName"
+az storage blob upload \
+  --account-name <storage-account-name> \
+  --container-name app-package \
+  --name function.zip \
+  --file function.zip \
+  --auth-mode login \
+  --overwrite
+```
+
+The Function App detects the new blob and redeploys automatically.
+
+</details>
 
 <details>
 <summary>Infrastructure changed (rare)? Re-run the full deployment instead</summary>
