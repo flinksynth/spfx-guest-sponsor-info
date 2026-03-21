@@ -79,6 +79,7 @@ define([], function() {
     "CityFieldLabel": "\u57ce\u5e02",
     "CountryFieldLabel": "\u56fd\u5bb6/\u5730\u533a",
     "CopyCityAriaLabel": "\u590d\u5236\u57ce\u5e02",
-    "CopyCountryAriaLabel": "\u590d\u5236\u56fd\u5bb6/\u5730\u533a"
+    "CopyCountryAriaLabel": "\u590d\u5236\u56fd\u5bb6/\u5730\u533a",
+    "ShowPresenceFieldLabel": "\u663e\u793a\u5728\u7ebf\u72b6\u6001"
   }
 });

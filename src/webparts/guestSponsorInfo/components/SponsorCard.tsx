@@ -196,6 +196,8 @@ interface ISponsorCardProps {
   showCountry: boolean;
   /** Show the manager section below the contact details. */
   showManager: boolean;
+  /** Show the presence status indicator (dot) and label. */
+  showPresence: boolean;
   /** Show the sponsor's job title in the rich card header. */
   showSponsorJobTitle: boolean;
   /** Show the manager's job title in the manager row. */
@@ -226,6 +228,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
   showCity,
   showCountry,
   showManager,
+  showPresence,
   showSponsorJobTitle,
   showManagerJobTitle,
   showSponsorDepartment,
@@ -292,7 +295,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
               <img src={sponsor.photoUrl} alt="" className={styles.photo} />
             )}
           </div>
-          {presenceColor && sponsor.hasTeams !== false && (
+          {presenceColor && showPresence && sponsor.hasTeams !== false && (
             <span
               className={styles.richPresenceDot}
               style={{ backgroundColor: presenceColor }}
@@ -308,7 +311,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
           ) : !showSponsorJobTitle && showSponsorDepartment && sponsor.department ? (
             <div className={styles.richJobTitle}>{sponsor.department}</div>
           ) : null}
-          {presenceLabel && sponsor.hasTeams !== false && (
+          {presenceLabel && showPresence && sponsor.hasTeams !== false && (
             <div className={styles.richPresenceLabel} style={{ color: presenceColor }}>
               {presenceLabel}
             </div>
@@ -519,7 +522,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
               <img src={sponsor.photoUrl} alt="" className={styles.photo} />
             )}
           </div>
-          {presenceColor && sponsor.hasTeams !== false && (
+          {presenceColor && showPresence && sponsor.hasTeams !== false && (
             <span
               className={styles.presenceDot}
               style={{ backgroundColor: presenceColor }}

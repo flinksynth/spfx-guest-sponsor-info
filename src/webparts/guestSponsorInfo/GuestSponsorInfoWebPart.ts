@@ -31,6 +31,8 @@ export interface IGuestSponsorInfoWebPartProps {
   showCountry: boolean;
   /** Show the manager section in the contact card. Default: true. */
   showManager: boolean;
+  /** Show the presence status indicator and label. Default: true. */
+  showPresence: boolean;
   /** Show the sponsor's job title. Default: true. */
   showSponsorJobTitle: boolean;
   /** Show the manager's job title. Default: true. */
@@ -68,6 +70,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
         showCity: this.properties.showCity ?? false,
         showCountry: this.properties.showCountry ?? false,
         showManager: this.properties.showManager ?? true,
+        showPresence: this.properties.showPresence ?? true,
         showSponsorJobTitle: this.properties.showSponsorJobTitle ?? true,
         showManagerJobTitle: this.properties.showManagerJobTitle ?? true,
         showSponsorDepartment: this.properties.showSponsorDepartment ?? false,
@@ -172,6 +175,10 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                 PropertyPaneCheckbox('showManager', {
                   text: strings.ShowManagerFieldLabel,
                   checked: this.properties.showManager ?? true,
+                }),
+                PropertyPaneCheckbox('showPresence', {
+                  text: strings.ShowPresenceFieldLabel,
+                  checked: this.properties.showPresence ?? true,
                 }),
                 PropertyPaneCheckbox('showSponsorJobTitle', {
                   text: strings.ShowSponsorJobTitleFieldLabel,

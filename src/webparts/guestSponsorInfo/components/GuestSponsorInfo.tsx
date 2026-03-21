@@ -24,6 +24,7 @@ interface ISponsorListProps {
   showCity: boolean;
   showCountry: boolean;
   showManager: boolean;
+  showPresence: boolean;
   showSponsorJobTitle: boolean;
   showManagerJobTitle: boolean;
   showSponsorDepartment: boolean;
@@ -34,7 +35,7 @@ interface ISponsorListProps {
   guestHasTeamsAccess?: boolean;
 }
 
-const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showManager, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, useInformalAddress, onActiveCardChange, guestHasTeamsAccess }) => {
+const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showManager, showPresence, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, useInformalAddress, onActiveCardChange, guestHasTeamsAccess }) => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const hideTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -73,6 +74,7 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, show
             showCity={showCity}
             showCountry={showCountry}
             showManager={showManager}
+            showPresence={showPresence}
             showSponsorJobTitle={showSponsorJobTitle}
             showManagerJobTitle={showManagerJobTitle}
             showSponsorDepartment={showSponsorDepartment}
@@ -151,6 +153,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   showCity,
   showCountry,
   showManager,
+  showPresence,
   showSponsorJobTitle,
   showManagerJobTitle,
   showSponsorDepartment,
@@ -408,6 +411,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
           showCity={showCity}
           showCountry={showCountry}
           showManager={showManager}
+          showPresence={showPresence}
           showSponsorJobTitle={showSponsorJobTitle}
           showManagerJobTitle={showManagerJobTitle}
           showSponsorDepartment={showSponsorDepartment}

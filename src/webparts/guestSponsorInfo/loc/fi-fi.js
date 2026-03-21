@@ -79,6 +79,7 @@ define([], function() {
     "CityFieldLabel": "Kaupunki",
     "CountryFieldLabel": "Maa",
     "CopyCityAriaLabel": "Kopioi kaupunki",
-    "CopyCountryAriaLabel": "Kopioi maa"
+    "CopyCountryAriaLabel": "Kopioi maa",
+    "ShowPresenceFieldLabel": "N\u00e4yt\u00e4 l\u00e4sn\u00e4olotila"
   }
 });

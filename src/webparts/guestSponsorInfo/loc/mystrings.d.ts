@@ -19,6 +19,7 @@ declare interface IGuestSponsorInfoWebPartStrings {
   ShowCityFieldLabel: string;
   ShowCountryFieldLabel: string;
   ShowManagerFieldLabel: string;
+  ShowPresenceFieldLabel: string;
   UseInformalAddressFieldLabel: string;
 
   // Job title and department toggles

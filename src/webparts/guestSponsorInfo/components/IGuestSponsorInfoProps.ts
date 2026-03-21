@@ -45,6 +45,8 @@ export interface IGuestSponsorInfoProps {
   showCountry: boolean;
   /** Show the manager section in the contact card. */
   showManager: boolean;
+  /** Show the presence status indicator and label. Default: true. */
+  showPresence: boolean;
   /** Show the sponsor's job title in the contact card. Default: true. */
   showSponsorJobTitle: boolean;
   /** Show the manager's job title in the contact card. Default: true. */

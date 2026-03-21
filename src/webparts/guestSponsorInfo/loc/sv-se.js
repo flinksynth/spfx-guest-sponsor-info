@@ -79,6 +79,7 @@ define([], function() {
     "CityFieldLabel": "Stad",
     "CountryFieldLabel": "Land",
     "CopyCityAriaLabel": "Kopiera stad",
-    "CopyCountryAriaLabel": "Kopiera land"
+    "CopyCountryAriaLabel": "Kopiera land",
+    "ShowPresenceFieldLabel": "Visa n\u00e4rvaro\u00f6status"
   }
 });

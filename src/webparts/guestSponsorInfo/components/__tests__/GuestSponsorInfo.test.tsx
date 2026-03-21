@@ -78,6 +78,7 @@ function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
     showCity: false,
     showCountry: false,
     showManager: true,
+    showPresence: true,
     useInformalAddress: false,
     showSponsorJobTitle: true,
     showManagerJobTitle: true,

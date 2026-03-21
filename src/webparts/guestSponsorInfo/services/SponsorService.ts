@@ -56,31 +56,49 @@ function arrayBufferToDataUrl(buffer: ArrayBuffer): string {
 }
 
 /**
- * Checks whether a user object still exists in the directory.
+ * Checks whether a sponsor user still exists and retrieves their manager profile
+ * in a single Graph call via $expand (saving one request per sponsor compared
+ * to two separate calls).
  *
- * Returns false only on an explicit HTTP 404.  Any other error (throttling,
- * transient network failure) is treated as "still exists" so that a temporary
- * Graph outage does not incorrectly hide a sponsor card.
+ * Returns `exists: false` only on HTTP 404 (hard-deleted or past soft-delete
+ * recycle-bin period).  Any other error is treated as "still exists" (fail-open)
+ * so a transient Graph outage does not incorrectly hide a sponsor card.
  *
- * Note: a *disabled* account (accountEnabled === false) still returns 200 here
- * because reading that flag on other users' objects requires User.Read.All, which
- * we intentionally do not request (least-privilege).
+ * Note: accountEnabled requires User.Read.All, which exceeds the declared
+ * permission scope and is therefore not checked here.
  */
-async function userExists(client: MSGraphClientV3, userId: string): Promise<boolean> {
+async function fetchSponsorDetails(
+  client: MSGraphClientV3,
+  userId: string
+): Promise<{ exists: boolean; managerDisplayName?: string; managerGivenName?: string; managerSurname?: string; managerJobTitle?: string; managerDepartment?: string; managerId?: string }> {
   try {
-    await client.api(`/users/${userId}`).select('id').get();
-    return true;
+    const user = await client
+      .api(`/users/${userId}`)
+      .select('id')
+      .expand('manager($select=id,displayName,givenName,surname,jobTitle,department)')
+      .get() as Record<string, unknown>;
+    const managerRaw = user.manager as Record<string, unknown> | null | undefined;
+    if (!managerRaw) return { exists: true };
+    return {
+      exists: true,
+      managerId: (managerRaw.id as string) || undefined,
+      managerDisplayName: (managerRaw.displayName as string) || undefined,
+      managerGivenName: (managerRaw.givenName as string) || undefined,
+      managerSurname: (managerRaw.surname as string) || undefined,
+      managerJobTitle: (managerRaw.jobTitle as string) || undefined,
+      managerDepartment: (managerRaw.department as string) || undefined,
+    };
   } catch (error) {
-    if ((error as { statusCode?: number }).statusCode === 404) return false;
-    return true;
+    if ((error as { statusCode?: number }).statusCode === 404) return { exists: false };
+    return { exists: true }; // Fail-open on transient errors.
   }
 }
 
 /**
  * Fetches the sponsors of the signed-in user via Microsoft Graph.
- * For each sponsor the function concurrently:
- *   1. Verifies the user object still exists (404 → unavailable).
- *   2. Fetches the profile photo (silent fallback to initials on any error).
+ * For each sponsor the function checks existence and retrieves manager details
+ * in a single Graph call (via $expand), then fetches presence for all sponsors
+ * in one batched call — both fan-outs run concurrently.
  *
  * Required delegated permissions (declared in package-solution.json):
  *   - User.Read          – read the signed-in user's own /me/sponsors relationship.
@@ -127,34 +145,6 @@ export async function fetchPresences(
   return map;
 }
 
-/**
- * Fetches the manager of a user (name and job title only, no photo).
- * Photo is deferred to loadPhotosProgressively so the card renders immediately.
- * Requires User.ReadBasic.All (delegated).
- * Returns undefined fields when no manager is set or on any error.
- */
-async function fetchManager(
-  client: MSGraphClientV3,
-  userId: string
-): Promise<{ managerDisplayName?: string; managerGivenName?: string; managerSurname?: string; managerJobTitle?: string; managerDepartment?: string; managerId?: string }> {
-  try {
-    const manager = await client
-      .api(`/users/${userId}/manager`)
-      .select('id,displayName,givenName,surname,jobTitle,department')
-      .get() as Record<string, unknown>;
-    const managerId = manager.id as string | undefined;
-    const managerDisplayName = (manager.displayName as string) || undefined;
-    const managerGivenName = (manager.givenName as string) || undefined;
-    const managerSurname = (manager.surname as string) || undefined;
-    const managerJobTitle = (manager.jobTitle as string) || undefined;
-    const managerDepartment = (manager.department as string) || undefined;
-    return { managerDisplayName, managerGivenName, managerSurname, managerJobTitle, managerDepartment, managerId };
-  } catch {
-    // No manager set (404) or permission error — non-critical.
-    return {};
-  }
-}
-
 export async function getSponsors(client: MSGraphClientV3): Promise<ISponsorsResult> {
   const response = await client
     .api('/me/sponsors')
@@ -186,10 +176,7 @@ export async function getSponsors(client: MSGraphClientV3): Promise<ISponsorsRes
     fetchPresences(client, sponsorIds),
     Promise.all(
       candidates.map(async sponsor => {
-        const [exists, managerInfo] = await Promise.all([
-          userExists(client, sponsor.id),
-          fetchManager(client, sponsor.id),
-        ]);
+        const { exists, ...managerInfo } = await fetchSponsorDetails(client, sponsor.id);
         return { sponsor: { ...sponsor, ...managerInfo }, exists };
       })
     ),

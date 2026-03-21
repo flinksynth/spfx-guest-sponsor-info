@@ -85,6 +85,7 @@ define([], function() {
     "CityFieldLabel": "Stad",
     "CountryFieldLabel": "Land",
     "CopyCityAriaLabel": "Stad kopi\u00ebren",
-    "CopyCountryAriaLabel": "Land kopi\u00ebren"
+    "CopyCountryAriaLabel": "Land kopi\u00ebren",
+    "ShowPresenceFieldLabel": "Aanwezigheidsstatus weergeven"
   }
 });

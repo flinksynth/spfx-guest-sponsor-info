@@ -79,6 +79,7 @@ define([], function() {
     "CityFieldLabel": "City",
     "CountryFieldLabel": "Country",
     "CopyCityAriaLabel": "Copy city",
-    "CopyCountryAriaLabel": "Copy country"
+    "CopyCountryAriaLabel": "Copy country",
+    "ShowPresenceFieldLabel": "Show presence status"
   }
 });

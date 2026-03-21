@@ -47,6 +47,7 @@ function buildClient(handlers: PathHandlers): unknown {
 
       return {
         select: jest.fn().mockReturnThis(),
+        expand: jest.fn().mockReturnThis(),
         responseType: jest.fn().mockReturnThis(),
         get: jest.fn().mockImplementation(getImpl),
       };
