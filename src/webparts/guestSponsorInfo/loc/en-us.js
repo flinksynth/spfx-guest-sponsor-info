@@ -61,9 +61,9 @@ define([], function() {
     "OpenAddressInMapLabel": "Open in map",
 
     "TeamsAccessPendingTitle": "Microsoft Teams not set up yet",
-    "TeamsAccessPendingMessage": "Your guest access to Microsoft Teams in this organization hasn\u2019t been set up yet. This doesn\u2019t affect your own Teams account. Ask your sponsor to add you to a Team \u2014 once they do, Teams features like chat, calls, and meetings will become available here.",
-    "TeamsNotReadyChatTooltip": "Chat not available in this organization \u2014 your Teams guest access hasn\u2019t been set up yet",
-    "TeamsNotReadyCallTooltip": "Call not available in this organization \u2014 your Teams guest access hasn\u2019t been set up yet",
+    "TeamsAccessPendingMessage": "Your guest access to Microsoft Teams in this organization hasn’t been set up yet. This doesn’t affect your own Teams account. Ask your sponsor to add you to a Team — once they do, Teams features like chat, calls, and meetings will become available here.",
+    "TeamsNotReadyChatTooltip": "Chat not available in this organization — your Teams guest access hasn’t been set up yet",
+    "TeamsNotReadyCallTooltip": "Call not available in this organization — your Teams guest access hasn’t been set up yet",
 
     "DisplayGroupName": "Display",
     "ShowBusinessPhonesFieldLabel": "Show business phone numbers",
@@ -93,7 +93,7 @@ define([], function() {
     "FunctionGroupName": "Azure Function",
     "FunctionUrlFieldLabel": "Sponsor API URL (Azure Function)",
     "FunctionClientIdFieldLabel": "Sponsor API Client ID (Azure Function App Registration)",
-    "ProxyStatusChecking": "Checking Azure Function connection\u2026",
+    "ProxyStatusChecking": "Checking Azure Function connection…",
     "ProxyStatusOk": "Azure Function reachable",
     "ProxyStatusError": "Azure Function not reachable",
     "ShowSponsorJobTitleFieldLabel": "Show sponsor's job title",
