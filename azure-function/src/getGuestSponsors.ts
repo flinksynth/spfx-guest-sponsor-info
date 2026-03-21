@@ -24,10 +24,11 @@ const RATE_LIMIT_MAX_REQUESTS = 20;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const rateLimitMap = new Map<string, number[]>();
 
-/** Cached optional-permission flags for MailboxSettings.Read and Presence.Read.All. */
+/** Cached optional-permission flags for MailboxSettings.Read, Presence.Read.All, and TeamMember.Read.All. */
 interface IOptionalPermissions {
   hasMailboxSettings: boolean;
   hasPresenceReadAll: boolean;
+  hasTeamMemberReadAll: boolean;
 }
 
 let cachedOptionalPermissions: Promise<IOptionalPermissions> | undefined;
@@ -63,12 +64,14 @@ async function detectOptionalPermissions(
         const hasPresenceReadAll = roles.includes('Presence.Read.All');
         const hasDirectoryReadAll = roles.includes('Directory.Read.All');
         const hasMailboxSettings = roles.includes('MailboxSettings.Read');
+        const hasTeamMemberReadAll = roles.includes('TeamMember.Read.All');
         context.log(
           `Graph app roles: User.Read.All=${hasUserReadAll}, ` +
           `User.ReadBasic.All=${hasUserReadBasicAll}, Presence.Read.All=${hasPresenceReadAll}, ` +
-          `Directory.Read.All=${hasDirectoryReadAll}, MailboxSettings.Read=${hasMailboxSettings}, count=${roles.length}`
+          `Directory.Read.All=${hasDirectoryReadAll}, MailboxSettings.Read=${hasMailboxSettings}, ` +
+          `TeamMember.Read.All=${hasTeamMemberReadAll}, count=${roles.length}`
         );
-        return { hasMailboxSettings, hasPresenceReadAll };
+        return { hasMailboxSettings, hasPresenceReadAll, hasTeamMemberReadAll };
       } catch (error) {
         // If token inspection fails for any reason, degrade gracefully.
         context.warn('Could not inspect token roles — optional features disabled.', error);
@@ -187,10 +190,13 @@ interface ISponsor {
 /**
  * Shape of the JSON response (matches ISponsorsResult in SPFx).
  * unavailableCount includes sponsors that are deleted, soft-deleted, or disabled.
+ * guestHasTeamsAccess is undefined when neither TeamMember.Read.All nor Presence.Read.All
+ * is granted — the client falls back to showing buttons enabled (fail-open).
  */
 interface ISponsorsResult {
   activeSponsors: ISponsor[];
   unavailableCount: number;
+  guestHasTeamsAccess?: boolean;
 }
 
 /**
@@ -377,7 +383,7 @@ export async function getGuestSponsors(
 
   try {
     const credential = new ManagedIdentityCredential();
-    const { hasMailboxSettings, hasPresenceReadAll } = await detectOptionalPermissions(credential, context);
+    const { hasMailboxSettings, hasPresenceReadAll, hasTeamMemberReadAll } = await detectOptionalPermissions(credential, context);
     const authProvider = new TokenCredentialAuthenticationProvider(credential, {
       scopes: ['https://graph.microsoft.com/.default'],
     });
@@ -446,8 +452,19 @@ export async function getGuestSponsors(
       url: `/users/${sponsor.id}?$select=id,accountEnabled,assignedPlans${hasMailboxSettings ? ',mailboxSettings' : ''}&$expand=manager($select=id,displayName,jobTitle,accountEnabled)`,
     }));
 
-    const [presenceMap, sponsorBatchResults] = await Promise.all([
-      hasPresenceReadAll ? fetchPresences(client, sponsorIds, context) : Promise.resolve(new Map<string, { availability?: string; activity?: string }>()),
+    // When TeamMember.Read.All is granted, add a joinedTeams sub-request to the
+    // same batch — saves an extra HTTP round-trip compared to a standalone call.
+    if (hasTeamMemberReadAll) {
+      sponsorBatchRequests.push({
+        id: 'joinedTeams',
+        method: 'GET',
+        url: `/users/${callerOid}/joinedTeams?$select=id&$top=1`,
+      });
+    }
+
+    const [presenceMap, batchResults] = await Promise.all([
+      // Include callerOid so we can use the guest's own presence as a provisioning signal.
+      hasPresenceReadAll ? fetchPresences(client, [...sponsorIds, callerOid], context) : Promise.resolve(new Map<string, { availability?: string; activity?: string }>()),
       executeBatch(
         client,
         sponsorBatchRequests,
@@ -456,8 +473,19 @@ export async function getGuestSponsors(
       ),
     ]);
 
+    // Extract joinedTeams count from the batch response (if included).
+    let guestJoinedTeamsCount: number | undefined;
+    if (hasTeamMemberReadAll) {
+      const jtResponse = batchResults.get('joinedTeams');
+      if (jtResponse?.status === 200 && jtResponse.body) {
+        const jtValue = (jtResponse.body as Record<string, unknown>).value;
+        guestJoinedTeamsCount = Array.isArray(jtValue) ? jtValue.length : 0;
+      }
+      // else: undefined — error or missing, falls through to presence fallback
+    }
+
     const perSponsorResults = candidates.map((sponsor, index) => {
-      const existsResponse = sponsorBatchResults.get(`exists-${index}`);
+      const existsResponse = batchResults.get(`exists-${index}`);
       const existsBody = existsResponse?.body;
       const sponsorEnabled = existsBody !== undefined
         ? getBooleanValue(existsBody, 'accountEnabled')
@@ -544,7 +572,40 @@ export async function getGuestSponsors(
       });
     const unavailableCount = perSponsorResults.filter(r => !r.exists).length;
 
+    // Determine whether the guest's Teams service account has been provisioned.
+    //
+    // Signal hierarchy (strongest → weakest):
+    //   1. joinedTeams non-empty  → definitively provisioned (account + resource exist)
+    //   2. joinedTeams empty      → account MAY still exist if the guest was removed from
+    //                              their last Team; use presence as tie-breaker:
+    //        • real presence (not PresenceUnknown) → account exists, no current membership
+    //        • PresenceUnknown / absent             → account not yet provisioned
+    //   3. Neither permission granted               → unknown; client fails open
+    let guestHasTeamsAccess: boolean | undefined;
+    const guestPresenceSnapshot = presenceMap.get(callerOid);
+    const guestPresenceKnown =
+      guestPresenceSnapshot !== undefined &&
+      guestPresenceSnapshot.availability !== undefined &&
+      guestPresenceSnapshot.availability !== 'PresenceUnknown';
+
+    if (hasTeamMemberReadAll) {
+      if (guestJoinedTeamsCount === undefined) {
+        // Error fetching joinedTeams — fall back to presence if available, else unknown.
+        guestHasTeamsAccess = hasPresenceReadAll ? guestPresenceKnown : undefined;
+      } else if (guestJoinedTeamsCount > 0) {
+        guestHasTeamsAccess = true;
+      } else {
+        // No joined teams — presence distinguishes "removed from last team" from "never provisioned".
+        guestHasTeamsAccess = hasPresenceReadAll ? guestPresenceKnown : false;
+      }
+    } else if (hasPresenceReadAll) {
+      // TeamMember.Read.All not granted — presence alone as signal.
+      guestHasTeamsAccess = guestPresenceKnown ? true : false;
+    }
+    // else → undefined: neither permission granted, client falls open.
+
     const result: ISponsorsResult = { activeSponsors, unavailableCount };
+    if (guestHasTeamsAccess !== undefined) result.guestHasTeamsAccess = guestHasTeamsAccess;
     return jsonResponse(result, 200, request);
   } catch (error) {
     if (error instanceof GraphError) {
