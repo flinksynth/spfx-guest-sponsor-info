@@ -384,7 +384,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
   const { presence: personaPresence, isOutOfOffice: personaOof } = graphPresenceToPersonaPresence(
     sponsor.presence, sponsor.presenceActivity
   );
-  const showPresenceIndicator = showPresence && sponsor.hasTeams !== false;
+  const showPresenceIndicator = showPresence && sponsor.hasTeams !== false && isActive;
   const isOffline = sponsor.presence === 'Offline' || sponsor.presence === 'PresenceUnknown';
   const useCustomPresenceDot = showPresenceIndicator && (isFocusing || isOffline);
   const customDotColor = isFocusing ? PRESENCE_COLORS.Focusing : PRESENCE_COLORS.Offline;
