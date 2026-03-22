@@ -18,6 +18,7 @@ RUN apt-get update \
   python-is-python3 \
   python3 \
   ripgrep \
+  shellcheck \
   unzip \
   xz-utils \
   && rm -rf /var/lib/apt/lists/* \

@@ -10,8 +10,13 @@
 # Run scripts/lint.sh afterwards to verify no issues remain.
 #
 # For CI use scripts/lint.sh instead — it never modifies files.
+# Note: Bicep lint (az bicep lint) and shellcheck have no auto-fix mode;
+# they are included in scripts/lint.sh but skipped here.
 
 set -euo pipefail
+
+# Always run from the repository root so npm scripts resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 echo "[ 1/4 ] ESLint --fix (TypeScript — web part)..."
 npm run fix:ts
@@ -19,7 +24,7 @@ echo "  ✓ done"
 
 echo ""
 echo "[ 2/4 ] ESLint --fix (TypeScript — Azure Function)..."
-node_modules/.bin/eslint azure-function/src --ext .ts --fix
+npm run fix:ts:func
 echo "  ✓ done"
 
 echo ""

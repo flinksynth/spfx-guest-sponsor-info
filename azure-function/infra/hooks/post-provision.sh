@@ -16,6 +16,7 @@
 
 set -euo pipefail
 
+# shellcheck disable=SC1090  # process substitution: no static path to specify
 source <(azd env get-values)
 
 MANAGED_IDENTITY_OBJECT_ID="${MANAGED_IDENTITY_OBJECT_ID:?Bicep output MANAGED_IDENTITY_OBJECT_ID missing — did provisioning succeed?}"

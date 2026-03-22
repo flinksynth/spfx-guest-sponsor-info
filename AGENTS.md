@@ -13,6 +13,7 @@ The following CLI tools are pre-installed in `.devcontainer/Dockerfile` and shou
 | **ripgrep** (`rg`) | `grep` | `rg "ComponentName" src/ --type ts` | Fast code/text search across codebase |
 | **fd** | `find` | `fd "\.tsx$" src/` | Finding files by pattern (faster, cleaner syntax) |
 | **bat** | `cat` | `bat src/components/MyComponent.tsx` | Syntax-highlighted file preview in terminal |
+| **shellcheck** | — | `shellcheck scripts/*.sh` | Static analysis of shell scripts |
 
 ### Data Processing Tools
 

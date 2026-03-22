@@ -23,8 +23,10 @@ set -euo pipefail
 # Load .env if present.
 ENV_FILE="${BASH_SOURCE[0]%/*}/../.env"
 if [[ -f "${ENV_FILE}" ]]; then
+  set -a
   # shellcheck source=/dev/null
-  set -a; source "${ENV_FILE}"; set +a
+  source "${ENV_FILE}"
+  set +a
 fi
 
 SPFX_TENANT="${SPFX_TENANT:-}"
