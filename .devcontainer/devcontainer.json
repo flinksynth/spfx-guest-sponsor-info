@@ -18,7 +18,15 @@
   ],
   "features": {
     // GitHub CLI — lets Copilot and shell scripts query Actions runs, PRs, releases, etc.
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    // Azure CLI — needed for azure-function infra deployment and local az commands.
+    "ghcr.io/devcontainers/features/azure-cli:1": {},
+    // PowerShell Extended — installs pwsh correctly on AMD64 and ARM64, with Oh My Posh
+    // prompt, PSReadLine, and optional PSGallery resources. Replaces the fragile
+    // packages-microsoft-prod.deb approach that fails on ARM64/Codespaces.
+    "ghcr.io/jpawlowski/devcontainer-features/powershell-extended:2": {
+      "installOhMyPosh": false
+    }
   },
   "build": {
     "dockerfile": "Dockerfile",

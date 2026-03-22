@@ -38,16 +38,6 @@ RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
   && npm install --global yo @microsoft/generator-sharepoint@1.22.2 \
   && npm cache clean --force
 
-# PowerShell — needed to run the azure-function/infra/*.ps1 setup scripts locally.
-# Installed from the Microsoft package repository for Debian 12.
-RUN curl -fsSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb \
-  -o /tmp/ms-prod.deb \
-  && dpkg -i /tmp/ms-prod.deb \
-  && rm /tmp/ms-prod.deb \
-  && apt-get update \
-  && apt-get install -y --no-install-recommends powershell azure-cli \
-  && rm -rf /var/lib/apt/lists/*
-
 # Azure Functions Core Tools v4 — enables `func start` for local function development.
 RUN npm install --global azure-functions-core-tools@4 \
   && npm cache clean --force
