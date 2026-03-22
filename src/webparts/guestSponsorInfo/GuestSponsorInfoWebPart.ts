@@ -80,7 +80,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
         mockMode: this.properties.mockMode ?? false,
         hostTenantId: this.context.pageContext.aadInfo.tenantId.toString(),
         functionUrl: this.properties.functionUrl
-          ? `${this.properties.functionUrl.replace(/\/$/, '')}/api/getGuestSponsors`
+          ? `https://${this.properties.functionUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '')}/api/getGuestSponsors`
           : undefined,
         functionClientId: this.properties.functionClientId || undefined,
         aadHttpClient: this._aadHttpClient,
