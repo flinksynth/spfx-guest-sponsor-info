@@ -3,11 +3,10 @@
   // Ensure ~/.gitconfig exists on the host before the bind-mount runs.
   // The mount makes the host git identity automatically available in the
   // container — and any 'git config --global' changes persist back to the host.
-  "initializeCommand": {
-    "linux": "[ -f ~/.gitconfig ] || touch ~/.gitconfig",
-    "mac": "[ -f ~/.gitconfig ] || touch ~/.gitconfig",
-    "windows": "powershell -Command \"if (-not (Test-Path $env:USERPROFILE\\\\.gitconfig)) { New-Item -ItemType File -Path $env:USERPROFILE\\\\.gitconfig -Force | Out-Null }\" || $true"
-  },
+  // Note: initializeCommand object keys run in parallel (not per-platform),
+  // so a single sh command is used here. Windows users: Git for Windows
+  // creates %USERPROFILE%\.gitconfig automatically, so no action is needed.
+  "initializeCommand": "[ -f ~/.gitconfig ] || touch ~/.gitconfig",
   "mounts": [
     // Expose the host gitconfig as a read-only reference file.
     // setup-git.sh reads user.name/email from it and writes them into the
