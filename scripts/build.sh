@@ -17,6 +17,9 @@
 
 set -euo pipefail
 
+# Always run from the repository root so paths resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 echo "Installing web part dependencies..."
 npm ci
 

@@ -16,6 +16,9 @@
 
 set -euo pipefail
 
+# Always run from the repository root so npm scripts resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 NEW_VERSION="${1:-}"
 if [[ -z "${NEW_VERSION}" ]]; then
   echo "Usage: $0 <new-spfx-version>  (e.g. 1.23.0)" >&2

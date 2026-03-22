@@ -9,6 +9,9 @@
 
 set -euo pipefail
 
+# Always run from the repository root so npm scripts resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 echo "Running tests..."
 npm test
 

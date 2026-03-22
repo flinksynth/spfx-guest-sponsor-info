@@ -20,8 +20,11 @@
 
 set -euo pipefail
 
+# Always run from the repository root so paths resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 # Load .env if present.
-ENV_FILE="${BASH_SOURCE[0]%/*}/../.env"
+ENV_FILE=".env"
 if [[ -f "${ENV_FILE}" ]]; then
   set -a
   # shellcheck source=/dev/null

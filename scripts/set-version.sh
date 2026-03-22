@@ -16,6 +16,9 @@
 
 set -euo pipefail
 
+# Always run from the repository root so paths resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
 TAG="${1:-}"
 if [[ -z "$TAG" ]]; then
   echo "Usage: $0 <tag> [--commit]  (e.g. v1.2.3 --commit)" >&2
