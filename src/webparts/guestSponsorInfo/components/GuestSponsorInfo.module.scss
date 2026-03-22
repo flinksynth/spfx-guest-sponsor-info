@@ -12,7 +12,7 @@
 
 // Reserve minimum height while displaying loading skeletons or error messages
 // to prevent layout shift when transitioning between states.
-// Conservative cover for: webPart padding (16px) + title (36px) + shimmer (132px) = 184px.
+// Conservative cover for: webPart padding (16px) + title (36px) + shimmer (140px) = 192px.
 .webPartContent {
   min-height: 200px;
 }
@@ -112,12 +112,12 @@
   position: relative;
   width: 136px;
   box-sizing: border-box;
-  min-height: 114px; // border-box: 8 padding + 72 avatar + 8 gap + 18px name (≥1 line) + 8 padding
+  min-height: 122px; // border-box: 12 padding + 72 avatar + 8 gap + 18px name (≥1 line) + 12 padding
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 8px; // equal on all sides — Fluent UI spacingS
+  padding: 12px; // equal on all sides — half of the 24px detail-row left inset
   border-radius: 4px;
   cursor: pointer;
   outline: none;
