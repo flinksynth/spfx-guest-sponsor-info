@@ -13,16 +13,18 @@ declare interface IGuestSponsorInfoWebPartStrings {
 
   // Display toggles
   DisplayGroupName: string;
+  CardLayoutFieldLabel: string;
+  CardLayoutAutoOption: string;
+  CardLayoutFullOption: string;
+  CardLayoutCompactOption: string;
   ShowBusinessPhonesFieldLabel: string;
   ShowMobilePhoneFieldLabel: string;
   ShowWorkLocationFieldLabel: string;
   ShowCityFieldLabel: string;
   ShowCountryFieldLabel: string;
-  ShowStructuredAddressFieldLabel: string;
   ShowStreetAddressFieldLabel: string;
   ShowPostalCodeFieldLabel: string;
   ShowStateFieldLabel: string;
-  ShowAddressMapFieldLabel: string;
   AzureMapsSubscriptionKeyFieldLabel: string;
   ExternalMapProviderFieldLabel: string;
   MapProviderBingOption: string;
@@ -30,15 +32,16 @@ declare interface IGuestSponsorInfoWebPartStrings {
   MapProviderAppleOption: string;
   MapProviderOpenStreetMapOption: string;
   MapProviderHereOption: string;
-  LocationDisplayHintAddressEnabled: string;
   LocationDisplayHintSeparateRows: string;
   LocationDisplayHintHidden: string;
-  AddressMapFallbackHint: string;
   AdvancedDisplayGroupName: string;
   ManagerOptionsDisabledHint: string;
   ShowManagerFieldLabel: string;
   ShowPresenceFieldLabel: string;
+  ShowSponsorPhotoFieldLabel: string;
+  ShowManagerPhotoFieldLabel: string;
   UseInformalAddressFieldLabel: string;
+  UseInformalAddressHint: string;
 
   // Job title and department toggles
   ShowSponsorJobTitleFieldLabel: string;
@@ -87,6 +90,7 @@ declare interface IGuestSponsorInfoWebPartStrings {
   WorkPhoneFieldLabel: string;
   MobileFieldLabel: string;
   WorkLocationFieldLabel: string;
+  AddressFieldLabel: string;
   CityFieldLabel: string;
   CountryFieldLabel: string;
   StreetAddressFieldLabel: string;
@@ -95,6 +99,7 @@ declare interface IGuestSponsorInfoWebPartStrings {
 
   // Organization section
   OrganizationSection: string;
+  ReportsToSection: string;
   ManagerLabel: string;
 
   // Copy-to-clipboard buttons
@@ -103,6 +108,7 @@ declare interface IGuestSponsorInfoWebPartStrings {
   CopyWorkPhoneAriaLabel: string;
   CopyMobileAriaLabel: string;
   CopyLocationAriaLabel: string;
+  CopyAddressAriaLabel: string;
   CopyCityAriaLabel: string;
   CopyCountryAriaLabel: string;
   CopyStreetAddressAriaLabel: string;

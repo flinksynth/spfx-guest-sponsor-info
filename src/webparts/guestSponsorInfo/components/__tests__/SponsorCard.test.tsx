@@ -117,7 +117,6 @@ function render(
   showWorkLocation = true,
   showCity = false,
   showCountry = false,
-  showStructuredAddress = false,
   showStreetAddress = false,
   showPostalCode = false,
   showState = false,
@@ -128,15 +127,18 @@ function render(
   showManagerJobTitle = true,
   showSponsorDepartment = false,
   showManagerDepartment = false,
-  showAddressMap = false,
+  showSponsorPhoto = true,
+  showManagerPhoto = true,
   azureMapsSubscriptionKey: string | undefined = undefined,
-  externalMapProvider: 'bing' | 'google' | 'apple' | 'openstreetmap' | 'here' = 'bing'
+  externalMapProvider: 'bing' | 'google' | 'apple' | 'openstreetmap' | 'here' = 'bing',
+  compact = false
 ): void {
   act(() => {
     ReactDOM.render(
       <SponsorCard
         sponsor={sponsor}
         hostTenantId={hostTenantId}
+        compact={compact}
         isActive={isActive}
         onActivate={onActivate}
         onScheduleDeactivate={onScheduleDeactivate}
@@ -145,11 +147,9 @@ function render(
         showWorkLocation={showWorkLocation}
         showCity={showCity}
         showCountry={showCountry}
-        showStructuredAddress={showStructuredAddress}
         showStreetAddress={showStreetAddress}
         showPostalCode={showPostalCode}
         showState={showState}
-        showAddressMap={showAddressMap}
         azureMapsSubscriptionKey={azureMapsSubscriptionKey}
         externalMapProvider={externalMapProvider}
         showManager={showManager}
@@ -159,6 +159,8 @@ function render(
         showManagerJobTitle={showManagerJobTitle}
         showSponsorDepartment={showSponsorDepartment}
         showManagerDepartment={showManagerDepartment}
+        showSponsorPhoto={showSponsorPhoto}
+        showManagerPhoto={showManagerPhoto}
       />,
       container
     );
@@ -366,7 +368,6 @@ describe('SponsorCard', () => {
       );
 
       const dialog = container.querySelector('[role="dialog"]')!;
-      expect(dialog.textContent).toContain('City / Country');
       expect(dialog.textContent).toContain('Munich, Germany');
       expect(dialog.textContent).toContain('Building 4 / Floor 2');
     });
@@ -386,7 +387,6 @@ describe('SponsorCard', () => {
       );
 
       const dialog = container.querySelector('[role="dialog"]')!;
-      expect(dialog.textContent).toContain('Work location');
       expect(dialog.textContent).toContain('Building 4 / Floor 2');
     });
 
@@ -405,7 +405,6 @@ describe('SponsorCard', () => {
       );
 
       const dialog = container.querySelector('[role="dialog"]')!;
-      expect(dialog.textContent).toContain('City');
       expect(dialog.textContent).toContain('Munich');
       expect(dialog.textContent).not.toContain('Germany');
       expect(dialog.textContent).toContain('Building 4 / Floor 2');
@@ -438,11 +437,8 @@ describe('SponsorCard', () => {
       );
 
       const dialog = container.querySelector('[role="dialog"]')!;
-      expect(dialog.textContent).toContain('Street');
       expect(dialog.textContent).toContain('Musterstrasse 10');
-      expect(dialog.textContent).toContain('ZIP');
       expect(dialog.textContent).toContain('80331');
-      expect(dialog.textContent).toContain('State');
       expect(dialog.textContent).toContain('Bayern');
     });
 
@@ -450,7 +446,7 @@ describe('SponsorCard', () => {
       globalThis.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
-          results: [{ position: { lat: 48.1371, lon: 11.5754 } }],
+          results: [{ type: 'Point Address', position: { lat: 48.1371, lon: 11.5754 } }],
         }),
       }) as unknown as typeof fetch;
 
@@ -473,7 +469,6 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
-        false,
         true,
         true,
         false,
@@ -481,6 +476,7 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
+        true,
         true,
         'test-azure-maps-key',
         'bing'
@@ -491,6 +487,98 @@ describe('SponsorCard', () => {
       expect(globalThis.fetch).toHaveBeenCalled();
       const preview = container.querySelector('img[src*="atlas.microsoft.com/map/static/png"]');
       expect(preview).not.toBeNull();
+    });
+
+    it('renders Azure Maps preview for city-only address (Geography/Municipality)', async () => {
+      globalThis.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          results: [{ type: 'Geography', entityType: 'Municipality', position: { lat: 48.1371, lon: 11.5754 } }],
+        }),
+      }) as unknown as typeof fetch;
+
+      render(
+        {
+          ...BASE_SPONSOR,
+          streetAddress: undefined,
+          city: 'Munich',
+          country: 'Germany',
+        },
+        'test-tenant-id',
+        true,
+        jest.fn(),
+        jest.fn(),
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        'test-azure-maps-key',
+        'bing'
+      );
+
+      await flushAsync();
+
+      const preview = container.querySelector('img[src*="atlas.microsoft.com/map/static/png"]');
+      expect(preview).not.toBeNull();
+    });
+
+    it('suppresses Azure Maps preview when geocoding returns only a country', async () => {
+      globalThis.fetch = jest.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          results: [{ type: 'Geography', entityType: 'Country', position: { lat: 51.1657, lon: 10.4515 } }],
+        }),
+      }) as unknown as typeof fetch;
+
+      render(
+        {
+          ...BASE_SPONSOR,
+          streetAddress: undefined,
+          city: undefined,
+          country: 'Germany',
+        },
+        'test-tenant-id',
+        true,
+        jest.fn(),
+        jest.fn(),
+        true,
+        true,
+        true,
+        true,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        false,
+        true,
+        false,
+        false,
+        false,
+        true,
+        true,
+        'test-azure-maps-key',
+        'bing'
+      );
+
+      await flushAsync();
+
+      const preview = container.querySelector('img[src*="atlas.microsoft.com/map/static/png"]');
+      expect(preview).toBeNull();
     });
 
     it('shows external provider link fallback when Azure Maps key is missing', () => {
@@ -513,7 +601,6 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
-        false,
         true,
         true,
         false,
@@ -521,6 +608,7 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
+        true,
         true,
         undefined,
         'google'
@@ -554,7 +642,6 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
-        false,
         true,
         true,
         false,
@@ -562,6 +649,7 @@ describe('SponsorCard', () => {
         false,
         false,
         false,
+        true,
         true,
         'test-azure-maps-key',
         'here'

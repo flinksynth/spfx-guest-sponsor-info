@@ -68,9 +68,11 @@ function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
     graphClient: {} as never, // The actual client object is irrelevant; getSponsors is mocked.
     title: 'My Sponsors',
     mockMode: false,
+    cardLayout: 'auto',
     hostTenantId: 'aaaabbbb-0000-0000-0000-000000000001',
     functionUrl: undefined,
     presenceUrl: undefined,
+    pingUrl: undefined,
     functionClientId: undefined,
     aadHttpClient: undefined,
     showBusinessPhones: true,
@@ -78,11 +80,9 @@ function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
     showWorkLocation: true,
     showCity: false,
     showCountry: false,
-    showStructuredAddress: false,
     showStreetAddress: false,
     showPostalCode: false,
     showState: false,
-    showAddressMap: false,
     azureMapsSubscriptionKey: undefined,
     externalMapProvider: 'bing',
     showManager: true,
@@ -92,6 +92,8 @@ function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
     showManagerJobTitle: true,
     showSponsorDepartment: false,
     showManagerDepartment: false,
+    showSponsorPhoto: true,
+    showManagerPhoto: true,
     clientVersion: '0.0.1',
   };
   ReactDOM.render(<GuestSponsorInfo {...defaults} {...overrides} />, container);

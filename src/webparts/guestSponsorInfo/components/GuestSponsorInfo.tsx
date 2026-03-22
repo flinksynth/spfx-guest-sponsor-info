@@ -5,7 +5,7 @@ import * as strings from 'GuestSponsorInfoWebPartStrings';
 import styles from './GuestSponsorInfo.module.scss';
 import type { IGuestSponsorInfoProps } from './IGuestSponsorInfoProps';
 import { ISponsor } from '../services/ISponsor';
-import { isGuestUser, getSponsors, getSponsorsViaProxy, loadPhotosProgressively, fetchPresences, getPresencesViaProxy } from '../services/SponsorService';
+import { isGuestUser, getSponsors, getSponsorsViaProxy, pingProxy, loadPhotosProgressively, fetchPresences, getPresencesViaProxy } from '../services/SponsorService';
 import { MOCK_SPONSORS } from '../services/MockSponsorService';
 import SponsorCard from './SponsorCard';
 
@@ -18,16 +18,16 @@ import SponsorCard from './SponsorCard';
 interface ISponsorListProps {
   sponsors: ISponsor[];
   hostTenantId: string;
+  /** When true, render compact horizontal cards instead of full 136px tiles. */
+  compact: boolean;
   showBusinessPhones: boolean;
   showMobilePhone: boolean;
   showWorkLocation: boolean;
   showCity: boolean;
   showCountry: boolean;
-  showStructuredAddress: boolean;
   showStreetAddress: boolean;
   showPostalCode: boolean;
   showState: boolean;
-  showAddressMap: boolean;
   azureMapsSubscriptionKey: string | undefined;
   externalMapProvider: 'bing' | 'google' | 'apple' | 'openstreetmap' | 'here';
   showManager: boolean;
@@ -36,13 +36,15 @@ interface ISponsorListProps {
   showManagerJobTitle: boolean;
   showSponsorDepartment: boolean;
   showManagerDepartment: boolean;
+  showSponsorPhoto: boolean;
+  showManagerPhoto: boolean;
   useInformalAddress: boolean;
   onActiveCardChange?: (hasActiveCard: boolean) => void;
   /** Propagated from ISponsorsResult — false shows disabled buttons in each card. */
   guestHasTeamsAccess?: boolean;
 }
 
-const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showStructuredAddress, showStreetAddress, showPostalCode, showState, showAddressMap, azureMapsSubscriptionKey, externalMapProvider, showManager, showPresence, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, useInformalAddress, onActiveCardChange, guestHasTeamsAccess }) => {
+const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, compact, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showStreetAddress, showPostalCode, showState, azureMapsSubscriptionKey, externalMapProvider, showManager, showPresence, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, showSponsorPhoto, showManagerPhoto, useInformalAddress, onActiveCardChange, guestHasTeamsAccess }) => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const hideTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -66,12 +68,13 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, show
   }, [onActiveCardChange]);
 
   return (
-    <ul className={styles.sponsorGrid}>
+    <ul className={compact ? styles.sponsorGridCompact : styles.sponsorGrid}>
       {sponsors.map(sponsor => (
         <li key={sponsor.id} className={styles.sponsorItem}>
           <SponsorCard
             sponsor={sponsor}
             hostTenantId={hostTenantId}
+            compact={compact}
             isActive={activeId === sponsor.id}
             onActivate={() => activate(sponsor.id)}
             onScheduleDeactivate={scheduleDeactivate}
@@ -80,11 +83,9 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, show
             showWorkLocation={showWorkLocation}
             showCity={showCity}
             showCountry={showCountry}
-            showStructuredAddress={showStructuredAddress}
             showStreetAddress={showStreetAddress}
             showPostalCode={showPostalCode}
             showState={showState}
-            showAddressMap={showAddressMap}
             azureMapsSubscriptionKey={azureMapsSubscriptionKey}
             externalMapProvider={externalMapProvider}
             showManager={showManager}
@@ -93,6 +94,8 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, show
             showManagerJobTitle={showManagerJobTitle}
             showSponsorDepartment={showSponsorDepartment}
             showManagerDepartment={showManagerDepartment}
+            showSponsorPhoto={showSponsorPhoto}
+            showManagerPhoto={showManagerPhoto}
             useInformalAddress={useInformalAddress}
             guestHasTeamsAccess={guestHasTeamsAccess}
           />
@@ -102,10 +105,8 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, show
   );
 };
 
-// Skeleton shimmer for a single sponsor card — shows avatar + 2-line name placeholder.
-// Job title is never shown in the grid thumbnail, so only the name area is shimmed.
-// Pixel values: card width 136px, avatar 72px centered, name lines ~96px and ~70px.
-const sponsorCardShimmer = (
+// Skeleton shimmer for full layout — 136px tile with 72px avatar + 2-line name.
+const sponsorCardShimmerFull = (
   <ShimmerElementsGroup
     flexWrap
     width="136px"
@@ -132,16 +133,34 @@ const sponsorCardShimmer = (
   />
 );
 
+// Skeleton shimmer for compact layout — horizontal row with 40px avatar + name line.
+// Total height: 6px padding + 40px avatar + 6px padding = 52px.
+// Width: 6px + 40px + 10px gap + ~120px name + 6px = 182px.
+const sponsorCardShimmerCompact = (
+  <ShimmerElementsGroup
+    width="182px"
+    shimmerElements={[
+      { type: ShimmerElementType.gap,    width: 6,  height: 52 },
+      { type: ShimmerElementType.circle,            height: 40 },
+      { type: ShimmerElementType.gap,    width: 10, height: 52 },
+      { type: ShimmerElementType.line,   width: 120, height: 14 },
+      { type: ShimmerElementType.gap,    width: 6,  height: 52 },
+    ]}
+  />
+);
+
 /**
- * Renders a single shimmer placeholder card in the same grid as the real sponsor list.
- * Shown instead of a loading text while Graph data is being fetched.
- * Displaying only one card reduces layout shift on page load while still providing
- * visual feedback that data is being fetched.
+ * Renders a single shimmer placeholder in the same grid as the real sponsor list.
+ * The shimmer shape matches the configured card layout so there is no layout shift
+ * when real data replaces the skeleton.
  */
-const SponsorGridSkeleton: React.FC = () => (
-  <ul className={styles.sponsorGrid} aria-busy="true">
+const SponsorGridSkeleton: React.FC<{ compact: boolean }> = ({ compact }) => (
+  <ul className={compact ? styles.sponsorGridCompact : styles.sponsorGrid} aria-busy="true">
     <li className={styles.sponsorItem}>
-      <Shimmer customElementsGroup={sponsorCardShimmer} width="136px" />
+      {compact
+        ? <Shimmer customElementsGroup={sponsorCardShimmerCompact} width="182px" />
+        : <Shimmer customElementsGroup={sponsorCardShimmerFull} width="136px" />
+      }
     </li>
   </ul>
 );
@@ -158,20 +177,20 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   graphClient,
   title,
   mockMode,
+  cardLayout,
   hostTenantId,
   functionUrl,
   presenceUrl,
+  pingUrl,
   aadHttpClient,
   showBusinessPhones,
   showMobilePhone,
   showWorkLocation,
   showCity,
   showCountry,
-  showStructuredAddress,
   showStreetAddress,
   showPostalCode,
   showState,
-  showAddressMap,
   azureMapsSubscriptionKey,
   externalMapProvider,
   showManager,
@@ -180,6 +199,8 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   showManagerJobTitle,
   showSponsorDepartment,
   showManagerDepartment,
+  showSponsorPhoto,
+  showManagerPhoto,
   useInformalAddress,
   clientVersion,
 }) => {
@@ -223,25 +244,29 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   const sponsorIdsRef = React.useRef<string[]>([]);
 
   // Edit-mode proxy health check: verify the Azure Function is reachable while the
-  // page author has the web part selected. Only fires when functionUrl is configured.
+  // page author has the web part selected.  Uses the lightweight /api/ping endpoint
+  // so the check works for any authenticated user — not just guests.
   React.useEffect(() => {
-    if (!isEditMode || !functionUrl) return;
+    if (!isEditMode || !pingUrl) return;
     if (!aadHttpClient) { setProxyStatus('error'); return; }
     let cancelled = false;
     setProxyStatus('checking');
-    getSponsorsViaProxy(functionUrl, aadHttpClient)
+    pingProxy(pingUrl, aadHttpClient)
       .then(() => { if (!cancelled) setProxyStatus('ok'); })
       .catch(() => { if (!cancelled) setProxyStatus('error'); });
     return () => { cancelled = true; };
-  }, [isEditMode, functionUrl, aadHttpClient]);
+  }, [isEditMode, pingUrl, aadHttpClient]);
 
   React.useEffect(() => {
     if (isEditMode) return;
 
     // Demo mode: use static mock data, no Graph calls needed.
+    // Simulate a guest whose Teams access hasn't been provisioned yet so
+    // the warning banner and disabled Chat/Call buttons are visible.
     if (mockMode) {
       setSponsors(MOCK_SPONSORS);
       setAllUnavailable(false);
+      setGuestHasTeamsAccess(false);
       setLoading(false);
       return;
     }
@@ -407,6 +432,13 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
     };
   }, [isEditMode, mockMode, isGuest, loading, error, graphClient, hasActiveCard, presenceUrl, aadHttpClient, presenceToken]);
 
+  // Guard: SPFx AMD locale bundles load asynchronously. On the very first synchronous
+  // render (edit mode renders immediately, before AMD resolves), strings may still be
+  // undefined. Return null here — after all hooks have been called unconditionally —
+  // so React can re-render once any state update or framework re-render provides a
+  // populated strings object.
+  if (!(strings as unknown as object | undefined)) return null;
+
   // Edit mode: always show a lightweight placeholder so page authors can position the web part.
   if (isEditMode) {
     let placeholderText: string;
@@ -451,7 +483,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   return (
     <section className={contentClassNames}>
       {title && <h2 className={styles.title}>{title}</h2>}
-      {loading && <SponsorGridSkeleton />}
+      {loading && <SponsorGridSkeleton compact={cardLayout === 'compact'} />}
       {!loading && error && !isPermissionError && (
         <p className={styles.statusMessage}>{error}</p>
       )}
@@ -470,16 +502,15 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
         <SponsorList
           sponsors={sponsors}
           hostTenantId={hostTenantId}
+          compact={cardLayout === 'compact' || (cardLayout === 'auto' && sponsors.length > 2)}
           showBusinessPhones={showBusinessPhones}
           showMobilePhone={showMobilePhone}
           showWorkLocation={showWorkLocation}
           showCity={showCity}
           showCountry={showCountry}
-          showStructuredAddress={showStructuredAddress}
           showStreetAddress={showStreetAddress}
           showPostalCode={showPostalCode}
           showState={showState}
-          showAddressMap={showAddressMap}
           azureMapsSubscriptionKey={azureMapsSubscriptionKey}
           externalMapProvider={externalMapProvider}
           showManager={showManager}
@@ -488,6 +519,8 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
           showManagerJobTitle={showManagerJobTitle}
           showSponsorDepartment={showSponsorDepartment}
           showManagerDepartment={showManagerDepartment}
+          showSponsorPhoto={showSponsorPhoto}
+          showManagerPhoto={showManagerPhoto}
           useInformalAddress={useInformalAddress}
           onActiveCardChange={setHasActiveCard}
           guestHasTeamsAccess={guestHasTeamsAccess}

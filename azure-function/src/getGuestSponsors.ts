@@ -929,7 +929,7 @@ export async function getGuestSponsors(
           mail: 'anna.mueller@contoso.com',
           jobTitle: 'IT Manager',
           department: 'Information Technology',
-          officeLocation: 'Berlin',
+          officeLocation: 'BER-HQ / Bldg A / Floor 4 / A4-12',
           city: 'Berlin',
           country: 'Germany',
           businessPhones: ['+49 30 12345678'],
@@ -950,7 +950,7 @@ export async function getGuestSponsors(
           mail: 'james.anderson@contoso.com',
           jobTitle: 'Project Lead',
           department: 'Business Development',
-          officeLocation: 'Munich',
+          officeLocation: 'MUC-03 / Bldg C / Floor 2 / C2-08',
           city: 'Munich',
           country: 'Germany',
           businessPhones: [],
@@ -1706,4 +1706,32 @@ app.http('getPresence', {
   methods: ['GET', 'OPTIONS'],
   authLevel: 'anonymous', // Authentication is enforced by EasyAuth, not the function key.
   handler: safeGetPresence,
+});
+
+/**
+ * HTTP GET – lightweight health-check endpoint.
+ *
+ * Returns HTTP 200 with the function version.  No authentication checks,
+ * no Graph calls — EasyAuth still gates access at the infrastructure level,
+ * but the function itself performs no caller validation.  This lets the SPFx
+ * web part verify connectivity to the Function App in edit mode without
+ * triggering sponsor lookups or permission errors for non-guest editors.
+ */
+app.http('ping', {
+  methods: ['GET', 'OPTIONS'],
+  authLevel: 'anonymous',
+  handler: async (request: HttpRequest): Promise<HttpResponseInit> => {
+    if (request.method === 'OPTIONS') {
+      return { status: 204, headers: corsHeaders(request) };
+    }
+    return {
+      status: 200,
+      body: JSON.stringify({ status: 'ok', version: FUNCTION_VERSION }),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-version': FUNCTION_VERSION,
+        ...corsHeaders(request),
+      },
+    };
+  },
 });

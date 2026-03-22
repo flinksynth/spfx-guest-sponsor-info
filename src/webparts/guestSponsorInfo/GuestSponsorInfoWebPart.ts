@@ -21,6 +21,8 @@ import { IGuestSponsorInfoProps } from './components/IGuestSponsorInfoProps';
 export interface IGuestSponsorInfoWebPartProps {
   title: string;
   mockMode: boolean;
+  /** Card layout: 'auto' switches to compact when >2 sponsors. Default: 'auto'. */
+  cardLayout: 'auto' | 'full' | 'compact';
   functionUrl: string;
   functionClientId: string;
   /** Show business phone numbers in the contact card. Default: true. */
@@ -33,16 +35,12 @@ export interface IGuestSponsorInfoWebPartProps {
   showCity: boolean;
   /** Show the sponsor's country or region. Default: false. */
   showCountry: boolean;
-  /** Enable structured address fields (street/postal code/state). Default: false. */
-  showStructuredAddress: boolean;
   /** Show the sponsor's street address. Default: false. */
   showStreetAddress: boolean;
   /** Show the sponsor's postal code. Default: false. */
   showPostalCode: boolean;
   /** Show the sponsor's state or province. Default: false. */
   showState: boolean;
-  /** Enable inline map preview for address data. Default: false. */
-  showAddressMap: boolean;
   /** Azure Maps subscription key used for inline map preview. */
   azureMapsSubscriptionKey: string;
   /** External map provider used for fallback links. */
@@ -51,6 +49,10 @@ export interface IGuestSponsorInfoWebPartProps {
   showManager: boolean;
   /** Show the presence status indicator and label. Default: true. */
   showPresence: boolean;
+  /** Show the sponsor's profile photo. Default: true. */
+  showSponsorPhoto: boolean;
+  /** Show the manager's profile photo. Default: true. */
+  showManagerPhoto: boolean;
   /** Show the sponsor's job title. Default: true. */
   showSponsorJobTitle: boolean;
   /** Show the manager's job title. Default: true. */
@@ -78,12 +80,16 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
         graphClient: this._graphClient, // undefined until onInit resolves
         title: this.properties.title,
         mockMode: this.properties.mockMode ?? false,
+        cardLayout: this.properties.cardLayout ?? 'auto',
         hostTenantId: this.context.pageContext.aadInfo.tenantId.toString(),
         functionUrl: this.properties.functionUrl
           ? `https://${this.properties.functionUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '')}/api/getGuestSponsors`
           : undefined,
         presenceUrl: this.properties.functionUrl
           ? `https://${this.properties.functionUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '')}/api/getPresence`
+          : undefined,
+        pingUrl: this.properties.functionUrl
+          ? `https://${this.properties.functionUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '')}/api/ping`
           : undefined,
         functionClientId: this.properties.functionClientId || undefined,
         aadHttpClient: this._aadHttpClient,
@@ -92,15 +98,15 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
         showWorkLocation: this.properties.showWorkLocation ?? true,
         showCity: this.properties.showCity ?? false,
         showCountry: this.properties.showCountry ?? false,
-        showStructuredAddress: this.properties.showStructuredAddress ?? false,
         showStreetAddress: this.properties.showStreetAddress ?? false,
         showPostalCode: this.properties.showPostalCode ?? false,
         showState: this.properties.showState ?? false,
-        showAddressMap: this.properties.showAddressMap ?? false,
         azureMapsSubscriptionKey: this.properties.azureMapsSubscriptionKey || undefined,
         externalMapProvider: this.properties.externalMapProvider ?? 'bing',
         showManager: this.properties.showManager ?? true,
         showPresence: this.properties.showPresence ?? true,
+        showSponsorPhoto: this.properties.showSponsorPhoto ?? true,
+        showManagerPhoto: this.properties.showManagerPhoto ?? true,
         showSponsorJobTitle: this.properties.showSponsorJobTitle ?? true,
         showManagerJobTitle: this.properties.showManagerJobTitle ?? true,
         showSponsorDepartment: this.properties.showSponsorDepartment ?? false,
@@ -171,8 +177,6 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
       propertyPath === 'showCity' ||
       propertyPath === 'showCountry' ||
       propertyPath === 'showWorkLocation' ||
-      propertyPath === 'showStructuredAddress' ||
-      propertyPath === 'showAddressMap' ||
       propertyPath === 'showManager'
     ) {
       this.context.propertyPane.refresh();
@@ -180,19 +184,24 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
   }
 
   private _getLocationDisplayHint(): string {
+    if (!(strings as unknown as object | undefined)) return '';
     const showCity = this.properties.showCity ?? false;
     const showCountry = this.properties.showCountry ?? false;
     const showWorkLocation = this.properties.showWorkLocation ?? true;
-    const showStructuredAddress = this.properties.showStructuredAddress ?? false;
-    if (showStructuredAddress) return strings.LocationDisplayHintAddressEnabled;
-    if (showCity || showCountry || showWorkLocation) return strings.LocationDisplayHintSeparateRows;
+    const showStreet = this.properties.showStreetAddress ?? false;
+    const showPostal = this.properties.showPostalCode ?? false;
+    const showState = this.properties.showState ?? false;
+    if (showCity || showCountry || showWorkLocation || showStreet || showPostal || showState) return strings.LocationDisplayHintSeparateRows;
     return strings.LocationDisplayHintHidden;
   }
 
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
+    // Guard: SPFx AMD locale bundles load asynchronously. If the property pane is opened
+    // before the bundle resolves (can happen during rapid initialisation), return an empty
+    // config so the framework doesn't crash. The pane will re-render once strings are ready.
+    if (!(strings as unknown as object | undefined)) return { pages: [] };
+
     const showManager = this.properties.showManager ?? true;
-    const showStructuredAddress = this.properties.showStructuredAddress ?? false;
-    const showAddressMap = this.properties.showAddressMap ?? false;
     const externalMapProvider = this.properties.externalMapProvider ?? 'bing';
     const mapProviderOptions: IPropertyPaneDropdownOption[] = [
       { key: 'bing', text: strings.MapProviderBingOption },
@@ -225,9 +234,23 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
               // Card display: what fields appear on the sponsor card itself.
               groupName: strings.DisplayGroupName,
               groupFields: [
+                PropertyPaneDropdown('cardLayout', {
+                  label: strings.CardLayoutFieldLabel,
+                  options: [
+                    { key: 'auto', text: strings.CardLayoutAutoOption },
+                    { key: 'full', text: strings.CardLayoutFullOption },
+                    { key: 'compact', text: strings.CardLayoutCompactOption },
+                  ],
+                  selectedKey: this.properties.cardLayout ?? 'auto',
+                }),
+                PropertyPaneHorizontalRule(),
                 PropertyPaneCheckbox('showPresence', {
                   text: strings.ShowPresenceFieldLabel,
                   checked: this.properties.showPresence ?? true,
+                }),
+                PropertyPaneCheckbox('showSponsorPhoto', {
+                  text: strings.ShowSponsorPhotoFieldLabel,
+                  checked: this.properties.showSponsorPhoto ?? true,
                 }),
                 PropertyPaneCheckbox('showSponsorJobTitle', {
                   text: strings.ShowSponsorJobTitleFieldLabel,
@@ -239,6 +262,9 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                 PropertyPaneHorizontalRule(),
                 PropertyPaneCheckbox('useInformalAddress', {
                   text: strings.UseInformalAddressFieldLabel,
+                }),
+                PropertyPaneLabel('useInformalAddressHint', {
+                  text: strings.UseInformalAddressHint,
                 }),
               ]
             },
@@ -256,59 +282,41 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                   checked: this.properties.showMobilePhone ?? true,
                 }),
                 PropertyPaneHorizontalRule(),
-                // Simple location fields
-                PropertyPaneCheckbox('showCity', {
-                  text: strings.ShowCityFieldLabel,
-                }),
-                PropertyPaneCheckbox('showCountry', {
-                  text: strings.ShowCountryFieldLabel,
-                }),
+                // Work location (officeLocation)
                 PropertyPaneCheckbox('showWorkLocation', {
                   text: strings.ShowWorkLocationFieldLabel,
                   checked: this.properties.showWorkLocation ?? true,
+                }),
+                PropertyPaneHorizontalRule(),
+                // Address fields (combined into a single clickable address row)
+                PropertyPaneCheckbox('showStreetAddress', {
+                  text: strings.ShowStreetAddressFieldLabel,
+                }),
+                PropertyPaneCheckbox('showPostalCode', {
+                  text: strings.ShowPostalCodeFieldLabel,
+                }),
+                PropertyPaneCheckbox('showCity', {
+                  text: strings.ShowCityFieldLabel,
+                }),
+                PropertyPaneCheckbox('showState', {
+                  text: strings.ShowStateFieldLabel,
+                }),
+                PropertyPaneCheckbox('showCountry', {
+                  text: strings.ShowCountryFieldLabel,
                 }),
                 PropertyPaneLabel('locationDisplayHint', {
                   text: this._getLocationDisplayHint(),
                 }),
                 PropertyPaneHorizontalRule(),
-                // Structured address (street/ZIP/state)
-                PropertyPaneCheckbox('showStructuredAddress', {
-                  text: strings.ShowStructuredAddressFieldLabel,
-                  checked: showStructuredAddress,
+                // Map settings
+                PropertyPaneDropdown('externalMapProvider', {
+                  label: strings.ExternalMapProviderFieldLabel,
+                  options: mapProviderOptions,
+                  selectedKey: externalMapProvider,
                 }),
-                ...(showStructuredAddress ? [
-                  PropertyPaneCheckbox('showStreetAddress', {
-                    text: strings.ShowStreetAddressFieldLabel,
-                    checked: this.properties.showStreetAddress ?? false,
-                  }),
-                  PropertyPaneCheckbox('showPostalCode', {
-                    text: strings.ShowPostalCodeFieldLabel,
-                    checked: this.properties.showPostalCode ?? false,
-                  }),
-                  PropertyPaneCheckbox('showState', {
-                    text: strings.ShowStateFieldLabel,
-                    checked: this.properties.showState ?? false,
-                  }),
-                ] : []),
-                PropertyPaneHorizontalRule(),
-                // Map preview
-                PropertyPaneCheckbox('showAddressMap', {
-                  text: strings.ShowAddressMapFieldLabel,
-                  checked: showAddressMap,
+                PropertyPaneTextField('azureMapsSubscriptionKey', {
+                  label: strings.AzureMapsSubscriptionKeyFieldLabel,
                 }),
-                ...(showAddressMap ? [
-                  PropertyPaneTextField('azureMapsSubscriptionKey', {
-                    label: strings.AzureMapsSubscriptionKeyFieldLabel,
-                  }),
-                  PropertyPaneDropdown('externalMapProvider', {
-                    label: strings.ExternalMapProviderFieldLabel,
-                    options: mapProviderOptions,
-                    selectedKey: externalMapProvider,
-                  }),
-                  PropertyPaneLabel('mapProviderHint', {
-                    text: strings.AddressMapFallbackHint,
-                  }),
-                ] : []),
               ]
             },
             {
@@ -325,6 +333,10 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                   }),
                   PropertyPaneCheckbox('showManagerDepartment', {
                     text: strings.ShowManagerDepartmentFieldLabel,
+                  }),
+                  PropertyPaneCheckbox('showManagerPhoto', {
+                    text: strings.ShowManagerPhotoFieldLabel,
+                    checked: this.properties.showManagerPhoto ?? true,
                   }),
                 ] : [
                   PropertyPaneLabel('managerOptionsDisabledHint', {

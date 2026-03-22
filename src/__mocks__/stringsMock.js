@@ -83,6 +83,8 @@ module.exports = {
   MapProviderOpenStreetMapOption: 'OpenStreetMap',
   MapProviderHereOption: 'HERE WeGo',
   AddressMapFallbackHint: 'If no Azure Maps key is configured or map lookup fails, an external map link is shown.',
+  UseInformalAddressFieldLabel: 'Use informal salutation (du/tu)',
+  UseInformalAddressHint: 'Affects status messages and banners that address the guest user directly in full sentences.',
 
   VersionMismatchMessage: 'A web part update is available. Ask your administrator to ensure the web part and the Azure Function are running the same version.',
 };

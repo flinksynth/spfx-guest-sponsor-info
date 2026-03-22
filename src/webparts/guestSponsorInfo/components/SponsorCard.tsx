@@ -46,38 +46,6 @@ function resolvePersonName(
   return displayName?.trim() ?? '';
 }
 
-function resolveGeographicLocation(
-  city: string | undefined,
-  country: string | undefined,
-  showCity: boolean,
-  showCountry: boolean
-): { label?: string; value?: string; copyAriaLabel?: string } {
-  const cityValue = showCity ? city?.trim() : undefined;
-  const countryValue = showCountry ? country?.trim() : undefined;
-  const parts = [cityValue, countryValue].filter((part): part is string => Boolean(part));
-
-  if (parts.length === 0) return {};
-  if (parts.length === 2) {
-    return {
-      label: `${strings.CityFieldLabel} / ${strings.CountryFieldLabel}`,
-      value: parts.join(', '),
-      copyAriaLabel: `${strings.CopyCityAriaLabel} / ${strings.CopyCountryAriaLabel}`,
-    };
-  }
-  if (cityValue) {
-    return {
-      label: strings.CityFieldLabel,
-      value: cityValue,
-      copyAriaLabel: strings.CopyCityAriaLabel,
-    };
-  }
-  return {
-    label: strings.CountryFieldLabel,
-    value: countryValue,
-    copyAriaLabel: strings.CopyCountryAriaLabel,
-  };
-}
-
 function buildExternalMapLink(
   provider: 'bing' | 'google' | 'apple' | 'openstreetmap' | 'here',
   address: string
@@ -122,30 +90,37 @@ const PRESENCE_COLORS: Record<string, string> = {
  * Activity tokens (InAMeeting, InACall, …) take priority over the base availability token,
  * matching Microsoft's profile card display behaviour.
  */
-const PRESENCE_LABELS: Record<string, string> = {
-  // availability tokens
-  Available:       strings.PresenceAvailable,
-  AvailableIdle:   strings.PresenceAvailableIdle,
-  Away:            strings.PresenceAway,
-  BeRightBack:     strings.PresenceBeRightBack,
-  Busy:            strings.PresenceBusy,
-  BusyIdle:        strings.PresenceBusyIdle,
-  DoNotDisturb:    strings.PresenceDoNotDisturb,
-  Offline:         strings.PresenceOffline,
-  PresenceUnknown: '',
-  // activity-specific tokens (refine the base availability label)
-  Focusing:        strings.PresenceFocusing,
-  InACall:         strings.PresenceInACall,
-  InAMeeting:      strings.PresenceInAMeeting,
-  OffWork:         strings.PresenceOffline,
-  OutOfOffice:     strings.PresenceOutOfOffice,
-  Presenting:      strings.PresencePresenting,
-};
+/**
+ * Returns a map of Graph presence tokens to localised labels.
+ * Evaluated lazily (called at render time, not at module load time) so that
+ * the SPFx AMD string bundle is guaranteed to be loaded before access.
+ */
+function getPresenceLabels(): Record<string, string> {
+  return {
+    // availability tokens
+    Available:       strings.PresenceAvailable,
+    AvailableIdle:   strings.PresenceAvailableIdle,
+    Away:            strings.PresenceAway,
+    BeRightBack:     strings.PresenceBeRightBack,
+    Busy:            strings.PresenceBusy,
+    BusyIdle:        strings.PresenceBusyIdle,
+    DoNotDisturb:    strings.PresenceDoNotDisturb,
+    Offline:         strings.PresenceOffline,
+    PresenceUnknown: '',
+    // activity-specific tokens (refine the base availability label)
+    Focusing:        strings.PresenceFocusing,
+    InACall:         strings.PresenceInACall,
+    InAMeeting:      strings.PresenceInAMeeting,
+    OffWork:         strings.PresenceOffline,
+    OutOfOffice:     strings.PresenceOutOfOffice,
+    Presenting:      strings.PresencePresenting,
+  };
+}
 
 /**
  * Converts a Graph presence activity token (PascalCase, e.g. InAMeeting) into a
  * localised, human-readable label matching Microsoft's profile card behaviour.
- * All documented tokens are resolved via PRESENCE_LABELS; unknown tokens fall back
+ * All documented tokens are resolved via getPresenceLabels(); unknown tokens fall back
  * to a generic PascalCase word-splitter (English only).
  */
 function formatPresenceActivity(activity: string): string {
@@ -153,7 +128,7 @@ function formatPresenceActivity(activity: string): string {
   if (!normalized || normalized === 'PresenceUnknown') return '';
 
   // Use the typed map for all documented tokens (also covers availability mirrors).
-  const typed = PRESENCE_LABELS[normalized];
+  const typed = getPresenceLabels()[normalized];
   if (typed !== undefined) return typed;
 
   // Fallback for undocumented activity tokens: split PascalCase into words.
@@ -244,13 +219,14 @@ const CopyButton: React.FC<{ value: string; ariaLabel: string }> = ({ value, ari
   );
 };
 
-/** Styles for the stacked (icon-above-label) action buttons in the rich card. */
+/** Styles for the icon-only action buttons in the rich card header. */
 const actionButtonStyles: IButtonStyles = {
   root: {
-    padding: '8px 12px',
+    padding: '8px',
     borderRadius: 4,
-    minWidth: 60,
-    height: 'auto',
+    minWidth: 40,
+    width: 40,
+    height: 40,
     border: 'none',
     background: 'none',
   },
@@ -263,25 +239,22 @@ const actionButtonStyles: IButtonStyles = {
     background: 'none',
   },
   flexContainer: {
-    flexDirection: 'column',
+    justifyContent: 'center',
     alignItems: 'center',
-    gap: '4px',
   },
   icon: {
-    fontSize: 20,
+    fontSize: 15, // Tier 1: matches richInfoIcon below
     lineHeight: '1',
-    color: 'var(--themePrimary, #0078d4)',
+    // neutralSecondary matches the info-row icons below — dark grey, no theme blue.
+    color: 'var(--neutralSecondary, #666666)',
     margin: 0,
     height: 'auto',
   },
+  iconHovered: {
+    color: 'var(--neutralSecondary, #666666)', // stays the same on hover
+  },
   iconDisabled: {
     color: 'var(--neutralTertiary, #a19f9d)',
-  },
-  label: {
-    fontSize: '10px',
-    margin: 0,
-    whiteSpace: 'nowrap',
-    color: 'var(--neutralSecondary, #666)',
   },
 };
 
@@ -307,6 +280,8 @@ interface ISponsorCardProps {
   sponsor: ISponsor;
   /** Entra ID tenant ID of the host tenant — used to build Teams guest-context deep links. */
   hostTenantId: string;
+  /** When true, render a compact horizontal row instead of a full 136px tile. */
+  compact: boolean;
   /** Controlled by the parent SponsorList — true when this card's rich popup should be visible. */
   isActive: boolean;
   /** Called when this card wants to show its popup. Parent cancels any pending hide timer. */
@@ -323,16 +298,12 @@ interface ISponsorCardProps {
   showCity: boolean;
   /** Show the sponsor's country or region. */
   showCountry: boolean;
-  /** Enable structured address rows (street/postal code/state). */
-  showStructuredAddress: boolean;
   /** Show the sponsor's street address. */
   showStreetAddress: boolean;
   /** Show the sponsor's postal code. */
   showPostalCode: boolean;
   /** Show the sponsor's state or province. */
   showState: boolean;
-  /** Enable inline map preview for address data. */
-  showAddressMap: boolean;
   /** Optional Azure Maps subscription key used for inline preview. */
   azureMapsSubscriptionKey: string | undefined;
   /** External map provider used for fallback links. */
@@ -345,6 +316,10 @@ interface ISponsorCardProps {
   showSponsorJobTitle: boolean;
   /** Show the manager's job title in the manager row. */
   showManagerJobTitle: boolean;
+  /** Show the sponsor's profile photo. When false, only initials are shown. */
+  showSponsorPhoto: boolean;
+  /** Show the manager's profile photo. When false, only initials are shown. */
+  showManagerPhoto: boolean;
   /** Show the sponsor's department in the Organization section. */
   showSponsorDepartment: boolean;
   /** Show the manager's department in the manager row. */
@@ -362,6 +337,7 @@ interface ISponsorCardProps {
 const SponsorCard: React.FC<ISponsorCardProps> = ({
   sponsor,
   hostTenantId,
+  compact,
   isActive,
   onActivate,
   onScheduleDeactivate,
@@ -370,17 +346,17 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
   showWorkLocation,
   showCity,
   showCountry,
-  showStructuredAddress,
   showStreetAddress,
   showPostalCode,
   showState,
-  showAddressMap,
   azureMapsSubscriptionKey,
   externalMapProvider,
   showManager,
   showPresence,
   showSponsorJobTitle,
   showManagerJobTitle,
+  showSponsorPhoto,
+  showManagerPhoto,
   showSponsorDepartment,
   showManagerDepartment,
   useInformalAddress,
@@ -409,8 +385,11 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
     sponsor.presence, sponsor.presenceActivity
   );
   const showPresenceIndicator = showPresence && sponsor.hasTeams !== false;
-  const effectivePresence = showPresenceIndicator ? personaPresence : PersonaPresence.none;
-  const effectiveOof = showPresenceIndicator ? personaOof : false;
+  const isOffline = sponsor.presence === 'Offline' || sponsor.presence === 'PresenceUnknown';
+  const useCustomPresenceDot = showPresenceIndicator && (isFocusing || isOffline);
+  const customDotColor = isFocusing ? PRESENCE_COLORS.Focusing : PRESENCE_COLORS.Offline;
+  const effectivePresence = showPresenceIndicator && !useCustomPresenceDot ? personaPresence : PersonaPresence.none;
+  const effectiveOof = showPresenceIndicator && !useCustomPresenceDot ? personaOof : false;
   const presenceColor = isOof
     ? PRESENCE_COLORS.OutOfOffice
     : sponsor.presence ? (PRESENCE_COLORS[sponsor.presence] ?? '#8A8886') : undefined;
@@ -421,12 +400,12 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
     if (isOof) {
       // OutOfOffice is a suffix modifier: "Available, out of office"
       // When availability mirrors a generic state, prepend it.
-      const base = availability ? (PRESENCE_LABELS[availability] ?? '') : '';
+      const base = availability ? (getPresenceLabels()[availability] ?? '') : '';
       const suffix = strings.PresenceOutOfOfficeSuffix || ', out of office';
       return base ? `${base}${suffix}` : (strings.PresenceOutOfOffice || 'Out of office');
     }
     if (activity) return formatPresenceActivity(activity);
-    return availability ? (PRESENCE_LABELS[availability] ?? '') : undefined;
+    return availability ? (getPresenceLabels()[availability] ?? '') : undefined;
   }, [sponsor.presence, sponsor.presenceActivity, isOof]);
   const managerInitials = resolvedManagerName ? getInitials(resolvedManagerName) : '';
   const managerBgColor = resolvedManagerName ? getInitialsColor(resolvedManagerName) : '#8A8886';
@@ -435,22 +414,25 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
   const streetAddress = sponsor.streetAddress?.trim();
   const postalCode = sponsor.postalCode?.trim();
   const state = sponsor.state?.trim();
-  const geographicLocation = resolveGeographicLocation(sponsor.city, sponsor.country, showCity, showCountry);
-  const showGeographicLocation = Boolean(geographicLocation.value);
   const showOfficeLocation = Boolean(showWorkLocation && officeLocation);
-  const showStreetAddressRow = Boolean(showStructuredAddress && showStreetAddress && streetAddress);
-  const showPostalCodeRow = Boolean(showStructuredAddress && showPostalCode && postalCode);
-  const showStateRow = Boolean(showStructuredAddress && showState && state);
-  const mapAddressParts = [streetAddress, sponsor.city?.trim(), state, postalCode, sponsor.country?.trim(), officeLocation]
-    .filter((part): part is string => Boolean(part));
-  const mapAddress = mapAddressParts.join(', ');
-  const hasAddressForMap = mapAddress.length > 0;
+
+  // Build a combined address from all configured/available address parts.
+  // officeLocation is intentionally excluded — it is shown as a separate field.
+  const addressParts: string[] = [];
+  if (showStreetAddress && streetAddress) addressParts.push(streetAddress);
+  if (showPostalCode && postalCode) addressParts.push(postalCode);
+  if (showCity && sponsor.city?.trim()) addressParts.push(sponsor.city!.trim());
+  if (showState && state) addressParts.push(state);
+  if (showCountry && sponsor.country?.trim()) addressParts.push(sponsor.country!.trim());
+  const combinedAddress = addressParts.join(', ');
+  const hasCombinedAddress = combinedAddress.length > 0;
+  const addressMapLink = hasCombinedAddress ? buildExternalMapLink(externalMapProvider, combinedAddress) : undefined;
+
   const [mapPreviewUrl, setMapPreviewUrl] = React.useState<string | undefined>(undefined);
   const [mapLoading, setMapLoading] = React.useState(false);
-  const externalMapLink = hasAddressForMap ? buildExternalMapLink(externalMapProvider, mapAddress) : undefined;
 
   React.useEffect(() => {
-    if (!isActive || !showAddressMap || !hasAddressForMap || !azureMapsSubscriptionKey) {
+    if (!isActive || !hasCombinedAddress || !azureMapsSubscriptionKey) {
       setMapPreviewUrl(undefined);
       setMapLoading(false);
       return;
@@ -459,7 +441,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
     const controller = new AbortController();
     setMapLoading(true);
 
-    const geocodeUrl = `https://atlas.microsoft.com/search/address/json?api-version=1.0&subscription-key=${encodeURIComponent(azureMapsSubscriptionKey)}&query=${encodeURIComponent(mapAddress)}&limit=1`;
+    const geocodeUrl = `https://atlas.microsoft.com/search/address/json?api-version=1.0&subscription-key=${encodeURIComponent(azureMapsSubscriptionKey)}&query=${encodeURIComponent(combinedAddress)}&limit=1`;
 
     fetch(geocodeUrl, { signal: controller.signal })
       .then(async response => {
@@ -467,9 +449,42 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
           throw new Error(`Azure Maps geocode failed: ${response.status}`);
         }
         const payload = (await response.json()) as {
-          results?: Array<{ position?: { lat?: number; lon?: number } }>;
+          results?: Array<{
+            type?: string;
+            entityType?: string;
+            position?: { lat?: number; lon?: number };
+          }>;
         };
-        const position = payload.results?.[0]?.position;
+        const result = payload.results?.[0];
+        // Allow the map only when the match is specific enough to be meaningful.
+        //
+        // Precise (always show):
+        //   'Point Address'  — exact house number
+        //   'Address Range'  — number interpolated along a road
+        //   'Street'         — specific road (no house number but still very local)
+        //
+        // Geography sub-types (show only for city-level precision):
+        //   Municipality / MunicipalitySubdivision / Neighbourhood / PostalCodeArea
+        //   → "Munich, Germany" resolves here → show ✅
+        //
+        // Too vague (suppress):
+        //   Geography with entityType Country / CountrySubdivision / etc.
+        //   → "Germany" alone would land here → hide ❌
+        //   POI, Cross Street — wrong or ambiguous location
+        const matchType = result?.type;
+        const entityType = result?.entityType ?? '';
+        const CITY_LEVEL_ENTITY_TYPES = new Set([
+          'Municipality', 'MunicipalitySubdivision', 'Neighbourhood', 'PostalCodeArea',
+        ]);
+        const isPrecise =
+          matchType === 'Point Address' ||
+          matchType === 'Address Range' ||
+          matchType === 'Street' ||
+          (matchType === 'Geography' && CITY_LEVEL_ENTITY_TYPES.has(entityType));
+        if (!isPrecise) {
+          throw new Error(`Azure Maps match too imprecise: ${matchType}/${entityType}`);
+        }
+        const position = result?.position;
         const lat = position?.lat;
         const lon = position?.lon;
         if (lat === undefined || lon === undefined) {
@@ -486,7 +501,22 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
       });
 
     return () => controller.abort();
-  }, [isActive, showAddressMap, hasAddressForMap, azureMapsSubscriptionKey, mapAddress]);
+  }, [isActive, hasCombinedAddress, azureMapsSubscriptionKey, combinedAddress]);
+
+  // Delayed expand: the detail sections slide open after 2 s, mimicking the
+  // Microsoft People Card behaviour where the header + actions appear first.
+  const [detailsExpanded, setDetailsExpanded] = React.useState(false);
+  React.useEffect(() => {
+    if (!isActive) { setDetailsExpanded(false); return; }
+    const timer = setTimeout(() => setDetailsExpanded(true), 1000);
+    return () => clearTimeout(timer);
+  }, [isActive]);
+
+  // Show the rich card below the persona tile (matching Microsoft's People Card
+  // behaviour in SharePoint lists). Fluent's Callout automatically chooses the
+  // left or right edge of the target based on available viewport space, and
+  // repositions above when there is insufficient space below.
+  const calloutHint = DirectionalHint.bottomAutoEdge;
 
   // The rich card body is defined here so it can be placed inside either
   // a Callout (desktop) or a Panel (mobile) without duplicating the JSX.
@@ -504,18 +534,20 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             size={PersonaSize.size72}
             initialsColor={bgColor}
             imageInitials={initials}
-            imageUrl={sponsor.photoUrl}
+            imageUrl={showSponsorPhoto ? sponsor.photoUrl : undefined}
             imageShouldFadeIn
             presence={effectivePresence}
             isOutOfOffice={effectiveOof}
             hidePersonaDetails
           />
-          {isFocusing && showPresenceIndicator && (
+          {useCustomPresenceDot && (
             <span
               className={styles.richPresenceDot}
-              style={{ backgroundColor: PRESENCE_COLORS.Focusing }}
+              style={{ backgroundColor: customDotColor }}
               aria-hidden="true"
-            />
+            >
+              {isOffline && <span className={styles.presenceX} aria-hidden="true">×</span>}
+            </span>
           )}
         </div>
         <div className={styles.richHeaderText}>
@@ -538,12 +570,11 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
       {sponsor.mail && (
         <div className={styles.richActions} role="toolbar" aria-label={strings.ContactActionsAriaLabel}>
           {sponsor.hasTeams !== false && sponsor.mail && (
-            <TooltipHost content={guestHasTeamsAccess === false ? fstr('TeamsNotReadyChatTooltip') : strings.ChatTitle}>
+            <TooltipHost content={guestHasTeamsAccess === false ? fstr('TeamsNotReadyChatTooltip') : strings.ChatTitle.replace('{name}', resolvedName)}>
               <ActionButton
                 href={guestHasTeamsAccess === false ? undefined : `https://teams.microsoft.com/l/chat/0/0?tenantId=${encodeURIComponent(hostTenantId)}&users=${encodeURIComponent(sponsor.mail)}`}
                 disabled={guestHasTeamsAccess === false}
                 iconProps={{ iconName: 'Chat' }}
-                text={strings.ChatLabel}
                 target="_blank"
                 rel="noreferrer noopener"
                 styles={actionButtonStyles}
@@ -551,22 +582,20 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             </TooltipHost>
           )}
           {sponsor.mail && (
-            <TooltipHost content={strings.EmailTitle}>
+            <TooltipHost content={strings.EmailTitle.replace('{name}', resolvedName)}>
               <ActionButton
                 href={`mailto:${sponsor.mail}`}
                 iconProps={{ iconName: 'Mail' }}
-                text={strings.EmailLabel}
                 styles={actionButtonStyles}
               />
             </TooltipHost>
           )}
           {sponsor.hasTeams !== false && (
-            <TooltipHost content={guestHasTeamsAccess === false ? fstr('TeamsNotReadyCallTooltip') : strings.CallTitle}>
+            <TooltipHost content={guestHasTeamsAccess === false ? fstr('TeamsNotReadyCallTooltip') : strings.CallTitle.replace('{name}', resolvedName)}>
               <ActionButton
                 href={guestHasTeamsAccess === false ? undefined : `https://teams.microsoft.com/l/call/0/0?tenantId=${encodeURIComponent(hostTenantId)}&users=${encodeURIComponent(sponsor.mail)}&withVideo=false`}
                 disabled={guestHasTeamsAccess === false}
                 iconProps={{ iconName: 'Phone' }}
-                text={strings.CallLabel}
                 target="_blank"
                 rel="noreferrer noopener"
                 styles={actionButtonStyles}
@@ -576,166 +605,129 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
         </div>
       )}
 
-      {/* ── Contact information section ──────────────────────── */}
+      {/* ── Scrollable detail area (expands after delay) ─────── */}
+      <div
+        className={`${styles.richCardBody}${isMobile || detailsExpanded ? ` ${styles.richCardBodyExpanded}` : ''}`}
+      >
+
+      {/* ── Contact section ─────────────────────────────────── */}
       <div className={styles.richSectionTitle}>{strings.ContactInfoSection}</div>
       <div className={styles.richSection}>
         {sponsor.mail && (
-          <div className={styles.richInfoRow}>
+          <div className={`${styles.richInfoRow} ${styles.richInfoRowInteractive}`}>
             <Icon iconName="Mail" className={styles.richInfoIcon} aria-hidden="true" />
             <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.EmailFieldLabel}</div>
               <Link href={`mailto:${sponsor.mail}`} className={styles.richInfoValue}>{sponsor.mail}</Link>
             </div>
             <CopyButton value={sponsor.mail} ariaLabel={strings.CopyEmailAriaLabel} />
           </div>
         )}
         {showBusinessPhones && sponsor.businessPhones?.map(phone => (
-          <div key={phone} className={styles.richInfoRow}>
+          <div key={phone} className={`${styles.richInfoRow} ${styles.richInfoRowInteractive}`}>
             <Icon iconName="Phone" className={styles.richInfoIcon} aria-hidden="true" />
             <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.WorkPhoneFieldLabel}</div>
               <Link href={`tel:${phone}`} className={styles.richInfoValue}>{phone}</Link>
             </div>
             <CopyButton value={phone} ariaLabel={strings.CopyWorkPhoneAriaLabel} />
           </div>
         ))}
         {showMobilePhone && sponsor.mobilePhone && (
-          <div className={styles.richInfoRow}>
+          <div className={`${styles.richInfoRow} ${styles.richInfoRowInteractive}`}>
             <Icon iconName="CellPhone" className={styles.richInfoIcon} aria-hidden="true" />
             <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.MobileFieldLabel}</div>
               <Link href={`tel:${sponsor.mobilePhone}`} className={styles.richInfoValue}>{sponsor.mobilePhone}</Link>
             </div>
             <CopyButton value={sponsor.mobilePhone} ariaLabel={strings.CopyMobileAriaLabel} />
           </div>
         )}
-        {showGeographicLocation && geographicLocation.label && geographicLocation.copyAriaLabel && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-            <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{geographicLocation.label}</div>
-              <div className={styles.richInfoValue}>{geographicLocation.value}</div>
-            </div>
-            <CopyButton value={geographicLocation.value!} ariaLabel={geographicLocation.copyAriaLabel} />
-          </div>
-        )}
         {showOfficeLocation && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
+          <div className={`${styles.richInfoRow} ${styles.richInfoRowInteractive}`}>
+            <Icon iconName="CityNext" className={styles.richInfoIcon} aria-hidden="true" />
             <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.WorkLocationFieldLabel}</div>
               <div className={styles.richInfoValue}>{officeLocation}</div>
             </div>
             <CopyButton value={officeLocation!} ariaLabel={strings.CopyLocationAriaLabel} />
           </div>
         )}
-        {showStreetAddressRow && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-            <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.StreetAddressFieldLabel}</div>
-              <div className={styles.richInfoValue}>{streetAddress}</div>
-            </div>
-            <CopyButton value={streetAddress!} ariaLabel={strings.CopyStreetAddressAriaLabel} />
-          </div>
-        )}
-        {showPostalCodeRow && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-            <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.PostalCodeFieldLabel}</div>
-              <div className={styles.richInfoValue}>{postalCode}</div>
-            </div>
-            <CopyButton value={postalCode!} ariaLabel={strings.CopyPostalCodeAriaLabel} />
-          </div>
-        )}
-        {showStateRow && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-            <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.StateFieldLabel}</div>
-              <div className={styles.richInfoValue}>{state}</div>
-            </div>
-            <CopyButton value={state!} ariaLabel={strings.CopyStateAriaLabel} />
-          </div>
-        )}
-        {showAddressMap && hasAddressForMap && azureMapsSubscriptionKey && (
+        {hasCombinedAddress && (
           <>
-            {(mapLoading || mapPreviewUrl) && (
-              <div className={styles.mapPreviewBlock}>
+            <div className={`${styles.richInfoRow} ${styles.richInfoRowInteractive}`}>
+              <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
+              <div className={styles.richInfoText}>
+                <Link href={addressMapLink} target="_blank" rel="noreferrer noopener" className={styles.richInfoValue}>
+                  {combinedAddress}
+                </Link>
+              </div>
+              <CopyButton value={combinedAddress} ariaLabel={strings.CopyAddressAriaLabel} />
+            </div>
+            {azureMapsSubscriptionKey && (mapLoading || mapPreviewUrl) && (
+              <div className={styles.mapPreviewInline}>
                 {mapLoading && !mapPreviewUrl && (
                   <div className={styles.mapPreviewStatus}>{strings.AddressMapLoadingLabel}</div>
                 )}
                 {mapPreviewUrl && (
-                  <img
-                    src={mapPreviewUrl}
-                    alt={strings.AddressMapSectionLabel}
-                    className={styles.mapPreviewImage}
-                    referrerPolicy="no-referrer"
-                  />
+                  <Link href={addressMapLink} target="_blank" rel="noreferrer noopener">
+                    <img
+                      src={mapPreviewUrl}
+                      alt={strings.AddressMapSectionLabel}
+                      className={styles.mapPreviewImage}
+                      referrerPolicy="no-referrer"
+                    />
+                  </Link>
                 )}
               </div>
             )}
           </>
         )}
-        {showAddressMap && hasAddressForMap && externalMapLink && (
-          <div className={styles.richInfoRow}>
-            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-            <div className={styles.richInfoText}>
-              <div className={styles.richInfoMeta}>{strings.OpenAddressInMapLabel}</div>
-              <Link href={externalMapLink} target="_blank" rel="noreferrer noopener" className={styles.richInfoValue}>
-                {mapAddress}
-              </Link>
-            </div>
-          </div>
-        )}
       </div>
 
-      {/* ── Organization section (department + manager) ─────────────── */}
-      {((showManager && sponsor.managerDisplayName) || (showSponsorDepartment && sponsor.department)) && (
+      {/* ── Organization section (department only) ─────────────────── */}
+      {showSponsorDepartment && sponsor.department && (
         <>
           <div className={styles.richSectionTitle}>{strings.OrganizationSection}</div>
           <div className={styles.richSection}>
-            {/* Sponsor department row */}
-            {showSponsorDepartment && sponsor.department && (
-              <div className={styles.richInfoRow}>
-                <Icon iconName="Org" className={styles.richInfoIcon} aria-hidden="true" />
-                <div className={styles.richInfoText}>
-                  <div className={styles.richInfoMeta}>{strings.DepartmentLabel}</div>
-                  <div className={styles.departmentValue}>{sponsor.department}</div>
-                </div>
+            <div className={styles.richInfoRow}>
+              <Icon iconName="Org" className={styles.richInfoIcon} aria-hidden="true" />
+              <div className={styles.richInfoText}>
+                <div className={styles.departmentValue}>{sponsor.department}</div>
               </div>
-            )}
-            {/* Manager row */}
-            {showManager && sponsor.managerDisplayName && (
-              <div className={styles.managerRow}>
-                <Persona
-                  size={PersonaSize.size40}
-                  initialsColor={managerBgColor}
-                  imageInitials={managerInitials}
-                  imageUrl={sponsor.managerPhotoUrl}
-                  imageShouldFadeIn
-                  hidePersonaDetails
-                />
-                <div className={styles.managerText}>
-                  <div className={styles.managerLabel}>{strings.ManagerLabel}</div>
-                  <div className={styles.managerName}>{resolvedManagerName}</div>
-                  {/* Manager job title, or department as fallback if job title is hidden */}
-                  {showManagerJobTitle && sponsor.managerJobTitle ? (
-                    <div className={styles.managerJobTitle}>{sponsor.managerJobTitle}</div>
-                  ) : !showManagerJobTitle && showManagerDepartment && sponsor.managerDepartment ? (
-                    <div className={styles.managerJobTitle}>{sponsor.managerDepartment}</div>
-                  ) : null}
-                  {/* Manager department below job title (only when both are shown) */}
-                  {showManagerJobTitle && showManagerDepartment && sponsor.managerDepartment && (
-                    <div className={styles.managerDept}>{sponsor.managerDepartment}</div>
-                  )}
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </>
       )}
+
+      {/* ── Reports to section (manager) ───────────────────────────── */}
+      {showManager && sponsor.managerDisplayName && (
+        <>
+          <div className={styles.richSectionTitle}>{strings.ReportsToSection}</div>
+          <div className={styles.richSection}>
+            <div className={styles.managerRow}>
+              <Persona
+                size={PersonaSize.size40}
+                initialsColor={managerBgColor}
+                imageInitials={managerInitials}
+                imageUrl={showManagerPhoto ? sponsor.managerPhotoUrl : undefined}
+                imageShouldFadeIn
+                hidePersonaDetails
+              />
+              <div className={styles.managerText}>
+                <div className={styles.managerName}>{resolvedManagerName}</div>
+                {/* Manager job title, or department as fallback if job title is hidden */}
+                {showManagerJobTitle && sponsor.managerJobTitle ? (
+                  <div className={styles.managerJobTitle}>{sponsor.managerJobTitle}</div>
+                ) : !showManagerJobTitle && showManagerDepartment && sponsor.managerDepartment ? (
+                  <div className={styles.managerJobTitle}>{sponsor.managerDepartment}</div>
+                ) : null}
+                {/* Manager department below job title (only when both are shown) */}
+                {showManagerJobTitle && showManagerDepartment && sponsor.managerDepartment && (
+                  <div className={styles.managerDept}>{sponsor.managerDepartment}</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+      </div>{/* end richCardBody */}
     </div>
   );
 
@@ -744,7 +736,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
       {/* ── Card thumbnail (always visible in the grid) ──────────────── */}
       <div
         ref={cardRef}
-        className={styles.card}
+        className={`${compact ? styles.cardCompact : styles.card}${isActive ? ` ${styles.cardActive}` : ''}`}
         onMouseEnter={onActivate}
         onMouseLeave={onScheduleDeactivate}
         onFocus={onActivate}
@@ -756,9 +748,9 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
         aria-haspopup="dialog"
         aria-expanded={isActive}
       >
-        <div className={styles.avatarWrapper}>
+        <div className={compact ? styles.avatarWrapperCompact : styles.avatarWrapper}>
           <Persona
-            size={PersonaSize.size72}
+            size={compact ? PersonaSize.size40 : PersonaSize.size72}
             initialsColor={bgColor}
             imageInitials={initials}
             imageUrl={sponsor.photoUrl}
@@ -767,15 +759,17 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
             isOutOfOffice={effectiveOof}
             hidePersonaDetails
           />
-          {isFocusing && showPresenceIndicator && (
+          {useCustomPresenceDot && (
             <span
-              className={styles.presenceDot}
-              style={{ backgroundColor: PRESENCE_COLORS.Focusing }}
+              className={compact ? styles.presenceDotCompact : styles.presenceDot}
+              style={{ backgroundColor: customDotColor }}
               aria-hidden="true"
-            />
+            >
+              {isOffline && <span className={styles.presenceX} aria-hidden="true">×</span>}
+            </span>
           )}
         </div>
-        <div className={styles.cardName}>
+        <div className={compact ? styles.cardNameCompact : styles.cardName}>
           {resolvedName}
         </div>
       </div>
@@ -798,8 +792,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
           <Callout
             target={cardRef}
             onDismiss={onScheduleDeactivate}
-            directionalHint={DirectionalHint.rightTopEdge}
-            directionalHintForRTL={DirectionalHint.leftTopEdge}
+            directionalHint={calloutHint}
             isBeakVisible={false}
             gapSpace={8}
             role="dialog"
