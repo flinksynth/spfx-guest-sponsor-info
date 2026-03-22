@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Ustawienia",
     "TitleFieldLabel": "Tytuł",
     "LoadingMessage": "Ładowanie sponsorów…",
+    "NoSponsorsTitle": "Brak sponsorów",
     "NoSponsorsMessage": "Nie znaleziono sponsorów dla Twojego konta.",
+    "SponsorUnavailableTitle": "Sponsor niedostępny",
     "SponsorUnavailableMessage": "Twój sponsor/właściciel nie jest już dostępny. Skontaktuj się z odpowiedzialną osobą w projekcie, aby przypisano nowego sponsora/właściciela do Twojego konta.",
+    "ErrorMessageTitle": "Wystąpił błąd",
     "ErrorMessage": "Nie można załadować informacji o sponsorze. Spróbuj ponownie później.",
     "EditModePlaceholder": "Informacje o sponsorze gościa — przełącz do trybu wyświetlania, aby zobaczyć sponsorów.",
     "GuestOnlyPlaceholder": "Ten składnik Web Part jest widoczny tylko dla użytkowników-gości w trybie wyświetlania.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Czat niedostępny w tej organizacji — Twój dostęp gościa Teams nie został jeszcze skonfigurowany",
     "TeamsNotReadyCallTooltip": "Połączenie niedostępne w tej organizacji — Twój dostęp gościa Teams nie został jeszcze skonfigurowany",
 
+    "VersionMismatchTitle": "Dostępna aktualizacja",
     "VersionMismatchMessage": "Dostępna jest aktualizacja tego składnika Web Part. Poproś administratora, aby upewnił się, że składnik Web Part i usługa Azure Function używają tej samej wersji.",
+    "InsufficientPermissionsTitle": "Brak uprawnień",
     "InsufficientPermissionsMessage": "Nie można załadować informacji o sponsorze — wymagane uprawnienie usługi nie zostało przyznane. Skontaktuj się z administratorem IT.",
 
     "DisplayGroupName": "Wyświetlanie",

@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Configurações",
     "TitleFieldLabel": "Título",
     "LoadingMessage": "Carregando seus patrocinadores…",
+    "NoSponsorsTitle": "Nenhum patrocinador encontrado",
     "NoSponsorsMessage": "Nenhum patrocinador encontrado para sua conta.",
+    "SponsorUnavailableTitle": "Patrocinador indisponível",
     "SponsorUnavailableMessage": "Seu patrocinador/responsável não está mais disponível. Entre em contato com o responsável pelo projeto para que um novo patrocinador/responsável seja atribuído à sua conta.",
+    "ErrorMessageTitle": "Ocorreu um erro",
     "ErrorMessage": "Não foi possível carregar as informações do patrocinador. Tente novamente mais tarde.",
     "EditModePlaceholder": "Informações do Patrocinador Convidado — alterne para o modo de exibição para ver os patrocinadores.",
     "GuestOnlyPlaceholder": "Este web part é visível apenas para usuários convidados no modo de exibição.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat indisponível aqui — seu acesso de convidado do Teams ainda não foi configurado",
     "TeamsNotReadyCallTooltip": "Chamada indisponível aqui — seu acesso de convidado do Teams ainda não foi configurado",
 
+    "VersionMismatchTitle": "Atualização disponível",
     "VersionMismatchMessage": "Há uma atualização disponível para esta web part. Peça ao seu administrador para garantir que a web part e o Azure Function estejam executando a mesma versão.",
+    "InsufficientPermissionsTitle": "Permissão insuficiente",
     "InsufficientPermissionsMessage": "Não foi possível carregar as informações do patrocinador — uma permissão de serviço necessária não foi concedida. Entre em contato com seu administrador de TI.",
 
     "DisplayGroupName": "Exibição",

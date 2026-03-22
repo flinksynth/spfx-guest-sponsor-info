@@ -479,24 +479,35 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   }
 
   // View mode + guest user: render the sponsor list.
-  const contentClassNames = (loading || error) ? `${styles.webPart} ${styles.webPartContent}` : styles.webPart;
+  const noResults = !loading && !error && sponsors.length === 0;
+  const contentClassNames = (loading || error || noResults) ? `${styles.webPart} ${styles.webPartContent}` : styles.webPart;
   return (
     <section className={contentClassNames}>
       {title && <h2 className={styles.title}>{title}</h2>}
       {loading && <SponsorGridSkeleton compact={cardLayout === 'compact'} />}
       {!loading && error && !isPermissionError && (
-        <p className={styles.statusMessage}>{error}</p>
+        <MessageBar messageBarType={MessageBarType.error} isMultiline delayedRender={false}>
+          <b>{strings.ErrorMessageTitle}</b><br />
+          {error}
+        </MessageBar>
       )}
       {!loading && isPermissionError && error && (
-        <MessageBar messageBarType={MessageBarType.error} isMultiline>
+        <MessageBar messageBarType={MessageBarType.error} isMultiline delayedRender={false}>
+          <b>{strings.InsufficientPermissionsTitle}</b><br />
           {error}
         </MessageBar>
       )}
       {!loading && !error && sponsors.length === 0 && allUnavailable && (
-        <p className={styles.statusMessage}>{fstr('SponsorUnavailableMessage')}</p>
+        <MessageBar messageBarType={MessageBarType.warning} isMultiline delayedRender={false}>
+          <b>{strings.SponsorUnavailableTitle}</b><br />
+          {fstr('SponsorUnavailableMessage')}
+        </MessageBar>
       )}
       {!loading && !error && sponsors.length === 0 && !allUnavailable && (
-        <p className={styles.statusMessage}>{fstr('NoSponsorsMessage')}</p>
+        <MessageBar messageBarType={MessageBarType.info} isMultiline delayedRender={false}>
+          <b>{strings.NoSponsorsTitle}</b><br />
+          {fstr('NoSponsorsMessage')}
+        </MessageBar>
       )}
       {!loading && !error && sponsors.length > 0 && (
         <SponsorList
@@ -530,8 +541,10 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
         <MessageBar
           messageBarType={MessageBarType.warning}
           isMultiline
+          delayedRender={false}
           className={styles.teamsAccessBanner}
         >
+          <b>{strings.TeamsAccessPendingTitle}</b><br />
           {fstr('TeamsAccessPendingMessage')}
         </MessageBar>
       )}
@@ -539,8 +552,10 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
         <MessageBar
           messageBarType={MessageBarType.warning}
           isMultiline
+          delayedRender={false}
           className={styles.teamsAccessBanner}
         >
+          <b>{strings.VersionMismatchTitle}</b><br />
           {strings.VersionMismatchMessage}
         </MessageBar>
       )}

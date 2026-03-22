@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Innstillinger",
     "TitleFieldLabel": "Tittel",
     "LoadingMessage": "Laster inn sponsorene dine…",
+    "NoSponsorsTitle": "Ingen sponsorer funnet",
     "NoSponsorsMessage": "Ingen sponsorer ble funnet for kontoen din.",
+    "SponsorUnavailableTitle": "Sponsor ikke tilgjengelig",
     "SponsorUnavailableMessage": "Din sponsor/eier er ikke lenger tilgjengelig. Kontakt din prosjektansvarlige for å få tildelt en ny sponsor/eier til kontoen din.",
+    "ErrorMessageTitle": "Noe gikk galt",
     "ErrorMessage": "Kunne ikke laste inn sponsorinformasjon. Prøv igjen senere.",
     "EditModePlaceholder": "Gjestesponsorinformasjon — bytt til visningsmodus for å se sponsorer.",
     "GuestOnlyPlaceholder": "Denne webdelen er bare synlig for gjestebrukere i visningsmodus.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat ikke tilgjengelig her — Teams-gjestetilgangen din er ikke konfigurert ennå",
     "TeamsNotReadyCallTooltip": "Samtale ikke tilgjengelig her — Teams-gjestetilgangen din er ikke konfigurert ennå",
 
+    "VersionMismatchTitle": "Oppdatering tilgjengelig",
     "VersionMismatchMessage": "Det er en oppdatering tilgjengelig for denne webdelen. Be administratoren din om å sikre at webdelen og Azure Function kjører samme versjon.",
+    "InsufficientPermissionsTitle": "Manglende tillatelse",
     "InsufficientPermissionsMessage": "Kunne ikke laste inn sponsorinformasjon — en påkrevd tjenestetillatelse er ikke innvilget. Kontakt IT-administratoren din.",
 
     "DisplayGroupName": "Visning",

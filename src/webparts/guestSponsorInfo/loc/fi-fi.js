@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Asetukset",
     "TitleFieldLabel": "Otsikko",
     "LoadingMessage": "Ladataan sponsoreitasi…",
+    "NoSponsorsTitle": "Ei sponsoreita",
     "NoSponsorsMessage": "Tilillesi ei löydy sponsoreita.",
+    "SponsorUnavailableTitle": "Sponsori ei käytettävissä",
     "SponsorUnavailableMessage": "Sponsorisi/omistajasi ei ole enää käytettävissä. Ota yhteyttä projektipäällikköön, jotta tilillesi voidaan nimetä uusi sponsori/omistaja.",
+    "ErrorMessageTitle": "Jokin meni pieleen",
     "ErrorMessage": "Sponsoritietojen lataaminen epäonnistui. Yritä myöhemmin uudelleen.",
     "EditModePlaceholder": "Vieraan sponsoritiedot — siirry näyttötilaan nähdäksesi sponsorit.",
     "GuestOnlyPlaceholder": "Tämä verkko-osa näkyy vain vieraskäyttäjille näyttötilassa.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat ei käytettävissä täällä — Teams-vierasoikeuksiasi ei ole vielä määritetty",
     "TeamsNotReadyCallTooltip": "Puhelu ei käytettävissä täällä — Teams-vierasoikeuksiasi ei ole vielä määritetty",
 
+    "VersionMismatchTitle": "Päivitys saatavilla",
     "VersionMismatchMessage": "Verkko-osalle on saatavana päivitys. Pyydä järjestelmänvalvojaasi varmistamaan, että verkko-osa ja Azure Function käyttävät samaa versiota.",
+    "InsufficientPermissionsTitle": "Lupa puuttuu",
     "InsufficientPermissionsMessage": "Sponsoritietoja ei voitu ladata — vaadittua palvelulupaa ei ole myönnetty. Ota yhteyttä IT-järjestelmänvalvojaasi.",
 
     "DisplayGroupName": "Näyttö",

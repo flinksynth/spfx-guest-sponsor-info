@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Impostazioni",
     "TitleFieldLabel": "Titolo",
     "LoadingMessage": "Caricamento degli sponsor in corso…",
+    "NoSponsorsTitle": "Nessuno sponsor trovato",
     "NoSponsorsMessage": "Nessuno sponsor trovato per il Suo account.",
+    "SponsorUnavailableTitle": "Sponsor non disponibile",
     "SponsorUnavailableMessage": "Il Suo sponsor/proprietario non è più disponibile. Contatti il Suo referente di progetto per richiedere l’assegnazione di un nuovo sponsor/proprietario.",
+    "ErrorMessageTitle": "Si è verificato un errore",
     "ErrorMessage": "Impossibile caricare le informazioni sugli sponsor. Riprovi più tardi.",
     "EditModePlaceholder": "Info sponsor ospite — passa alla modalità di visualizzazione per vedere gli sponsor.",
     "GuestOnlyPlaceholder": "Questa web part è visibile solo agli utenti ospiti in modalità di visualizzazione.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat non disponibile qui — il Suo accesso ospite Teams non è ancora stato configurato",
     "TeamsNotReadyCallTooltip": "Chiamata non disponibile qui — il Suo accesso ospite Teams non è ancora stato configurato",
 
+    "VersionMismatchTitle": "Aggiornamento disponibile",
     "VersionMismatchMessage": "È disponibile un aggiornamento della web part. Chiedere all'amministratore di verificare che la web part e la Funzione di Azure utilizzino la stessa versione.",
+    "InsufficientPermissionsTitle": "Autorizzazione necessaria",
     "InsufficientPermissionsMessage": "Impossibile caricare le informazioni sugli sponsor — un'autorizzazione di servizio richiesta non è stata concessa. Contattare l'amministratore IT.",
 
     "NoSponsorsMessageInformal": "Nessuno sponsor trovato per il tuo account.",

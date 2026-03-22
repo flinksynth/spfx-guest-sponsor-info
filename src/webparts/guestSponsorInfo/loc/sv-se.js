@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Inställningar",
     "TitleFieldLabel": "Titel",
     "LoadingMessage": "Läser in dina sponsorer…",
+    "NoSponsorsTitle": "Inga sponsorer hittades",
     "NoSponsorsMessage": "Inga sponsorer hittades för ditt konto.",
+    "SponsorUnavailableTitle": "Sponsor ej tillgänglig",
     "SponsorUnavailableMessage": "Din sponsor/ägare är inte längre tillgänglig. Kontakta din projektansvarige för att få en ny sponsor/ägare tilldelad till ditt konto.",
+    "ErrorMessageTitle": "Något gick fel",
     "ErrorMessage": "Det gick inte att läsa in sponsorinformation. Försök igen senare.",
     "EditModePlaceholder": "Gästsponsorsinfo — växla till visningsläge för att se sponsorer.",
     "GuestOnlyPlaceholder": "Den här webbdelen visas bara för gästanvändare i visningsläge.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chatt inte tillgänglig här — din Teams-gäståtkomst har ännu inte konfigurerats",
     "TeamsNotReadyCallTooltip": "Samtal inte tillgängligt här — din Teams-gäståtkomst har ännu inte konfigurerats",
 
+    "VersionMismatchTitle": "Uppdatering tillgänglig",
     "VersionMismatchMessage": "Det finns en uppdatering tillgänglig för den här webbdelen. Be din administratör att se till att webbdelen och Azure Function körs med samma version.",
+    "InsufficientPermissionsTitle": "Behörighet saknas",
     "InsufficientPermissionsMessage": "Det gick inte att läsa in sponsorinformation — en nödvändig tjänstbehörighet har inte beviljats. Kontakta din IT-administratör.",
 
     "DisplayGroupName": "Visning",

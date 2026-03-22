@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "設定",
     "TitleFieldLabel": "タイトル",
     "LoadingMessage": "スポンサーを読み込んでいます…",
+    "NoSponsorsTitle": "スポンサーが見つかりません",
     "NoSponsorsMessage": "アカウントのスポンサーが見つかりませんでした。",
+    "SponsorUnavailableTitle": "スポンサーが利用できません",
     "SponsorUnavailableMessage": "スポンサー/オーナーは利用できなくなりました。プロジェクトの担当者に連絡して、新しいスポンサー/オーナーをアカウントに割り当ててもらってください。",
+    "ErrorMessageTitle": "エラーが発生しました",
     "ErrorMessage": "スポンサー情報を読み込めませんでした。後でもう一度お試しください。",
     "EditModePlaceholder": "ゲストスポンサー情報 — スポンサーを表示するには表示モードに切り替えてください。",
     "GuestOnlyPlaceholder": "この Web パーツは、表示モードではゲスト ユーザーにのみ表示されます。",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "この組織ではチャットを利用できません — Teams ゲストアクセスがまだ設定されていません",
     "TeamsNotReadyCallTooltip": "この組織では通話を利用できません — Teams ゲストアクセスがまだ設定されていません",
 
+    "VersionMismatchTitle": "アップデートが利用可能です",
     "VersionMismatchMessage": "Web パーツの更新プログラムが利用可能です。管理者に Web パーツと Azure Function が同じバージョンを実行していることを確認するよう依頼してください。",
+    "InsufficientPermissionsTitle": "権限が不足しています",
     "InsufficientPermissionsMessage": "スポンサー情報を読み込めませんでした — 必要なサービスのアクセス許可が付与されていません。IT 管理者にお問い合わせください。",
 
     "DisplayGroupName": "表示",

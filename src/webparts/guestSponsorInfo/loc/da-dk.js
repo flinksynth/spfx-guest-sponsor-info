@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Indstillinger",
     "TitleFieldLabel": "Titel",
     "LoadingMessage": "Indlæser dine sponsorer…",
+    "NoSponsorsTitle": "Ingen sponsorer fundet",
     "NoSponsorsMessage": "Der blev ikke fundet nogen sponsorer for din konto.",
-    "SponsorUnavailableMessage": "Din sponsor/ejer er ikke længre tilgængelig. Kontakt din projektansvarlige om at få tildelt en ny sponsor/ejer til din konto.",
+    "SponsorUnavailableTitle": "Sponsor ikke tilgængelig",
+    "SponsorUnavailableMessage": "Din sponsor er ikke længre tilgængelig. Kontakt din projektansvarlige om at få tildelt en ny sponsor til din konto.",
+    "ErrorMessageTitle": "Noget gik galt",
     "ErrorMessage": "Det var ikke muligt at indlæse sponsoroplysninger. Prøv igen senere.",
     "EditModePlaceholder": "Gæstesponsoroplysninger — skift til visningstilstand for at se sponsorer.",
     "GuestOnlyPlaceholder": "Denne webdel er kun synlig for gæstebrugere i visningstilstand.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat ikke tilgængelig her — din Teams-gæsteadgang er endnu ikke konfigureret",
     "TeamsNotReadyCallTooltip": "Opkald ikke tilgængeligt her — din Teams-gæsteadgang er endnu ikke konfigureret",
 
+    "VersionMismatchTitle": "Opdatering tilgængelig",
     "VersionMismatchMessage": "Der er en opdatering tilgængelig til denne webdel. Bed din administrator om at sikre, at webdelen og Azure Function kører den samme version.",
+    "InsufficientPermissionsTitle": "Manglende tilladelse",
     "InsufficientPermissionsMessage": "Det var ikke muligt at indlæse sponsoroplysninger — en påkrævet servicetilladelse er ikke tildelt. Kontakt din IT-administrator.",
 
     "DisplayGroupName": "Visning",

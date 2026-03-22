@@ -6,9 +6,12 @@ module.exports = {
   BasicGroupName: 'Settings',
   TitleFieldLabel: 'Title',
   LoadingMessage: 'Loading your sponsors\u2026',
+  NoSponsorsTitle: 'No sponsors found',
   NoSponsorsMessage: 'No sponsors found for your account.',
+  SponsorUnavailableTitle: 'Sponsor not available',
   SponsorUnavailableMessage:
-    'Your sponsor/owner is no longer available. Please contact your project stakeholder to have a new sponsor/owner assigned to your account.',
+    'Your sponsor is no longer available. Please contact your project stakeholder to have a new sponsor assigned to your account.',
+  ErrorMessageTitle: 'Something went wrong',
   ErrorMessage: 'Could not load sponsor information. Please try again later.',
   EditModePlaceholder: 'Guest Sponsor Info \u2014 switch to view mode to see sponsors.',
   GuestOnlyPlaceholder: 'This web part is only visible to guest users in view mode.',
@@ -86,5 +89,8 @@ module.exports = {
   UseInformalAddressFieldLabel: 'Use informal salutation (du/tu)',
   UseInformalAddressHint: 'Affects status messages and banners that address the guest user directly in full sentences.',
 
+  VersionMismatchTitle: 'Update available',
   VersionMismatchMessage: 'A web part update is available. Ask your administrator to ensure the web part and the Azure Function are running the same version.',
+  InsufficientPermissionsTitle: 'Permission required',
+  InsufficientPermissionsMessage: 'Could not load sponsor information — a required service permission has not been granted. Please contact your IT administrator.',
 };

@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "Instellingen",
     "TitleFieldLabel": "Titel",
     "LoadingMessage": "Sponsors worden geladen…",
+    "NoSponsorsTitle": "Geen sponsors gevonden",
     "NoSponsorsMessage": "Er zijn geen sponsors gevonden voor uw account.",
+    "SponsorUnavailableTitle": "Sponsor niet beschikbaar",
     "SponsorUnavailableMessage": "Uw sponsor/eigenaar is niet langer beschikbaar. Neem contact op met uw projectverantwoordelijke om een nieuwe sponsor/eigenaar aan uw account te koppelen.",
+    "ErrorMessageTitle": "Er is een fout opgetreden",
     "ErrorMessage": "Kan sponsorinformatie niet laden. Probeer het later opnieuw.",
     "EditModePlaceholder": "Gastsponsors — schakel over naar de weergavemodus om sponsors te zien.",
     "GuestOnlyPlaceholder": "Dit webonderdeel is alleen zichtbaar voor gastgebruikers in de weergavemodus.",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat hier niet beschikbaar — uw Teams-gasttoegang is nog niet ingesteld",
     "TeamsNotReadyCallTooltip": "Bellen hier niet beschikbaar — uw Teams-gasttoegang is nog niet ingesteld",
 
+    "VersionMismatchTitle": "Update beschikbaar",
     "VersionMismatchMessage": "Er is een update beschikbaar voor dit webonderdeel. Vraag uw beheerder om te controleren of het webonderdeel en de Azure Function dezelfde versie gebruiken.",
+    "InsufficientPermissionsTitle": "Onvoldoende rechten",
     "InsufficientPermissionsMessage": "Kan sponsorinformatie niet laden — een vereiste servicemachtiging is niet verleend. Neem contact op met uw IT-beheerder.",
 
     "NoSponsorsMessageInformal": "Er zijn geen sponsors gevonden voor je account.",

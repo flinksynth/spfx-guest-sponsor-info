@@ -4,8 +4,11 @@ define([], function() {
     "BasicGroupName": "设置",
     "TitleFieldLabel": "标题",
     "LoadingMessage": "正在加载您的赞助商…",
+    "NoSponsorsTitle": "未找到担保人",
     "NoSponsorsMessage": "未找到您帐户的赞助商。",
+    "SponsorUnavailableTitle": "担保人不可用",
     "SponsorUnavailableMessage": "您的赞助商/所有者不再可用。请联系您的项目负责人，为您的帐户分配新的赞助商/所有者。",
+    "ErrorMessageTitle": "出现了错误",
     "ErrorMessage": "无法加载赞助商信息。请稍后重试。",
     "EditModePlaceholder": "访客赞助商信息 — 切换到查看模式以查看赞助商。",
     "GuestOnlyPlaceholder": "此 Web 部件在查看模式下仅对访客用户可见。",
@@ -68,7 +71,9 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "此组织中聊天不可用 — 您的 Teams 来宾访问权限尚未设置",
     "TeamsNotReadyCallTooltip": "此组织中通话不可用 — 您的 Teams 来宾访问权限尚未设置",
 
+    "VersionMismatchTitle": "有可用更新",
     "VersionMismatchMessage": "此 Web 部件有可用更新。请联系管理员确保 Web 部件和 Azure Function 运行相同版本。",
+    "InsufficientPermissionsTitle": "权限不足",
     "InsufficientPermissionsMessage": "无法加载赞助商信息 — 尚未授予所需的服务权限。请联系您的 IT 管理员。",
 
     "DisplayGroupName": "显示",

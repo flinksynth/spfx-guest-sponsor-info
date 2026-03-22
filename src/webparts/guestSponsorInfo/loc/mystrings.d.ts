@@ -3,8 +3,11 @@ declare interface IGuestSponsorInfoWebPartStrings {
   BasicGroupName: string;
   TitleFieldLabel: string;
   LoadingMessage: string;
+  NoSponsorsTitle: string;
   NoSponsorsMessage: string;
+  SponsorUnavailableTitle: string;
   SponsorUnavailableMessage: string;
+  ErrorMessageTitle: string;
   ErrorMessage: string;
   EditModePlaceholder: string;
   GuestOnlyPlaceholder: string;
@@ -125,9 +128,11 @@ declare interface IGuestSponsorInfoWebPartStrings {
   TeamsNotReadyCallTooltip: string;
 
   // Version mismatch notice (shown when the web part and Azure Function run different versions)
+  VersionMismatchTitle: string;
   VersionMismatchMessage: string;
 
   // Shown when the Azure Function managed identity is missing required Graph permissions
+  InsufficientPermissionsTitle: string;
   InsufficientPermissionsMessage: string;
 
   // Informal-address overrides (optional — only provided by locales with T-V distinction)
