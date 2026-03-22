@@ -100,9 +100,10 @@ docs: update README configuration section
 ### ✅ Use `npm` Scripts (Managed + Linted)
 
 ```bash
-npm run lint        # ESLint + Stylelint + Markdownlint
+npm run lint        # ESLint + Stylelint + Markdownlint + locale syntax
 npm run fix         # Auto-correct formatting
 npm run lint:ts     # TypeScript only
+npm run lint:loc    # Locale .js files (node --check syntax only)
 npm test            # Jest + coverage
 npm start           # Dev server with hot-reload
 npm run build       # Full production build + packaging

@@ -2,9 +2,9 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "func",
+      "type": "shell",
       "label": "func: host start",
-      "command": "host start --inspect=9229",
+      "command": "func host start --inspect=9229",
       "problemMatcher": "$func-node-watch",
       "isBackground": true,
       "dependsOn": "npm watch (functions)",
