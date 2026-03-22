@@ -202,7 +202,10 @@
   overflow-y: auto;
   max-height: 0;
   opacity: 0;
-  padding-bottom: 24px; // matches the 24px left-edge inset used by all info rows
+
+  // padding-bottom intentionally only in .richCardBodyExpanded:
+  // padding is outside the content box and adds to rendered height even when
+  // max-height is 0, which would push the card past the divider line.
 
   // ease-in-out (cubic-bezier(0.4, 0, 0.2, 1)) starts slowly, peaks in the middle
   // and decelerates — the eye sees the whole travel arc, making the accordion
@@ -218,6 +221,7 @@
   // what the user sees; this value only affects animation timing accuracy.
   max-height: 400px;
   opacity: 1;
+  padding-bottom: 24px; // matches the 24px left-edge inset used by all info rows
 }
 
 /* Header: large avatar + name / title / presence */
