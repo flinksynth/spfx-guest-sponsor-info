@@ -12,7 +12,7 @@ param location string = resourceGroup().location
 
 @metadata({ category: 'Basics' })
 @description('Entra tenant ID (GUID).')
-param tenantId string
+param tenantId string = tenant().tenantId
 
 @metadata({ category: 'Basics' })
 @description('Tenant name without domain suffix, e.g. "contoso".')

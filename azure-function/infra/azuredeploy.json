@@ -24,6 +24,7 @@
     },
     "tenantId": {
       "type": "string",
+      "defaultValue": "[tenant().tenantId]",
       "metadata": {
         "category": "Basics",
         "description": "Entra tenant ID (GUID)."
