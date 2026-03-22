@@ -65,6 +65,8 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chatt inte tillgänglig här — din Teams-gäståtkomst har ännu inte konfigurerats",
     "TeamsNotReadyCallTooltip": "Samtal inte tillgängligt här — din Teams-gäståtkomst har ännu inte konfigurerats",
 
+    "VersionMismatchMessage": "Det finns en uppdatering tillgänglig för den här webbdelen. Be din administratör att se till att webbdelen och Azure Function körs med samma version.",
+
     "DisplayGroupName": "Visning",
     "ShowBusinessPhonesFieldLabel": "Visa arbetstelefonnummer",
     "ShowMobilePhoneFieldLabel": "Visa mobilnummer",

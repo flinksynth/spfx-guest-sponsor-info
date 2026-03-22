@@ -65,6 +65,8 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat hier niet beschikbaar — uw Teams-gasttoegang is nog niet ingesteld",
     "TeamsNotReadyCallTooltip": "Bellen hier niet beschikbaar — uw Teams-gasttoegang is nog niet ingesteld",
 
+    "VersionMismatchMessage": "Er is een update beschikbaar voor dit webonderdeel. Vraag uw beheerder om te controleren of het webonderdeel en de Azure Function dezelfde versie gebruiken.",
+
     "NoSponsorsMessageInformal": "Er zijn geen sponsors gevonden voor je account.",
     "SponsorUnavailableMessageInformal": "Je sponsor/eigenaar is niet langer beschikbaar. Neem contact op met je projectverantwoordelijke om een nieuwe sponsor/eigenaar aan je account te koppelen.",
     "TeamsAccessPendingMessageInformal": "Je gasttoegang tot Microsoft Teams in deze organisatie is nog niet ingesteld. Je eigen Teams-account wordt hierdoor niet beïnvloed. Vraag je sponsor om je toe te voegen aan een team — daarna kun je hier Teams-functies zoals chat, bellen en vergaderingen gebruiken.",

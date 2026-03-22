@@ -101,6 +101,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
         showSponsorDepartment: this.properties.showSponsorDepartment ?? false,
         showManagerDepartment: this.properties.showManagerDepartment ?? false,
         useInformalAddress: this.properties.useInformalAddress ?? false,
+        clientVersion: this.manifest.version,
       }
     );
 

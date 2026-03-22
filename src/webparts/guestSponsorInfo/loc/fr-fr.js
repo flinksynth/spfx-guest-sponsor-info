@@ -64,7 +64,7 @@ define([], function() {
     "TeamsAccessPendingMessage": "Votre accès invité à Microsoft Teams dans cette organisation n’a pas encore été configuré. Votre propre compte Teams n’est pas concerné. Demandez à votre sponsor de vous ajouter à une équipe — ensuite, les fonctionnalités Teams telles que le chat, les appels et les réunions seront disponibles ici.",
     "TeamsNotReadyChatTooltip": "Chat non disponible ici — votre accès invité Teams n’a pas encore été configuré",
     "TeamsNotReadyCallTooltip": "Appel non disponible ici — votre accès invité Teams n’a pas encore été configuré",
-
+    "VersionMismatchMessage": "Une mise à jour du composant WebPart est disponible. Demandez à votre administrateur de s'assurer que le composant WebPart et la fonction Azure utilisent la même version.",
     "LoadingMessageInformal": "Chargement de tes sponsors…",
     "NoSponsorsMessageInformal": "Aucun sponsor trouvé pour ton compte.",
     "SponsorUnavailableMessageInformal": "Ton sponsor/propriétaire n’est plus disponible. Contacte ton responsable de projet pour qu’un nouveau sponsor/propriétaire te soit attribué.",

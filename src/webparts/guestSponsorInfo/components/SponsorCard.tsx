@@ -676,18 +676,18 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
                 )}
               </div>
             )}
-            {externalMapLink && (
-              <div className={styles.richInfoRow}>
-                <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
-                <div className={styles.richInfoText}>
-                  <div className={styles.richInfoMeta}>{strings.OpenAddressInMapLabel}</div>
-                  <Link href={externalMapLink} target="_blank" rel="noreferrer noopener" className={styles.richInfoValue}>
-                    {mapAddress}
-                  </Link>
-                </div>
-              </div>
-            )}
           </>
+        )}
+        {showAddressMap && hasAddressForMap && externalMapLink && (
+          <div className={styles.richInfoRow}>
+            <Icon iconName="MapPin" className={styles.richInfoIcon} aria-hidden="true" />
+            <div className={styles.richInfoText}>
+              <div className={styles.richInfoMeta}>{strings.OpenAddressInMapLabel}</div>
+              <Link href={externalMapLink} target="_blank" rel="noreferrer noopener" className={styles.richInfoValue}>
+                {mapAddress}
+              </Link>
+            </div>
+          </div>
         )}
       </div>
 

@@ -65,6 +65,8 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat hier nicht verfügbar — Ihr Teams-Gastzugang ist noch nicht eingerichtet",
     "TeamsNotReadyCallTooltip": "Anruf hier nicht verfügbar — Ihr Teams-Gastzugang ist noch nicht eingerichtet",
 
+    "VersionMismatchMessage": "Es ist eine Webpart-Aktualisierung verfügbar. Bitten Sie Ihren Administrator, sicherzustellen, dass das Webpart und die Azure Function dieselbe Version verwenden.",
+
     "NoSponsorsMessageInformal": "Für dein Konto wurden keine Sponsoren gefunden.",
     "SponsorUnavailableMessageInformal": "Dein bisheriger Sponsor/Owner ist nicht mehr verfügbar. Bitte kümmere dich bei deinem Auftraggeber darum, dass dir ein neuer Sponsor/Owner zugewiesen wird.",
     "ErrorMessageInformal": "Die Sponsoreninformationen konnten nicht geladen werden. Bitte versuche es später erneut.",

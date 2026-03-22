@@ -22,8 +22,12 @@ export interface ISponsorsResult {
    * neither TeamMember.Read.All nor Presence.Read.All is granted); the client
    * fails open and shows the buttons enabled.
    */
-  guestHasTeamsAccess?: boolean;
-}
+  guestHasTeamsAccess?: boolean;  /**
+   * Version of the Azure Function that served this response, read from the
+   * X-Api-Version response header.  Only set on the proxy path; undefined
+   * when sponsors are fetched directly via Graph (no function involved).
+   */
+  functionVersion?: string;}
 
 interface IPresenceSnapshot {
   availability?: string;
@@ -204,14 +208,21 @@ export async function getSponsors(client: MSGraphClientV3): Promise<ISponsorsRes
  * The proxy authenticates the caller via EasyAuth and calls Graph with application
  * permissions (User.Read.All, optionally Presence.Read.All) using its Managed Identity.
  *
- * @param proxyUrl     - Full URL of the Azure Function endpoint.
+ * @param proxyUrl      - Full URL of the Azure Function endpoint.
  * @param aadHttpClient - Pre-acquired AAD HTTP client scoped to the function App Registration.
+ * @param clientVersion - Optional web part version string sent as X-Client-Version request header
+ *                        so the function can log a warning when versions differ.
  */
 export async function getSponsorsViaProxy(
   proxyUrl: string,
-  aadHttpClient: AadHttpClient
+  aadHttpClient: AadHttpClient,
+  clientVersion?: string
 ): Promise<ISponsorsResult> {
-  const response = await aadHttpClient.get(proxyUrl, AadHttpClient.configurations.v1);
+  const options = clientVersion
+    ? { headers: { 'X-Client-Version': clientVersion } }
+    : undefined;
+  const response = await aadHttpClient.get(proxyUrl, AadHttpClient.configurations.v1, options);
+  const functionVersion = response.headers.get('x-api-version') ?? undefined;
   if (!response.ok) {
     let reasonCode: string | undefined;
     let referenceId: string | undefined;
@@ -238,7 +249,9 @@ export async function getSponsorsViaProxy(
     (err as { retryable?: boolean }).retryable = retryable;
     throw err;
   }
-  return response.json() as Promise<ISponsorsResult>;
+  const result = await response.json() as ISponsorsResult;
+  if (functionVersion) result.functionVersion = functionVersion;
+  return result;
 }
 
 /**

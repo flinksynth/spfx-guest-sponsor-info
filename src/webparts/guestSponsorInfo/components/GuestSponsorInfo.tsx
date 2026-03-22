@@ -180,6 +180,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   showSponsorDepartment,
   showManagerDepartment,
   useInformalAddress,
+  clientVersion,
 }) => {
   // Helper: pick the informal string variant when useInformalAddress is enabled and
   // the current locale provides one (languages with T-V distinction like de, fr, es, it, nl).
@@ -210,6 +211,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   const [retryCount, setRetryCount] = React.useState(0);
   const [hasActiveCard, setHasActiveCard] = React.useState(false);
   const [guestHasTeamsAccess, setGuestHasTeamsAccess] = React.useState<boolean | undefined>(undefined);
+  const [versionMismatch, setVersionMismatch] = React.useState(false);
 
   // Ref that always holds the IDs of currently displayed sponsors.
   // The presence refresh interval reads this without capturing sponsors in its closure.
@@ -249,9 +251,10 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
     let cancelled = false;
     setLoading(true);
     setError(undefined);
+    setVersionMismatch(false);
     setGuestHasTeamsAccess(undefined);
     const loadFn = useProxy
-      ? () => getSponsorsViaProxy(functionUrl as string, aadHttpClient!)
+      ? () => getSponsorsViaProxy(functionUrl as string, aadHttpClient!, clientVersion)
       : () => getSponsors(graphClient!);
 
     loadFn()
@@ -267,6 +270,11 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
           setGuestHasTeamsAccess(result.guestHasTeamsAccess);
           setLoading(false);
           setRetryCount(0);
+
+          // Log a UI notice when the web part and function versions diverge.
+          if (clientVersion && result.functionVersion && clientVersion !== result.functionVersion) {
+            setVersionMismatch(true);
+          }
 
           // Phase 2: progressively fetch photos without blocking the initial render.
           // graphClient is always obtained in onInit regardless of proxy mode,
@@ -314,7 +322,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
       });
 
     return () => { cancelled = true; };
-  }, [isGuest, isEditMode, graphClient, mockMode, functionUrl, aadHttpClient, retryCount]);
+  }, [isGuest, isEditMode, graphClient, mockMode, functionUrl, aadHttpClient, clientVersion, retryCount]);
 
   // Presence refresh: poll faster while a card is actively open and the tab is visible,
   // but back off when the tab is hidden to reduce Graph traffic.
@@ -466,6 +474,15 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
           className={styles.teamsAccessBanner}
         >
           {fstr('TeamsAccessPendingMessage')}
+        </MessageBar>
+      )}
+      {versionMismatch && (
+        <MessageBar
+          messageBarType={MessageBarType.warning}
+          isMultiline
+          className={styles.teamsAccessBanner}
+        >
+          {strings.VersionMismatchMessage}
         </MessageBar>
       )}
     </section>

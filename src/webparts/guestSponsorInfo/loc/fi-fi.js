@@ -65,6 +65,8 @@ define([], function() {
     "TeamsNotReadyChatTooltip": "Chat ei käytettävissä täällä — Teams-vierasoikeuksiasi ei ole vielä määritetty",
     "TeamsNotReadyCallTooltip": "Puhelu ei käytettävissä täällä — Teams-vierasoikeuksiasi ei ole vielä määritetty",
 
+    "VersionMismatchMessage": "Verkko-osalle on saatavana päivitys. Pyydä järjestelmänvalvojaasi varmistamaan, että verkko-osa ja Azure Function käyttävät samaa versiota.",
+
     "DisplayGroupName": "Näyttö",
     "ShowBusinessPhonesFieldLabel": "Näytä työpuhelin",
     "ShowMobilePhoneFieldLabel": "Näytä matkapuhelin",

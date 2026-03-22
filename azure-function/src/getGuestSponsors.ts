@@ -3,6 +3,10 @@ import { randomUUID } from 'crypto';
 import { ManagedIdentityCredential } from '@azure/identity';
 import { Client, GraphError } from '@microsoft/microsoft-graph-client';
 import { TokenCredentialAuthenticationProvider } from '@microsoft/microsoft-graph-client/authProviders/azureTokenCredentials';
+import packageJson from '../package.json';
+
+/** Version string exposed in every response via X-Api-Version and used for client/server mismatch detection. */
+const FUNCTION_VERSION: string = packageJson.version;
 
 /**
  * A guest can have at most 5 sponsors.
@@ -620,6 +624,7 @@ function jsonErrorResponse(
     headers: {
       'Content-Type': 'application/json',
       'x-correlation-id': correlationId,
+      'x-api-version': FUNCTION_VERSION,
       ...corsHeaders(request),
     },
   };
@@ -770,6 +775,16 @@ export async function getGuestSponsors(
       };
       return response;
     }
+  }
+
+  // Version compatibility check — warn in Azure Monitor when the client and function versions differ.
+  const clientVersion = request.headers.get('x-client-version');
+  if (clientVersion && clientVersion !== FUNCTION_VERSION) {
+    context.warn('Client/function version mismatch', {
+      clientVersion,
+      functionVersion: FUNCTION_VERSION,
+      correlationId,
+    });
   }
 
   context.log(`Fetching sponsors for caller ${redactGuid(callerOid)}`);
@@ -1065,6 +1080,7 @@ function jsonResponse(body: unknown, status: number, request: HttpRequest, corre
     headers: {
       'Content-Type': 'application/json',
       'x-correlation-id': correlationId,
+      'x-api-version': FUNCTION_VERSION,
       ...corsHeaders(request),
     },
   };

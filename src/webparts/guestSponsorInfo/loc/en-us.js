@@ -64,7 +64,7 @@ define([], function() {
     "TeamsAccessPendingMessage": "Your guest access to Microsoft Teams in this organization hasn’t been set up yet. This doesn’t affect your own Teams account. Ask your sponsor to add you to a Team — once they do, Teams features like chat, calls, and meetings will become available here.",
     "TeamsNotReadyChatTooltip": "Chat not available in this organization — your Teams guest access hasn’t been set up yet",
     "TeamsNotReadyCallTooltip": "Call not available in this organization — your Teams guest access hasn’t been set up yet",
-
+    "VersionMismatchMessage": "A web part update is available. Ask your administrator to ensure the web part and the Azure Function are running the same version.",
     "DisplayGroupName": "Display",
     "ShowBusinessPhonesFieldLabel": "Show business phone numbers",
     "ShowMobilePhoneFieldLabel": "Show mobile phone number",

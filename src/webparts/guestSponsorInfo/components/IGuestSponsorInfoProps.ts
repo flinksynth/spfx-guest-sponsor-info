@@ -71,5 +71,11 @@ export interface IGuestSponsorInfoProps {
   showManagerDepartment: boolean;
   /** Use informal address ("du"/"tu") instead of formal ("Sie"/"vous"). Default: false. */
   useInformalAddress: boolean;
+  /**
+   * Version string of the web part (from the manifest).
+   * Sent as X-Client-Version on proxy requests so the Azure Function can log
+   * a warning when client and server versions differ.
+   */
+  clientVersion: string;
 }
 

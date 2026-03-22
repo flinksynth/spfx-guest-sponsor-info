@@ -91,6 +91,7 @@ function renderWebPart(overrides: Partial<IGuestSponsorInfoProps> = {}): void {
     showManagerJobTitle: true,
     showSponsorDepartment: false,
     showManagerDepartment: false,
+    clientVersion: '0.0.1',
   };
   ReactDOM.render(<GuestSponsorInfo {...defaults} {...overrides} />, container);
 }

@@ -118,6 +118,9 @@ declare interface IGuestSponsorInfoWebPartStrings {
   TeamsNotReadyChatTooltip: string;
   TeamsNotReadyCallTooltip: string;
 
+  // Version mismatch notice (shown when the web part and Azure Function run different versions)
+  VersionMismatchMessage: string;
+
   // Informal-address overrides (optional — only provided by locales with T-V distinction)
   LoadingMessageInformal?: string;
   NoSponsorsMessageInformal?: string;
