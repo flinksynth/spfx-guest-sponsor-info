@@ -7,7 +7,7 @@ define([], function() {
     "NoSponsorsTitle": "Brak sponsorów",
     "NoSponsorsMessage": "Nie znaleziono sponsorów dla Twojego konta.",
     "SponsorUnavailableTitle": "Sponsor niedostępny",
-    "SponsorUnavailableMessage": "Twój sponsor/właściciel nie jest już dostępny. Skontaktuj się z odpowiedzialną osobą w projekcie, aby przypisano nowego sponsora/właściciela do Twojego konta.",
+    "SponsorUnavailableMessage": "Twój sponsor nie jest już dostępny. Skontaktuj się z odpowiedzialną osobą w projekcie, aby przypisano nowego sponsora do Twojego konta.",
     "ErrorMessageTitle": "Wystąpił błąd",
     "ErrorMessage": "Nie można załadować informacji o sponsorze. Spróbuj ponownie później.",
     "EditModePlaceholder": "Informacje o sponsorze gościa — przełącz do trybu wyświetlania, aby zobaczyć sponsorów.",

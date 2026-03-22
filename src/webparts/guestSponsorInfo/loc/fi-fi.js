@@ -7,7 +7,7 @@ define([], function() {
     "NoSponsorsTitle": "Ei sponsoreita",
     "NoSponsorsMessage": "Tilillesi ei löydy sponsoreita.",
     "SponsorUnavailableTitle": "Sponsori ei käytettävissä",
-    "SponsorUnavailableMessage": "Sponsorisi/omistajasi ei ole enää käytettävissä. Ota yhteyttä projektipäällikköön, jotta tilillesi voidaan nimetä uusi sponsori/omistaja.",
+    "SponsorUnavailableMessage": "Sponsorisi ei ole enää käytettävissä. Ota yhteyttä projektipäällikköön, jotta tilillesi voidaan nimeätä uusi sponsori.",
     "ErrorMessageTitle": "Jokin meni pieleen",
     "ErrorMessage": "Sponsoritietojen lataaminen epäonnistui. Yritä myöhemmin uudelleen.",
     "EditModePlaceholder": "Vieraan sponsoritiedot — siirry näyttötilaan nähdäksesi sponsorit.",

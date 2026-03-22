@@ -7,7 +7,7 @@ define([], function() {
     "NoSponsorsTitle": "Ingen sponsorer funnet",
     "NoSponsorsMessage": "Ingen sponsorer ble funnet for kontoen din.",
     "SponsorUnavailableTitle": "Sponsor ikke tilgjengelig",
-    "SponsorUnavailableMessage": "Din sponsor/eier er ikke lenger tilgjengelig. Kontakt din prosjektansvarlige for å få tildelt en ny sponsor/eier til kontoen din.",
+    "SponsorUnavailableMessage": "Din sponsor er ikke lenger tilgjengelig. Kontakt din prosjektansvarlige for å få tildelt en ny sponsor til kontoen din.",
     "ErrorMessageTitle": "Noe gikk galt",
     "ErrorMessage": "Kunne ikke laste inn sponsorinformasjon. Prøv igjen senere.",
     "EditModePlaceholder": "Gjestesponsorinformasjon — bytt til visningsmodus for å se sponsorer.",

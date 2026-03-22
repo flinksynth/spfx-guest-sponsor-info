@@ -7,7 +7,7 @@ define([], function() {
     "NoSponsorsTitle": "未找到担保人",
     "NoSponsorsMessage": "未找到您帐户的赞助商。",
     "SponsorUnavailableTitle": "担保人不可用",
-    "SponsorUnavailableMessage": "您的赞助商/所有者不再可用。请联系您的项目负责人，为您的帐户分配新的赞助商/所有者。",
+    "SponsorUnavailableMessage": "您的赞助商不再可用。请联系您的项目负责人，为您的帐户分配新的赞助商。",
     "ErrorMessageTitle": "出现了错误",
     "ErrorMessage": "无法加载赞助商信息。请稍后重试。",
     "EditModePlaceholder": "访客赞助商信息 — 切换到查看模式以查看赞助商。",
