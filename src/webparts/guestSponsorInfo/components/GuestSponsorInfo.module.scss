@@ -297,6 +297,7 @@
   overflow-y: auto;
   max-height: 0;
   opacity: 0;
+  padding-bottom: 24px; // matches the 24px left-edge inset used by all info rows
 
   // ease-in-out (cubic-bezier(0.4, 0, 0.2, 1)) starts slowly, peaks in the middle
   // and decelerates — the eye sees the whole travel arc, making the accordion
