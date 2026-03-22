@@ -6,23 +6,29 @@ metadata repository = 'https://github.com/jpawlowski/spfx-guest-sponsor-info'
 metadata author = 'jpawlowski'
 metadata license = 'MIT'
 
+@metadata({ category: 'Basics' })
 @description('Azure region for all resources.')
 param location string = resourceGroup().location
 
+@metadata({ category: 'Basics' })
 @description('Entra tenant ID (GUID).')
 param tenantId string
 
+@metadata({ category: 'Basics' })
 @description('Tenant name without domain suffix, e.g. "contoso".')
 param tenantName string
 
+@metadata({ category: 'Basics' })
 @description('Globally unique name for the Function App (2–58 characters, letters, numbers, and hyphens only).')
 @minLength(2)
 @maxLength(58)
 param functionAppName string
 
+@metadata({ category: 'Basics' })
 @description('Client ID of the App Registration created for EasyAuth.')
 param functionClientId string
 
+@metadata({ category: 'Hosting' })
 @description('Hosting plan for the Function App. "Consumption" = Y1/Dynamic (free tier included, cold starts after ~20 min idle, ZIP served directly from GitHub package URL). "FlexConsumption" = FC1/Linux-only (no free tier, cold starts greatly reduced — alwaysReadyInstances=1 eliminates them; ZIP is uploaded to blob storage by the provisioning script automatically during ARM deployment; "Deploy to Azure" button is supported). Not all Azure regions support Flex Consumption — check https://aka.ms/flex-region before choosing.')
 @allowed([
   'Consumption'
@@ -30,34 +36,43 @@ param functionClientId string
 ])
 param hostingPlan string = 'Consumption'
 
+@metadata({ category: 'Hosting' })
 @description('Number of always-ready (pre-warmed) instances for the Function App (Flex Consumption plan only). 0 = purely on-demand (cold starts possible). 1 = one instance kept warm — eliminates cold starts (~€2–5/month). Ignored when hostingPlan = "Consumption".')
 @minValue(0)
 param alwaysReadyInstances int = 1
 
+@metadata({ category: 'Hosting' })
 @description('Hard upper bound on the number of instances the Flex Consumption plan may scale out to (Flex Consumption plan only). Acts as a cost ceiling — scale-out stops at this limit regardless of demand. Valid range: 1–1000. Default: 10. Ignored when hostingPlan = "Consumption".')
 @minValue(1)
 @maxValue(1000)
 param maximumFlexInstances int = 10
 
+@metadata({ category: 'Hosting' })
 @description('Memory allocated to each Flex Consumption instance in MB (Flex Consumption plan only). Valid values: 512 or 2048. Higher memory allows more concurrent requests per instance but costs more per GB-second. Default: 2048. Ignored when hostingPlan = "Consumption".')
 @allowed([512, 2048])
 param instanceMemoryMB int = 2048
 
+@metadata({ category: 'Deployment' })
 @description('Function package version to deploy. "latest" (default) = always pull the newest GitHub Release at provisioning time. SemVer without "v" prefix, e.g. "1.4.2" = pin to that specific release. On Consumption: sets the WEBSITE_RUN_FROM_PACKAGE URL. On Flex Consumption: the provisioning script re-runs and re-uploads the ZIP whenever this value changes — set it on each redeployment to trigger a code update.')
 param appVersion string = 'latest'
 
+@metadata({ category: 'Deployment' })
 @description('Override the computed package ZIP URL. Leave empty (default) to auto-compute from appVersion. Use only when hosting the ZIP at a custom location.')
 param packageUrl string = ''
 
+@metadata({ category: 'Tags' })
 @description('Additional resource tags to apply to all deployed resources. The tags "managed-by", "source", and "package-version" are always set automatically and cannot be overridden.')
 param tags object = {}
 
+@metadata({ category: 'Azure Maps' })
 @description('Deploy Azure Maps account for inline address map preview.')
 param deployAzureMaps bool = true
 
+@metadata({ category: 'Azure Maps' })
 @description('Optional custom Azure Maps account name. Leave empty to auto-generate.')
 param azureMapsAccountName string = ''
 
+@metadata({ category: 'Azure Maps' })
 @description('Azure region for the Azure Maps account. Must be one of the regions supported by Microsoft.Maps/accounts (westeurope, northeurope, westus2, eastus, westcentralus, global). Defaults to westeurope. Required when the resource group location is not supported by Azure Maps (e.g. germanywestcentral).')
 @allowed([
   'westeurope'
@@ -69,74 +84,93 @@ param azureMapsAccountName string = ''
 ])
 param azureMapsLocation string = 'westeurope'
 
+@metadata({ category: 'Monitoring' })
 @description('Enable operational email alert for probable service outage (5xx/504 spike or low success rate).')
 param enableServiceOutageAlert bool = true
 
+@metadata({ category: 'Monitoring' })
 @description('Enable operational email alert for auth/config regressions (AUTH_CONFIG_* reason codes).')
 param enableAuthConfigRegressionAlert bool = true
 
+@metadata({ category: 'Monitoring' })
 @description('Enable info-only alert for likely attack/noise spikes (high 401/403 from many IPs).')
 param enableLikelyAttackInfoAlert bool = true
 
+@metadata({ category: 'Monitoring' })
 @description('KQL alert evaluation frequency in minutes.')
 @minValue(1)
 param alertEvaluationFrequencyInMinutes int = 5
 
+@metadata({ category: 'Monitoring' })
 @description('KQL alert lookback window in minutes.')
 @minValue(5)
 param alertWindowInMinutes int = 15
 
+@metadata({ category: 'Monitoring' })
 @description('Minimum total requests in window before service outage alert can fire.')
 @minValue(1)
 param serviceOutageMinRequests int = 20
 
+@metadata({ category: 'Monitoring' })
 @description('5xx/504 count threshold for service outage alert.')
 @minValue(1)
 param serviceOutageFailureCountThreshold int = 10
 
+@metadata({ category: 'Monitoring' })
 @description('Success-rate percentage threshold below which service outage alert can fire.')
 @minValue(1)
 @maxValue(99)
 param serviceOutageSuccessRatePercentThreshold int = 70
 
+@metadata({ category: 'Monitoring' })
 @description('AUTH_CONFIG_* trace count threshold for config-regression alert.')
 @minValue(1)
 param authConfigRegressionHitsThreshold int = 1
 
+@metadata({ category: 'Monitoring' })
 @description('401/403 count threshold for likely-attack info alert.')
 @minValue(1)
 param likelyAttackDeniedCountThreshold int = 50
 
+@metadata({ category: 'Monitoring' })
 @description('Unique client IP threshold for likely-attack info alert.')
 @minValue(1)
 param likelyAttackUniqueIpThreshold int = 20
 
+@metadata({ category: 'Monitoring' })
 @description('Denied-rate percentage threshold for likely-attack info alert.')
 @minValue(1)
 @maxValue(100)
 param likelyAttackDenyRatePercentThreshold int = 80
 
+@metadata({ category: 'Monitoring' })
 @description('Minimum successful requests required before likely-attack info alert fires (avoid pure outage overlap).')
 @minValue(0)
 param likelyAttackMinSuccessThreshold int = 1
 
+@metadata({ category: 'Hosting' })
 @description('Consumption plan (Y1) daily memory-time budget in GB-seconds. When hit, the Function App is suspended until midnight UTC — the primary cost guard. 0 = unlimited (not recommended). Default 10 000 GB-s ≈ 13 000 typical invocations/day, stays within the monthly free tier (400 000 GB-s/month). Ignored when hostingPlan = "FlexConsumption" (Flex has no daily GB-second budget concept).')
 @minValue(0)
 param dailyMemoryTimeQuotaGBs int = 10000
 
+@metadata({ category: 'Monitoring' })
 @description('Action group resource IDs for operational email alerts. Leave empty to create alert rules without notifications.')
 param operationalActionGroupResourceIds array = []
 
+@metadata({ category: 'Monitoring' })
 @description('Action group resource IDs for info-only alerts. Leave empty to create alert rules without notifications.')
 param infoActionGroupResourceIds array = []
 
+@metadata({ category: 'Monitoring' })
 @description('Optional notification email used to auto-create default operational/info action groups. Leave empty to skip auto-creation.')
 param defaultAlertNotificationEmail string = ''
 
+@metadata({ category: 'Monitoring' })
 @description('Short name for the auto-created operational action group (max 12 chars).')
 @maxLength(12)
 param defaultOperationalActionGroupShortName string = 'GSIOps'
 
+@metadata({ category: 'Monitoring' })
 @description('Short name for the auto-created info action group (max 12 chars).')
 @maxLength(12)
 param defaultInfoActionGroupShortName string = 'GSIInfo'
@@ -159,135 +193,39 @@ var builtInTags = {
 }
 var effectiveTags = union(builtInTags, tags)
 var appServicePlanName = '${functionAppName}-plan'
-var logAnalyticsWorkspaceName = '${functionAppName}-logs'
-var appInsightsName = '${functionAppName}-insights'
 var azureMapsName = empty(azureMapsAccountName)
   ? toLower('maps${uniqueString(resourceGroup().id, functionAppName)}')
   : toLower(azureMapsAccountName)
-// KQL queries use triple-quoted raw strings (no interpolation) with replace() for parameters.
-var serviceOutageAlertQueryRaw = '''
-let window = __WINDOW__m;
-let req = requests
-| where timestamp > ago(window)
-| where name contains "getGuestSponsors";
-let total = toscalar(req | count);
-let failures5xx = toscalar(req | where resultCode startswith "5" or resultCode == "504" | count);
-let success = toscalar(req | where resultCode startswith "2" | count);
-print total=total, failures5xx=failures5xx, success=success,
-      successRatePct = iff(total == 0, 100.0, todouble(success) * 100.0 / todouble(total))
-| where total >= __MIN_REQUESTS__
-| where failures5xx >= __FAILURE_COUNT__ or successRatePct < __SUCCESS_RATE_PCT__
-'''
-#disable-next-line prefer-interpolation
-var serviceOutageAlertQuery = replace(
-  replace(
-    replace(
-      replace(serviceOutageAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)),
-      '__MIN_REQUESTS__',
-      string(serviceOutageMinRequests)
-    ),
-    '__FAILURE_COUNT__',
-    string(serviceOutageFailureCountThreshold)
-  ),
-  '__SUCCESS_RATE_PCT__',
-  string(serviceOutageSuccessRatePercentThreshold)
-)
 
-var authConfigRegressionAlertQueryRaw = '''
-let window = __WINDOW__m;
-traces
-| where timestamp > ago(window)
-| where message has "Client validation ("
-| extend reasonCode = tostring(customDimensions.reasonCode)
-| where reasonCode in ("AUTH_CONFIG_TENANT_MISSING", "AUTH_CONFIG_AUDIENCE_MISSING")
-| summarize hits = count() by reasonCode
-| where hits >= __HITS_THRESHOLD__
-'''
-#disable-next-line prefer-interpolation
-var authConfigRegressionAlertQuery = replace(
-  replace(authConfigRegressionAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)),
-  '__HITS_THRESHOLD__',
-  string(authConfigRegressionHitsThreshold)
-)
-
-var likelyAttackInfoAlertQueryRaw = '''
-let window = __WINDOW__m;
-let req = requests
-| where timestamp > ago(window)
-| where name contains "getGuestSponsors";
-let denied = req
-| where resultCode in ("401", "403")
-| summarize deniedCount = count(), uniqueIps = dcount(client_IP);
-let total = toscalar(req | count);
-let success = toscalar(req | where resultCode startswith "2" | count);
-denied
-| extend denyRatePct = iff(total == 0, 0.0, todouble(deniedCount) * 100.0 / todouble(total))
-| where deniedCount >= __DENIED_COUNT__
-| where uniqueIps >= __UNIQUE_IP__
-| where denyRatePct >= __DENY_RATE_PCT__
-| where success >= __MIN_SUCCESS__
-'''
-#disable-next-line prefer-interpolation
-var likelyAttackInfoAlertQuery = replace(
-  replace(
-    replace(
-      replace(
-        replace(likelyAttackInfoAlertQueryRaw, '__WINDOW__', string(alertWindowInMinutes)),
-        '__DENIED_COUNT__',
-        string(likelyAttackDeniedCountThreshold)
-      ),
-      '__UNIQUE_IP__',
-      string(likelyAttackUniqueIpThreshold)
-    ),
-    '__DENY_RATE_PCT__',
-    string(likelyAttackDenyRatePercentThreshold)
-  ),
-  '__MIN_SUCCESS__',
-  string(likelyAttackMinSuccessThreshold)
-)
-var createDefaultActionGroups = !empty(defaultAlertNotificationEmail)
-
-resource defaultOperationalActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (createDefaultActionGroups) {
-  name: '${functionAppName}-ops-ag'
-  location: 'global'
-  tags: effectiveTags
-  properties: {
-    groupShortName: defaultOperationalActionGroupShortName
-    enabled: true
-    emailReceivers: [
-      {
-        name: 'ops-email'
-        emailAddress: defaultAlertNotificationEmail
-        useCommonAlertSchema: true
-      }
-    ]
+// ── Monitoring module ────────────────────────────────────────────────────────
+// Log Analytics, Application Insights, Action Groups, and KQL alert rules are
+// managed in a dedicated module to keep this orchestration template focused.
+module monitoring './modules/monitoring.bicep' = {
+  name: 'monitoring'
+  params: {
+    location: location
+    functionAppName: functionAppName
+    tags: effectiveTags
+    enableServiceOutageAlert: enableServiceOutageAlert
+    enableAuthConfigRegressionAlert: enableAuthConfigRegressionAlert
+    enableLikelyAttackInfoAlert: enableLikelyAttackInfoAlert
+    alertEvaluationFrequencyInMinutes: alertEvaluationFrequencyInMinutes
+    alertWindowInMinutes: alertWindowInMinutes
+    serviceOutageMinRequests: serviceOutageMinRequests
+    serviceOutageFailureCountThreshold: serviceOutageFailureCountThreshold
+    serviceOutageSuccessRatePercentThreshold: serviceOutageSuccessRatePercentThreshold
+    authConfigRegressionHitsThreshold: authConfigRegressionHitsThreshold
+    likelyAttackDeniedCountThreshold: likelyAttackDeniedCountThreshold
+    likelyAttackUniqueIpThreshold: likelyAttackUniqueIpThreshold
+    likelyAttackDenyRatePercentThreshold: likelyAttackDenyRatePercentThreshold
+    likelyAttackMinSuccessThreshold: likelyAttackMinSuccessThreshold
+    operationalActionGroupResourceIds: operationalActionGroupResourceIds
+    infoActionGroupResourceIds: infoActionGroupResourceIds
+    defaultAlertNotificationEmail: defaultAlertNotificationEmail
+    defaultOperationalActionGroupShortName: defaultOperationalActionGroupShortName
+    defaultInfoActionGroupShortName: defaultInfoActionGroupShortName
   }
 }
-
-resource defaultInfoActionGroup 'Microsoft.Insights/actionGroups@2023-01-01' = if (createDefaultActionGroups) {
-  name: '${functionAppName}-info-ag'
-  location: 'global'
-  tags: effectiveTags
-  properties: {
-    groupShortName: defaultInfoActionGroupShortName
-    enabled: true
-    emailReceivers: [
-      {
-        name: 'info-email'
-        emailAddress: defaultAlertNotificationEmail
-        useCommonAlertSchema: true
-      }
-    ]
-  }
-}
-
-var effectiveOperationalActionGroupResourceIds = createDefaultActionGroups
-  ? concat(operationalActionGroupResourceIds, [defaultOperationalActionGroup.id])
-  : operationalActionGroupResourceIds
-
-var effectiveInfoActionGroupResourceIds = createDefaultActionGroups
-  ? concat(infoActionGroupResourceIds, [defaultInfoActionGroup.id])
-  : infoActionGroupResourceIds
 
 // ── Storage Account (required by Azure Functions runtime) ────────────────────
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
@@ -303,44 +241,6 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     allowSharedKeyAccess: false
-  }
-}
-
-// ── Log Analytics Workspace ──────────────────────────────────────────────────
-// Backend for Application Insights. Workspace-based AppInsights is the modern
-// approach (classic components are deprecated).
-resource logAnalyticsWorkspace 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
-  name: logAnalyticsWorkspaceName
-  location: location
-  tags: effectiveTags
-  properties: {
-    sku: {
-      name: 'PerGB2018'
-    }
-    // 30 days is the minimum; first 5 GB/month per workspace is free.
-    retentionInDays: 30
-  }
-}
-
-// ── Application Insights ─────────────────────────────────────────────────────
-// When APPLICATIONINSIGHTS_CONNECTION_STRING is set, the Azure Functions Node.js
-// runtime instruments automatically — no code changes needed. Captured data:
-//   • invocations as "requests" (duration, success, HTTP status)
-//   • outbound Graph API calls as "dependencies" (URL, latency, status)
-//   • context.log/warn/error() as "traces" (incl. Graph requestId)
-//   • unhandled exceptions as "exceptions"
-resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
-  name: appInsightsName
-  location: location
-  tags: effectiveTags
-  kind: 'web'
-  properties: {
-    Application_Type: 'web'
-    WorkspaceResourceId: logAnalyticsWorkspace.id
-    RetentionInDays: 30
-    IngestionMode: 'LogAnalytics'
-    publicNetworkAccessForIngestion: 'Enabled'
-    publicNetworkAccessForQuery: 'Enabled'
   }
 }
 
@@ -535,7 +435,7 @@ var sharedAppSettings = [
   {
     // Automatic instrumentation — no code changes required.
     name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-    value: appInsights.properties.ConnectionString
+    value: monitoring.outputs.appInsightsConnectionString
   }
   {
     // Visible in Application Insights telemetry and Azure Portal tags.
@@ -779,97 +679,6 @@ resource storageTableRoleFlex 'Microsoft.Authorization/roleAssignments@2022-04-0
   }
 }
 
-// ── Optional KQL alerts (low false-positive model) ───────────────────────────
-resource serviceOutageAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableServiceOutageAlert) {
-  name: '${functionAppName}-service-outage-kql'
-  location: location
-  tags: effectiveTags
-  properties: {
-    description: 'Operational email alert for probable service outage (5xx/504 spike or low success rate).'
-    enabled: true
-    scopes: [
-      appInsights.id
-    ]
-    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
-    windowSize: 'PT${alertWindowInMinutes}M'
-    severity: 2
-    criteria: {
-      allOf: [
-        {
-          query: serviceOutageAlertQuery
-          timeAggregation: 'Count'
-          operator: 'GreaterThan'
-          threshold: 0
-        }
-      ]
-    }
-    actions: {
-      actionGroups: effectiveOperationalActionGroupResourceIds
-    }
-    autoMitigate: true
-  }
-}
-
-resource authConfigRegressionAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableAuthConfigRegressionAlert) {
-  name: '${functionAppName}-auth-config-regression-kql'
-  location: location
-  tags: effectiveTags
-  properties: {
-    description: 'Operational email alert for auth/config regressions (AUTH_CONFIG_* reason codes).'
-    enabled: true
-    scopes: [
-      appInsights.id
-    ]
-    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
-    windowSize: 'PT${alertWindowInMinutes}M'
-    severity: 2
-    criteria: {
-      allOf: [
-        {
-          query: authConfigRegressionAlertQuery
-          timeAggregation: 'Count'
-          operator: 'GreaterThan'
-          threshold: 0
-        }
-      ]
-    }
-    actions: {
-      actionGroups: effectiveOperationalActionGroupResourceIds
-    }
-    autoMitigate: true
-  }
-}
-
-resource likelyAttackInfoAlert 'Microsoft.Insights/scheduledQueryRules@2021-08-01' = if (enableLikelyAttackInfoAlert) {
-  name: '${functionAppName}-likely-attack-info-kql'
-  location: location
-  tags: effectiveTags
-  properties: {
-    description: 'Info-only alert for likely attack/noise spikes (high 401/403 from many IPs).'
-    enabled: true
-    scopes: [
-      appInsights.id
-    ]
-    evaluationFrequency: 'PT${alertEvaluationFrequencyInMinutes}M'
-    windowSize: 'PT${alertWindowInMinutes}M'
-    severity: 4
-    criteria: {
-      allOf: [
-        {
-          query: likelyAttackInfoAlertQuery
-          timeAggregation: 'Count'
-          operator: 'GreaterThan'
-          threshold: 0
-        }
-      ]
-    }
-    actions: {
-      actionGroups: effectiveInfoActionGroupResourceIds
-    }
-    autoMitigate: true
-  }
-}
-
 // ── Outputs ──────────────────────────────────────────────────────────────────
 // The hostname follows a fixed pattern — no runtime reference needed.
 var functionAppHostName = '${functionAppName}.azurewebsites.net'
@@ -890,7 +699,7 @@ var consumptionPrincipalId = functionApp.identity.principalId
 output managedIdentityObjectId string = isFlexConsumption ? flexPrincipalId : consumptionPrincipalId
 
 @description('Name of the Application Insights component — open in the Azure Portal for live telemetry.')
-output appInsightsName string = appInsights.name
+output appInsightsName string = monitoring.outputs.appInsightsName
 
 @description('The selected hosting plan — included in outputs for operational visibility.')
 output hostingPlan string = hostingPlan
