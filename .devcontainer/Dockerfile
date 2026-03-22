@@ -20,8 +20,24 @@ RUN apt-get update \
   ripgrep \
   unzip \
   xz-utils \
-  yq \
-  && rm -rf /var/lib/apt/lists/*
+  && rm -rf /var/lib/apt/lists/* \
+  # Debian installs bat as "batcat" and fd-find as "fdfind" to avoid name
+  # conflicts. Create canonical symlinks so scripts/agents can use bat and fd.
+  && ln -s /usr/bin/batcat /usr/local/bin/bat \
+  && ln -s /usr/bin/fdfind /usr/local/bin/fd
+
+# yq (mikefarah/yq v4) — the apt package is a Python wrapper with different
+# syntax. Install the official Go binary directly for `yq eval` compatibility.
+ARG YQ_VERSION=v4.44.6
+RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
+  && case "${arch}" in \
+  amd64|x86_64) yq_arch="amd64" ;; \
+  arm64|aarch64) yq_arch="arm64" ;; \
+  *) echo "Unsupported architecture: ${arch}" >&2; exit 1 ;; \
+  esac \
+  && curl -fsSLo /usr/local/bin/yq \
+  "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_${yq_arch}" \
+  && chmod +x /usr/local/bin/yq
 
 RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
   && case "${arch}" in \
