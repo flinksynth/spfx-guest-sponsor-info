@@ -309,8 +309,8 @@
   width: 14px;
   height: 14px;
   border-radius: 50%;
-  border: 2px solid var(--white, #fff);
-  border: 2px solid "[theme:white, default: #ffffff]";
+  box-shadow: 0 0 0 2px var(--white, #fff);
+  box-shadow: 0 0 0 2px "[theme:white, default: #ffffff]";
   transition: background-color 300ms ease;
   display: flex;
   align-items: center;
