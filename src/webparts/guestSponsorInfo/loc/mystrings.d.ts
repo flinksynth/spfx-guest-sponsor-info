@@ -63,6 +63,18 @@ declare interface IGuestSponsorInfoWebPartStrings {
   ProxyStatusOk: string;
   ProxyStatusError: string;
 
+  // Author/company information section
+  AuthorSectionGroupName: string;
+  AuthorSectionIntro: string;
+  AuthorSectionWebsiteLinkLabel: string;
+  AuthorSectionConsultingText: string;
+  AuthorSectionPartnerPrefix: string;
+  AuthorSectionPartnerLinkLabel: string;
+  AuthorSectionPartnerSuffix: string;
+  AuthorSectionPartnerTagline: string;
+  AuthorSectionSourceCodeLabel: string;
+  AuthorSectionVersionLabel: string;
+
   // Presence labels
   PresenceAvailable: string;
   PresenceAvailableIdle: string;

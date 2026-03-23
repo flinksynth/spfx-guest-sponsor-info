@@ -4,12 +4,14 @@ import { Version } from '@microsoft/sp-core-library';
 import {
   type IPropertyPaneConfiguration,
   type IPropertyPaneDropdownOption,
+  type IPropertyPaneField,
   PropertyPaneHorizontalRule,
   PropertyPaneLabel,
   PropertyPaneTextField,
   PropertyPaneCheckbox,
   PropertyPaneDropdown,
 } from '@microsoft/sp-property-pane';
+import { PropertyPaneCustomField } from '@microsoft/sp-property-pane/lib/propertyPaneFields/propertyPaneCustomField/PropertyPaneCustomField';
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 import { MSGraphClientV3, AadHttpClient } from '@microsoft/sp-http';
 import { initializeIcons } from '@fluentui/react';
@@ -17,6 +19,7 @@ import { initializeIcons } from '@fluentui/react';
 import * as strings from 'GuestSponsorInfoWebPartStrings';
 import GuestSponsorInfo from './components/GuestSponsorInfo';
 import { IGuestSponsorInfoProps } from './components/IGuestSponsorInfoProps';
+import workohoDefaultLogo from './assets/workoho-default-logo.svg';
 
 export interface IGuestSponsorInfoWebPartProps {
   title: string;
@@ -202,6 +205,157 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     return strings.LocationDisplayHintHidden;
   }
 
+  private _renderAuthorSection(element?: HTMLElement): void {
+    if (!element) return;
+
+    element.innerHTML = '';
+
+    const createParagraph = (
+      text: string,
+      marginBottom: string = '8px',
+      fontWeight: string = '400'
+    ): HTMLParagraphElement => {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = text;
+      paragraph.style.margin = `0 0 ${marginBottom} 0`;
+      paragraph.style.fontWeight = fontWeight;
+      paragraph.style.lineHeight = '1.45';
+      return paragraph;
+    };
+
+    const createCtaLink = (text: string, href: string): HTMLAnchorElement => {
+      const ctaLink = document.createElement('a');
+      ctaLink.textContent = text;
+      ctaLink.href = href;
+      ctaLink.target = '_blank';
+      ctaLink.rel = 'noopener noreferrer';
+      ctaLink.style.display = 'inline-block';
+      ctaLink.style.margin = '0 0 12px 0';
+      ctaLink.style.fontWeight = '600';
+      return ctaLink;
+    };
+
+    const createGitHubIcon = (): SVGSVGElement => {
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const icon = document.createElementNS(svgNs, 'svg');
+      icon.setAttribute('viewBox', '0 0 16 16');
+      icon.setAttribute('width', '12');
+      icon.setAttribute('height', '12');
+      icon.setAttribute('aria-hidden', 'true');
+      icon.style.verticalAlign = 'text-bottom';
+      icon.style.marginRight = '4px';
+
+      const path = document.createElementNS(svgNs, 'path');
+      path.setAttribute(
+        'd',
+        'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38' +
+        ' 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13' +
+        '-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66' +
+        '.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15' +
+        '-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82a7.54 7.54 0 012-.27c.68 0 1.36.09' +
+        ' 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15' +
+        ' 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2' +
+        ' 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z'
+      );
+      path.setAttribute('fill', 'currentColor');
+
+      icon.appendChild(path);
+      return icon;
+    };
+
+    const logoLink = document.createElement('a');
+    logoLink.href = 'https://workoho.com/';
+    logoLink.target = '_blank';
+    logoLink.rel = 'noopener noreferrer';
+    logoLink.style.display = 'block';
+    logoLink.style.width = '100%';
+    logoLink.style.margin = '0 0 12px 0';
+
+    const logo = document.createElement('img');
+    logo.src = workohoDefaultLogo;
+    logo.alt = 'Workoho GmbH logo';
+    logo.style.display = 'block';
+    logo.style.width = 'min(150px, 50%)';
+    logo.style.height = 'auto';
+    logo.style.maxWidth = '150px';
+    logo.style.aspectRatio = '4 / 1';
+    logo.style.objectFit = 'contain';
+    logoLink.appendChild(logo);
+    element.appendChild(logoLink);
+
+    element.appendChild(createParagraph(strings.AuthorSectionIntro, '8px', '700'));
+    element.appendChild(createParagraph(strings.AuthorSectionConsultingText));
+    element.appendChild(createCtaLink(strings.AuthorSectionWebsiteLinkLabel, 'https://workoho.com/'));
+
+    const partnerLine = document.createElement('p');
+    partnerLine.style.margin = '0 0 8px 0';
+    partnerLine.style.fontWeight = '700';
+    partnerLine.style.lineHeight = '1.45';
+    partnerLine.append(`${strings.AuthorSectionPartnerPrefix} `);
+
+    const easyLifeLink = document.createElement('a');
+    easyLifeLink.textContent = strings.AuthorSectionPartnerLinkLabel;
+    easyLifeLink.href = 'https://easylife365.cloud/';
+    easyLifeLink.target = '_blank';
+    easyLifeLink.rel = 'noopener noreferrer';
+    easyLifeLink.style.fontWeight = '500';
+
+    partnerLine.appendChild(easyLifeLink);
+    partnerLine.append(` ${strings.AuthorSectionPartnerSuffix}`);
+
+    const easyLifeBox = document.createElement('div');
+    easyLifeBox.style.backgroundColor = '#f5f5f5';
+    easyLifeBox.style.border = '1px solid #e1e1e1';
+    easyLifeBox.style.borderRadius = '6px';
+    easyLifeBox.style.padding = '10px 12px';
+    easyLifeBox.style.margin = '0';
+
+    easyLifeBox.appendChild(partnerLine);
+    easyLifeBox.appendChild(createParagraph(strings.AuthorSectionPartnerTagline, '0'));
+    element.appendChild(easyLifeBox);
+
+    const footer = document.createElement('div');
+    footer.style.marginTop = '10px';
+    footer.style.fontSize = '12px';
+    footer.style.color = '#616161';
+
+    const metaLine = document.createElement('div');
+
+    const sourceLink = document.createElement('a');
+    sourceLink.appendChild(createGitHubIcon());
+    sourceLink.append(strings.AuthorSectionSourceCodeLabel);
+    sourceLink.href = 'https://github.com/workoho/spfx-guest-sponsor-info';
+    sourceLink.target = '_blank';
+    sourceLink.rel = 'noopener noreferrer';
+    sourceLink.style.display = 'inline';
+
+    const separator = document.createElement('span');
+    separator.textContent = ' · ';
+
+    const versionLabel = document.createElement('span');
+    versionLabel.textContent = `Version: ${this.manifest.version}`;
+
+    const munichLine = document.createElement('span');
+    munichLine.textContent = 'Built in Munich, World City with ❤';
+    munichLine.style.display = 'inline-block';
+    munichLine.style.marginTop = '8px';
+    munichLine.style.padding = '2px 8px';
+    munichLine.style.borderRadius = '999px';
+    munichLine.style.backgroundColor = '#eef6ff';
+    munichLine.style.color = '#24527a';
+    munichLine.style.fontWeight = '600';
+    munichLine.style.fontSize = '11px';
+
+    metaLine.appendChild(sourceLink);
+    metaLine.appendChild(separator);
+    metaLine.appendChild(versionLabel);
+
+    footer.appendChild(metaLine);
+    footer.appendChild(document.createElement('br'));
+    footer.appendChild(munichLine);
+    element.appendChild(footer);
+  }
+
   protected getPropertyPaneConfiguration(): IPropertyPaneConfiguration {
     // Guard: SPFx AMD locale bundles load asynchronously. If the property pane is opened
     // before the bundle resolves (can happen during rapid initialisation), return an empty
@@ -229,6 +383,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
           groups: [
             {
               groupName: strings.BasicGroupName,
+              isCollapsed: true,
               groupFields: [
                 PropertyPaneTextField('title', {
                   label: strings.TitleFieldLabel
@@ -241,6 +396,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
             {
               // Card display: what fields appear on the sponsor card itself.
               groupName: strings.DisplayGroupName,
+              isCollapsed: true,
               groupFields: [
                 PropertyPaneDropdown('cardLayout', {
                   label: strings.CardLayoutFieldLabel,
@@ -332,6 +488,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
             },
             {
               groupName: strings.OrganizationSection,
+              isCollapsed: true,
               groupFields: [
                 PropertyPaneCheckbox('showManager', {
                   text: strings.ShowManagerFieldLabel,
@@ -373,6 +530,23 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                       : strings.ProxyStatusChecking
                   })
                 ] : [])
+              ]
+            },
+            {
+              groupName: strings.AuthorSectionGroupName,
+              isCollapsed: false,
+              groupFields: [
+                PropertyPaneCustomField({
+                  key: 'authorSectionCustomField',
+                  onRender: (element: HTMLElement | undefined) => {
+                    this._renderAuthorSection(element);
+                  },
+                  onDispose: (element: HTMLElement | undefined) => {
+                    if (element) {
+                      element.innerHTML = '';
+                    }
+                  },
+                }) as unknown as IPropertyPaneField<unknown>,
               ]
             }
           ]
