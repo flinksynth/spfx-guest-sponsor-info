@@ -5,6 +5,7 @@ SharePoint and Azure administrators.
 
 For a quick-start overview, see the [README](../README.md).
 For architecture decisions and internals, see [architecture.md](architecture.md).
+For a visual system overview, see [architecture-diagram.md](architecture-diagram.md).
 
 ## Table of Contents
 

@@ -4,6 +4,7 @@ Local development setup, build commands, testing, and release workflow.
 
 For deployment and administration, see [deployment.md](deployment.md).
 For architecture decisions and internals, see [architecture.md](architecture.md).
+For a visual system overview, see [architecture-diagram.md](architecture-diagram.md).
 
 ## Prerequisites
 

@@ -4,6 +4,7 @@ High-level overview: [README](../README.md)
 For deployment details see [deployment.md](deployment.md).
 For development setup see [development.md](development.md).
 For design decisions see [architecture.md](architecture.md).
+For a visual system overview see [architecture-diagram.md](architecture-diagram.md).
 
 ---
 

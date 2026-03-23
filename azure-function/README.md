@@ -7,6 +7,8 @@ For deployment instructions and administration, see
 [docs/deployment.md](../docs/deployment.md#azure-function-sponsor-api).
 For architecture decisions, see
 [docs/architecture.md](../docs/architecture.md#azure-function).
+For a visual system overview, see
+[docs/architecture-diagram.md](../docs/architecture-diagram.md).
 
 ## Why this exists
 

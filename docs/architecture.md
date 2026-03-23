@@ -4,6 +4,7 @@ Project-specific decisions and known limitations.
 For installation and build instructions see the [README](../README.md).
 For deployment details see [deployment.md](deployment.md).
 For development setup see [development.md](development.md).
+For a visual system overview see [architecture-diagram.md](architecture-diagram.md).
 
 ## SPFx Lifecycle and Non-Blocking Initialization
 

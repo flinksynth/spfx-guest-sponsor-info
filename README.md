@@ -180,6 +180,7 @@ npm run lint                   # TypeScript · SCSS · Markdown
 
 | Document | Audience | Content |
 |---|---|---|
+| [docs/architecture-diagram.md](docs/architecture-diagram.md) | Everyone | Visual Mermaid diagram of the full system architecture |
 | [docs/features.md](docs/features.md) | Everyone | Detailed feature descriptions and the problems they solve |
 | [docs/deployment.md](docs/deployment.md) | Admins / Ops | Full deployment, guest access, Azure Function, security |
 | [docs/development.md](docs/development.md) | Developers | Local setup, build, test, release, code conventions |
