@@ -132,6 +132,16 @@
   &.cardActive {
     background: transparent !important;
   }
+
+  // Read-only tiles (e.g. unavailable sponsors): never show hover background
+  // or pointer cursor — the card is purely visual.
+  &.cardReadOnly {
+    cursor: default;
+
+    &:hover {
+      background: transparent;
+    }
+  }
 }
 
 /* ─── Avatar wrapper (relative-positioned to anchor the presence dot) ────── */
