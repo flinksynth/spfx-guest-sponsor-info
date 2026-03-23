@@ -430,9 +430,14 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
   // can see the real layout and adjust display settings before going live.
   if (isEditMode) {
     const mockCompact = cardLayout === 'compact' || (cardLayout === 'auto' && MOCK_SPONSORS.length > 2);
+    // Hide the sponsor list when the simulated hint replaces it in reality
+    // (no sponsors assigned → "No sponsors found"; all inactive → "Sponsor not available").
+    const showMockCards = !mockMode ||
+      (mockSimulatedHint !== 'noSponsors' && mockSimulatedHint !== 'sponsorUnavailable');
     return (
       <section className={styles.webPart}>
         {title && <h2 className={styles.title}>{title}</h2>}
+        {showMockCards && (
         <SponsorList
           sponsors={MOCK_SPONSORS}
           hostTenantId={hostTenantId}
@@ -459,6 +464,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
           onActiveCardChange={() => undefined}
           guestHasTeamsAccess={mockMode && mockSimulatedHint === 'teamsAccessPending' ? false : undefined}
         />
+        )}
         {/* Real version mismatch detected via ping: always shown to the editor, independent
             of the showVersionMismatchHint guest-facing toggle. */}
         {versionMismatch && mockSimulatedHint !== 'versionMismatch' && (
