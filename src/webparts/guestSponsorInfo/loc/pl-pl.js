@@ -78,7 +78,7 @@ define([], function() {
     "TeamsNotReadyCallTooltip": "Połączenie niedostępne w tej organizacji — Twój dostęp gościa Teams nie został jeszcze skonfigurowany",
 
     "VersionMismatchTitle": "Dostępna aktualizacja",
-    "VersionMismatchMessage": "Dostępna jest aktualizacja tego składnika Web Part. Poproś administratora, aby upewnił się, że składnik Web Part i usługa Azure Function używają tej samej wersji.",
+"VersionMismatchMessage": "Dostępna jest aktualizacja tego składnika Web Part. Propoś administratora, aby upewnił się, że składnik Web Part i Guest Sponsor API używają tej samej wersji."
     "InsufficientPermissionsTitle": "Brak uprawnień",
     "InsufficientPermissionsMessage": "Nie można załadować informacji o sponsorze — wymagane uprawnienie usługi nie zostało przyznane. Skontaktuj się z administratorem IT.",
 
@@ -107,12 +107,12 @@ define([], function() {
     "LocationDisplayHintSeparateRows": "Włączone pola adresowe są łączone w jeden klikalny wiersz.",
     "AdvancedDisplayGroupName": "Zaawansowane opcje wyświetlania",
     "ManagerOptionsDisabledHint": "Włącz wyświetlanie menedżera, aby skonfigurować pola specyficzne dla menedżera.",
-    "FunctionGroupName": "Azure Function",
-    "FunctionUrlFieldLabel": "Podstawowy adres URL Azure Function",
-    "FunctionClientIdFieldLabel": "Identyfikator klienta interfejsu API sponsorów (rejestracja aplikacji Azure Function)",
-    "ProxyStatusChecking": "Sprawdzanie Azure Function…",
-    "ProxyStatusOk": "Azure Function osiągalna",
-    "ProxyStatusError": "Azure Function nieosiągalna",
+    "FunctionGroupName": "Guest Sponsor API",
+    "FunctionUrlFieldLabel": "Podstawowy adres URL Guest Sponsor API",
+    "FunctionClientIdFieldLabel": "Identyfikator klienta Guest Sponsor API (rejestracja aplikacji)",
+    "ProxyStatusChecking": "Sprawdzanie Guest Sponsor API…",
+    "ProxyStatusOk": "Guest Sponsor API osiągalna",
+    "ProxyStatusError": "Guest Sponsor API nieosiągalna",
     "AuthorSectionGroupName": "O Workoho",
     "AuthorSectionIntro": "Zarządzanie Microsoft 365, tożsamości i dostęp gości \u2014 nasza dziedzina.",
     "AuthorSectionWebsiteLinkLabel": "Skontaktuj się",

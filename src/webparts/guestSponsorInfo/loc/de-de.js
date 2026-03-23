@@ -78,7 +78,7 @@ define([], function() {
     "TeamsNotReadyCallTooltip": "Anruf hier nicht verfügbar — Ihr Teams-Gastzugang ist noch nicht eingerichtet",
 
     "VersionMismatchTitle": "Update verfügbar",
-    "VersionMismatchMessage": "Es ist eine Webpart-Aktualisierung verfügbar. Bitten Sie Ihren Administrator, sicherzustellen, dass das Webpart und die Azure Function dieselbe Version verwenden.",
+    "VersionMismatchMessage": "Es ist eine Webpart-Aktualisierung verfügbar. Bitten Sie Ihren Administrator, sicherzustellen, dass das Webpart und die Guest Sponsor API dieselbe Version verwenden.",
     "InsufficientPermissionsTitle": "Berechtigung erforderlich",
     "InsufficientPermissionsMessage": "Die Sponsoreninformationen konnten nicht geladen werden — eine erforderliche Dienstberechtigung wurde nicht erteilt. Bitte wenden Sie sich an Ihren IT-Administrator.",
 
@@ -122,12 +122,12 @@ define([], function() {
     "AdvancedDisplayGroupName": "Erweiterte Anzeigeoptionen",
     "ManagerOptionsDisabledHint": "Aktivieren Sie \"Vorgesetzte(n) anzeigen\", um führungsspezifische Felder zu konfigurieren.",
 
-    "FunctionGroupName": "Azure-Funktion",
-    "FunctionUrlFieldLabel": "Azure-Funktion Basis-URL",
-    "FunctionClientIdFieldLabel": "Sponsor-API-Client-ID (Azure-Funktion App-Registrierung)",
-    "ProxyStatusChecking": "Prüfe Azure-Funktion…",
-    "ProxyStatusOk": "Azure-Funktion erreichbar",
-    "ProxyStatusError": "Azure-Funktion nicht erreichbar",
+    "FunctionGroupName": "Guest Sponsor API",
+    "FunctionUrlFieldLabel": "Guest Sponsor API Basis-URL",
+    "FunctionClientIdFieldLabel": "Guest Sponsor API Client-ID (App-Registrierung)",
+    "ProxyStatusChecking": "Prüfe Guest Sponsor API…",
+    "ProxyStatusOk": "Guest Sponsor API erreichbar",
+    "ProxyStatusError": "Guest Sponsor API nicht erreichbar",
     "AuthorSectionGroupName": "Über Workoho",
     "AuthorSectionIntro": "Microsoft 365 Governance, Identität und Gastzugriff \u2013 unser Thema.",
     "AuthorSectionWebsiteLinkLabel": "Kontakt aufnehmen",

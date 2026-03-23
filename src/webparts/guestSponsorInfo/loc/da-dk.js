@@ -78,7 +78,7 @@ define([], function() {
     "TeamsNotReadyCallTooltip": "Opkald ikke tilgængeligt her — din Teams-gæsteadgang er endnu ikke konfigureret",
 
     "VersionMismatchTitle": "Opdatering tilgængelig",
-    "VersionMismatchMessage": "Der er en opdatering tilgængelig til denne webdel. Bed din administrator om at sikre, at webdelen og Azure Function kører den samme version.",
+    "VersionMismatchMessage": "Der er en opdatering tilgængelig til denne webdel. Bed din administrator om at sikre, at webdelen og Guest Sponsor API kører den samme version.",
     "InsufficientPermissionsTitle": "Manglende tilladelse",
     "InsufficientPermissionsMessage": "Det var ikke muligt at indlæse sponsoroplysninger — en påkrævet servicetilladelse er ikke tildelt. Kontakt din IT-administrator.",
 
@@ -107,12 +107,12 @@ define([], function() {
     "AdvancedDisplayGroupName": "Avancerede visningsindstillinger",
     "ManagerOptionsDisabledHint": "Aktivér visning af chef for at konfigurere chefrelaterede felter.",
 
-  "FunctionGroupName": "Azure-funktion",
-    "FunctionUrlFieldLabel": "Azure-funktion basis-URL",
-    "FunctionClientIdFieldLabel": "Sponsor-API-klient-ID (Azure Function-appregistrering)",
-    "ProxyStatusChecking": "Tjekker Azure-funktion…",
-    "ProxyStatusOk": "Azure-funktion er tilgængelig",
-    "ProxyStatusError": "Azure-funktion er ikke tilgængelig",
+  "FunctionGroupName": "Guest Sponsor API",
+    "FunctionUrlFieldLabel": "Guest Sponsor API basis-URL",
+    "FunctionClientIdFieldLabel": "Guest Sponsor API klient-ID (appregistrering)",
+    "ProxyStatusChecking": "Tjekker Guest Sponsor API…",
+    "ProxyStatusOk": "Guest Sponsor API er tilgængelig",
+    "ProxyStatusError": "Guest Sponsor API er ikke tilgængelig",
     "AuthorSectionGroupName": "Om Workoho",
     "AuthorSectionIntro": "Microsoft 365-governance, identiteter og gæsteadgang \u2014 vores felt.",
     "AuthorSectionWebsiteLinkLabel": "Kom i kontakt",
