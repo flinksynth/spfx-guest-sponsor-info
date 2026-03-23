@@ -68,19 +68,19 @@ function buildExternalMapLink(
 
 /** Maps Graph presence availability (and activity) token → display colour. */
 const PRESENCE_COLORS: Record<string, string> = {
-  // Matches Fluent PersonaPresence defaults for v8 (Microsoft).
-  Available:       '#6BB700',
-  AvailableIdle:   '#6BB700',
+  // Matches Microsoft Teams presence indicator colours (Fluent v9 / new Teams).
+  Available:       '#13A10C',
+  AvailableIdle:   '#13A10C',
   Away:            '#FFAA44',
   BeRightBack:     '#FFAA44',
-  Busy:            '#C43148',
-  BusyIdle:        '#C43148',
+  Busy:            '#C50F1F',
+  BusyIdle:        '#C50F1F',
   DoNotDisturb:    '#C50F1F',
   Focusing:        '#6264A7',
-  InACall:         '#C43148',
-  InAMeeting:      '#C43148',
+  InACall:         '#C50F1F',
+  InAMeeting:      '#C50F1F',
   OutOfOffice:     '#B4009E',
-  Presenting:      '#C43148',
+  Presenting:      '#C50F1F',
   Offline:         '#8A8886',
   PresenceUnknown: '#8A8886',
 };
