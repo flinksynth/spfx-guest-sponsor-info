@@ -12,9 +12,64 @@
 
 // Reserve minimum height while displaying loading skeletons or error messages
 // to prevent layout shift when transitioning between states.
-// Conservative cover for: webPart padding (16px) + title (36px) + shimmer (140px) = 192px.
+// Conservative cover: webPart padding (16px) + title (40px) + skeleton card (136px) = 192px.
 .webPartContent {
   min-height: 200px;
+}
+
+/* ─── Loading skeleton ───────────────────────────────────────────────────── */
+
+@keyframes skeleton-wave {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
+
+// Reusable shimmer gradient — uses CSS custom properties so it follows the
+// current SharePoint theme automatically.
+@mixin skeleton-pulse {
+  background-color: var(--neutralLight, #edebe9);
+  background-image: linear-gradient(
+    90deg,
+    var(--neutralLight,           #edebe9) 0%,
+    var(--neutralQuaternaryAlt,   #e1dfdd) 50%,
+    var(--neutralLight,           #edebe9) 100%
+  );
+  background-size: 400px 100%;
+  animation: skeleton-wave 1.4s ease-in-out infinite;
+}
+
+// Applied to the wrapper div to suppress hover/click cues on skeleton cards.
+.skeletonItem {
+  pointer-events: none;
+  cursor: default !important;
+}
+
+// 72px filled circle — stands in for the Persona coin in full-layout cards.
+.skeletonCircle {
+  @include skeleton-pulse;
+
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// 40px filled circle — stands in for the Persona coin in compact-layout cards.
+.skeletonCircleCompact {
+  @include skeleton-pulse;
+
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+// Pill-shaped bar that mimics a line of text.
+.skeletonLine {
+  @include skeleton-pulse;
+
+  height: 12px;
+  border-radius: 6px;
 }
 
 .title {
@@ -253,13 +308,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 9px;
-}
-
-.presenceX {
-  color: #fff;
-  font-weight: 700;
-  line-height: 1;
 }
 
 .richHeaderText {

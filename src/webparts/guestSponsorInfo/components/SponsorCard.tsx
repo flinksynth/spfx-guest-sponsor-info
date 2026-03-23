@@ -557,7 +557,12 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
               style={{ backgroundColor: customDotColor }}
               aria-hidden="true"
             >
-              {isOffline && <span className={styles.presenceX} aria-hidden="true">×</span>}
+              {isOffline && (
+                <svg viewBox="0 0 10 10" width="8" height="8" fill="none" aria-hidden="true">
+                  <line x1="1" y1="1" x2="9" y2="9" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                  <line x1="9" y1="1" x2="1" y2="9" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              )}
               {isAvailable && (
                 <svg viewBox="0 0 12 10" width="9" height="7" fill="none" aria-hidden="true">
                   <polyline points="1,5 5,9 11,1" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
