@@ -6,15 +6,27 @@
 #   scripts/set-version.sh --help       # show this help
 #   scripts/set-version.sh v1.2.3           # stamp only (for CI)
 #   scripts/set-version.sh v1.2.3 --commit  # stamp + git commit + git tag
+#   scripts/set-version.sh v1.2.3 --commit --push  # stamp + commit + tag + push
+#   scripts/set-version.sh v1.2.3 --retag --commit --push  # delete & recreate tag
+#   scripts/set-version.sh v1.2.3 --commit --push --dry-run  # preview without changes
+#   scripts/set-version.sh v1.2.3 --commit --skip-build  # skip the build step
+#
+# When --commit is set the script runs scripts/build.sh first to verify the
+# project builds cleanly before the tag is created. Use --skip-build to omit
+# this step — e.g. when called from CI which already runs its own build.
 #
 # Both forms are accepted; a leading "v" is stripped automatically.
 # SPFx requires a four-part version (major.minor.patch.build), so ".0" is
 # appended for package-solution.json.
 #
-# Recommended release workflow (run locally, then push):
-#   ./scripts/set-version.sh v1.2.3 --commit
-#   git push && git push --tags
+# Recommended release workflow:
+#   ./scripts/set-version.sh v1.2.3 --commit --push
 # The pushed tag triggers the release GitHub Actions workflow automatically.
+#
+# To move a tag to a different commit (e.g. after amending the release commit):
+#   ./scripts/set-version.sh v1.2.3 --retag --commit --push
+# This deletes the local tag, remote tag, and GitHub release (if gh is
+# available), then re-stamps, re-commits and re-pushes.
 
 set -euo pipefail
 
@@ -27,7 +39,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 show_help() {
   cat <<'EOF'
-Usage: scripts/set-version.sh [OPTIONS] [<version>] [--commit]
+Usage: scripts/set-version.sh [OPTIONS] [<version>]
 
 Stamp a SemVer version into package.json, azure-function/package.json,
 and config/package-solution.json.
@@ -35,8 +47,21 @@ and config/package-solution.json.
 Arguments:
   <version>   Target version, e.g. v1.2.3 or 1.2.3. A leading "v" is stripped
               automatically. When omitted, interactive mode starts.
-  --commit    After stamping, create a git commit and annotated tag, then
-              print the push command. In interactive mode you will be asked.
+  --commit    After stamping, create a git commit and annotated tag.
+              In interactive mode you will be asked.
+  --push      After committing and tagging, push branch and tags to origin.
+              Implies --commit. In interactive mode you will be asked.
+  --retag     Before stamping, delete the existing local tag, remote tag, and
+              GitHub release (if gh CLI is available) for <version>.
+              Requires <version> to be specified explicitly.
+              A safety confirmation is always required. Combine with --commit
+              --push to fully recreate the release in one command.
+  --dry-run   Preview all actions without modifying any files or running git
+              or npm commands. No changes will be written to disk or pushed.
+  --skip-build
+              Skip the build step that normally runs before creating the git
+              commit. Use this when the caller (e.g. a CI workflow) already
+              builds the project independently to avoid a redundant build.
 
 Options:
   -h, --help  Show this help and exit.
@@ -46,9 +71,13 @@ Interactive mode (no arguments):
   package.json) and suggests next patch, minor, and major versions.
 
 Examples:
-  scripts/set-version.sh                    # interactive
-  scripts/set-version.sh v1.2.3             # stamp only (CI)
-  scripts/set-version.sh v1.2.3 --commit    # stamp + commit + tag
+  scripts/set-version.sh                                    # interactive
+  scripts/set-version.sh v1.2.3                             # stamp only (CI)
+  scripts/set-version.sh v1.2.3 --commit                    # stamp + commit + tag
+  scripts/set-version.sh v1.2.3 --commit --push             # stamp + commit + tag + push
+  scripts/set-version.sh v1.2.3 --retag --commit --push       # move tag to new commit
+  scripts/set-version.sh v1.2.3 --commit --push --dry-run     # preview without changes
+  scripts/set-version.sh v1.2.3 --commit --push --skip-build  # skip build step
 EOF
 }
 
@@ -91,6 +120,16 @@ bump_version() {
     minor) echo "${major}.$((minor + 1)).0" ;;
     patch) echo "${major}.${minor}.$((patch + 1))" ;;
   esac
+}
+
+# Execute a command, or in dry-run mode just print it instead.
+# Note: not suitable for commands using shell redirections — handle those inline.
+maybe() {
+  if [[ "${DO_DRYRUN}" == "true" ]]; then
+    echo "[dry-run] $*"
+  else
+    "$@"
+  fi
 }
 
 # suggest_bump [<base_tag>]
@@ -145,6 +184,10 @@ suggest_bump() {
 
 TAG=""
 DO_COMMIT=false
+DO_PUSH=false
+DO_RETAG=false
+DO_DRYRUN=false
+DO_BUILD=true # default on when --commit is set; disable with --skip-build
 
 for arg in "$@"; do
   case "$arg" in
@@ -154,6 +197,19 @@ for arg in "$@"; do
       ;;
     --commit)
       DO_COMMIT=true
+      ;;
+    --push)
+      DO_COMMIT=true
+      DO_PUSH=true
+      ;;
+    --retag)
+      DO_RETAG=true
+      ;;
+    --dry-run)
+      DO_DRYRUN=true
+      ;;
+    --skip-build)
+      DO_BUILD=false
       ;;
     -*)
       echo "Unknown option: $arg" >&2
@@ -171,6 +227,45 @@ for arg in "$@"; do
       ;;
   esac
 done
+
+# --retag always requires an explicit version (not compatible with interactive
+# version selection — you must know which tag you are replacing).
+if [[ "${DO_RETAG}" == "true" && -z "${TAG}" ]]; then
+  echo "Error: --retag requires an explicit version argument (e.g. v1.2.3)." >&2
+  echo "Run '$0 --help' for usage." >&2
+  exit 1
+fi
+
+# --------------------------------------------------------------------------- #
+# Early branch check
+# --------------------------------------------------------------------------- #
+#
+# Run before the interactive menu so the user finds out immediately, not after
+# spending time in the version selector.
+# Triggers when:
+#   - --commit or --push is given (non-interactive intent known up front), or
+#   - interactive mode with a TTY (we don't know yet if they'll commit, but
+#     warn now so they can abort before the menu).
+
+CURRENT_BRANCH=$(git branch --show-current 2>/dev/null || true)
+if [[ "${CURRENT_BRANCH}" != "main" ]]; then
+  if [[ "${DO_COMMIT}" == "true" || -t 0 ]]; then
+    echo ""
+    echo "Warning: you are on branch '${CURRENT_BRANCH}', not 'main'."
+    echo "Release commits and tags should normally come from 'main'."
+    if [[ -t 0 ]]; then
+      read -rp "Continue anyway? [y/N]: " BRANCH_EARLY_ANSWER
+      if [[ "${BRANCH_EARLY_ANSWER,,}" != "y" && "${BRANCH_EARLY_ANSWER,,}" != "yes" ]]; then
+        echo "Aborted." >&2
+        exit 1
+      fi
+      echo ""
+    else
+      echo "Error: releases should be pushed from 'main'. Run from the correct branch." >&2
+      exit 1
+    fi
+  fi
+fi
 
 # --------------------------------------------------------------------------- #
 # Interactive mode (no version argument)
@@ -226,6 +321,16 @@ if [[ -z "$TAG" ]]; then
     echo "Commits since ${LAST_TAG}: ${COMMIT_COUNT}"
   fi
   echo ""
+  echo "──────────────────────────────────────────────────────────────────────"
+  echo "Changes that will be included in the next release:"
+  echo "──────────────────────────────────────────────────────────────────────"
+  if ./scripts/release-notes.sh 2>/dev/null; then
+    :
+  else
+    echo "(release-notes.sh failed or git-cliff not available — skipping preview)"
+  fi
+  echo "──────────────────────────────────────────────────────────────────────"
+  echo ""
   echo "Suggested next versions:"
   echo "  1) ${LABEL_PATCH}"
   echo "  2) ${LABEL_MINOR}"
@@ -264,12 +369,71 @@ if [[ -z "$TAG" ]]; then
     esac
   done
 
+  # Show release notes preview with the chosen version tag applied
   echo ""
+  echo "──────────────────────────────────────────────────────────────────────"
+  echo "Final release notes for ${TAG}:"
+  echo "──────────────────────────────────────────────────────────────────────"
+  if ./scripts/release-notes.sh --tag "${TAG}" 2>/dev/null; then
+    :
+  else
+    echo "(release-notes.sh failed or git-cliff not available — skipping preview)"
+  fi
+  echo "──────────────────────────────────────────────────────────────────────"
+  echo ""
+
   read -rp "Create git commit and tag? [y/N]: " COMMIT_ANSWER
   if [[ "${COMMIT_ANSWER,,}" == "y" || "${COMMIT_ANSWER,,}" == "yes" ]]; then
     DO_COMMIT=true
+    read -rp "Run build before committing? [Y/n]: " BUILD_ANSWER
+    if [[ "${BUILD_ANSWER,,}" == "n" || "${BUILD_ANSWER,,}" == "no" ]]; then
+      DO_BUILD=false
+    fi
+    read -rp "Also push to origin? [y/N]: " PUSH_ANSWER
+    if [[ "${PUSH_ANSWER,,}" == "y" || "${PUSH_ANSWER,,}" == "yes" ]]; then
+      DO_PUSH=true
+    fi
   fi
   echo ""
+fi
+
+# --------------------------------------------------------------------------- #
+# Preflight checks
+# --------------------------------------------------------------------------- #
+
+# Dirty working tree: warn when --commit is set and uncommitted changes exist.
+if [[ "${DO_COMMIT}" == "true" ]]; then
+  DIRTY=$(git status --porcelain 2>/dev/null || true)
+  if [[ -n "${DIRTY}" ]]; then
+    echo ""
+    echo "Warning: working tree has uncommitted changes:"
+    echo "${DIRTY}" | while IFS= read -r line; do echo "  ${line}"; done
+    echo ""
+    echo "These may end up in the release commit. Continue only if intentional."
+    if [[ -t 0 ]]; then
+      read -rp "Continue anyway? [y/N]: " DIRTY_ANSWER
+      if [[ "${DIRTY_ANSWER,,}" != "y" && "${DIRTY_ANSWER,,}" != "yes" ]]; then
+        echo "Aborted." >&2
+        exit 1
+      fi
+      echo ""
+    else
+      echo "Error: working tree is dirty. Commit or stash changes first." >&2
+      exit 1
+    fi
+  fi
+fi
+
+# Branch check: warn when --push is set and not on the default branch.
+# (Early check above already caught interactive and --commit cases;
+# this handles the edge case where --push is added non-interactively
+# without --commit, which implies --commit anyway.)
+if [[ "${DO_PUSH}" == "true" && "${CURRENT_BRANCH}" != "main" ]]; then
+  # Already warned above; if we reach here in non-TTY mode, abort.
+  if [[ ! -t 0 ]]; then
+    echo "Error: releases should be pushed from 'main'. Run from the correct branch." >&2
+    exit 1
+  fi
 fi
 
 # --------------------------------------------------------------------------- #
@@ -285,21 +449,138 @@ if ! [[ "$SEMVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9.]+)?$ ]]; then
   exit 1
 fi
 
-echo "Stamping version: semver=${SEMVER}  spfx=${SPFX_VER}"
+# --------------------------------------------------------------------------- #
+# Detect "re-release" situation: tag already exists but HEAD has moved on
+# --------------------------------------------------------------------------- #
+
+if [[ "${DO_RETAG}" == "false" ]] && git tag -l "${VTAG}" | grep -q .; then
+  TAGGED_COMMIT=$(git rev-parse "${VTAG}^{}" 2>/dev/null || true)
+  HEAD_COMMIT=$(git rev-parse HEAD)
+  COMMITS_SINCE=$(git rev-list "${VTAG}..HEAD" --count 2>/dev/null || echo "0")
+
+  if [[ "${TAGGED_COMMIT}" != "${HEAD_COMMIT}" && "${COMMITS_SINCE}" -gt 0 ]]; then
+    echo ""
+    echo "Note: tag ${VTAG} already exists but HEAD is ${COMMITS_SINCE} commit(s) ahead of it."
+    if [[ -t 0 ]]; then
+      read -rp "Move tag ${VTAG} to the current commit (retag)? [y/N]: " RETAG_AUTO
+      if [[ "${RETAG_AUTO,,}" == "y" || "${RETAG_AUTO,,}" == "yes" ]]; then
+        DO_RETAG=true
+      fi
+      echo ""
+    elif [[ "${DO_COMMIT}" == "true" ]]; then
+      echo "Error: tag ${VTAG} already exists. Use --retag to move it." >&2
+      exit 1
+    fi
+  elif [[ "${TAGGED_COMMIT}" == "${HEAD_COMMIT}" && "${DO_COMMIT}" == "true" ]]; then
+    echo ""
+    echo "Note: tag ${VTAG} already points to HEAD — no new commit to create."
+    echo "Skipping git commit, tag and push (already up to date)."
+    DO_COMMIT=false
+    DO_PUSH=false
+    echo ""
+  fi
+fi
+
+# --------------------------------------------------------------------------- #
+# Retag: delete existing tag locally, remotely, and on GitHub
+# --------------------------------------------------------------------------- #
+
+if [[ "${DO_RETAG}" == "true" ]]; then
+  if [[ ! -t 0 && "${DO_DRYRUN}" == "false" ]]; then
+    echo "Error: --retag requires a TTY (safety confirmation cannot be skipped)." >&2
+    exit 1
+  fi
+
+  LOCAL_TAG_EXISTS=false
+  REMOTE_TAG_EXISTS=false
+  GH_RELEASE_EXISTS=false
+
+  if git tag -l "${VTAG}" | grep -q .; then
+    LOCAL_TAG_EXISTS=true
+  fi
+  if git ls-remote --tags origin "refs/tags/${VTAG}" 2>/dev/null | grep -q .; then
+    REMOTE_TAG_EXISTS=true
+  fi
+  if command -v gh &>/dev/null; then
+    if gh release view "${VTAG}" &>/dev/null 2>&1; then
+      GH_RELEASE_EXISTS=true
+    fi
+  fi
+
+  echo ""
+  echo "Retag mode — the following will be deleted and recreated:"
+  echo ""
+  if [[ "${LOCAL_TAG_EXISTS}" == "true" ]]; then
+    echo "  • Local tag      ${VTAG}  → will be deleted"
+  else
+    echo "  • Local tag      ${VTAG}  (not found — nothing to delete)"
+  fi
+  if [[ "${REMOTE_TAG_EXISTS}" == "true" ]]; then
+    echo "  • Remote tag     ${VTAG}  → will be deleted"
+  else
+    echo "  • Remote tag     ${VTAG}  (not found — nothing to delete)"
+  fi
+  if [[ "${GH_RELEASE_EXISTS}" == "true" ]]; then
+    echo "  • GitHub release ${VTAG}  → will be deleted"
+  elif command -v gh &>/dev/null; then
+    echo "  • GitHub release ${VTAG}  (not found — nothing to delete)"
+  else
+    echo "  • GitHub release           (gh CLI not available — skipped)"
+  fi
+  echo ""
+
+  if [[ "${DO_DRYRUN}" == "true" ]]; then
+    echo "[dry-run] would delete as shown above — skipping confirmation and deletions."
+    echo ""
+  else
+    # Safety: require typing the exact tag name
+    read -rp "Type '${VTAG}' to confirm deletion: " RETAG_CONFIRM
+    if [[ "${RETAG_CONFIRM}" != "${VTAG}" ]]; then
+      echo "Aborted — confirmation did not match." >&2
+      exit 1
+    fi
+    echo ""
+
+    if [[ "${LOCAL_TAG_EXISTS}" == "true" ]]; then
+      git tag -d "${VTAG}"
+      echo "Deleted local tag ${VTAG}."
+    fi
+    if [[ "${REMOTE_TAG_EXISTS}" == "true" ]]; then
+      git push origin --delete "${VTAG}"
+      echo "Deleted remote tag ${VTAG}."
+    fi
+    if [[ "${GH_RELEASE_EXISTS}" == "true" ]]; then
+      gh release delete "${VTAG}" --yes
+      echo "Deleted GitHub release ${VTAG}."
+    fi
+    echo ""
+  fi
+fi
+
+if [[ "${DO_DRYRUN}" == "true" ]]; then
+  echo "[dry-run] would stamp version: semver=${SEMVER}  spfx=${SPFX_VER}"
+else
+  echo "Stamping version: semver=${SEMVER}  spfx=${SPFX_VER}"
+fi
 
 # --------------------------------------------------------------------------- #
 # Stamp files
 # --------------------------------------------------------------------------- #
 
-npm version "$SEMVER" --no-git-tag-version --allow-same-version
+maybe npm version "$SEMVER" --no-git-tag-version --allow-same-version
 
 # Stamp azure-function/package.json if it exists
 if [[ -f "azure-function/package.json" ]]; then
-  npm version "$SEMVER" --no-git-tag-version --allow-same-version --prefix azure-function
-  echo "azure-function/package.json → ${SEMVER}"
+  maybe npm version "$SEMVER" --no-git-tag-version --allow-same-version --prefix azure-function
+  if [[ "${DO_DRYRUN}" == "false" ]]; then
+    echo "azure-function/package.json → ${SEMVER}"
+  fi
 fi
 
-SPFX_VER="$SPFX_VER" node -e "
+if [[ "${DO_DRYRUN}" == "true" ]]; then
+  echo "[dry-run] would update config/package-solution.json → ${SPFX_VER}"
+else
+  SPFX_VER="$SPFX_VER" node -e "
 const fs  = require('fs');
 const ver = process.env.SPFX_VER;
 const p   = 'config/package-solution.json';
@@ -309,17 +590,42 @@ obj.solution.features.forEach(f => { f.version = ver; });
 fs.writeFileSync(p, JSON.stringify(obj, null, 2) + '\n');
 console.log('config/package-solution.json → ' + ver);
 "
+fi
 
 # Compile azuredeploy.json from main.bicep so it is part of the release commit.
 # The tag must point to a commit that already contains the correct ARM template —
 # otherwise the Deploy-to-Azure button would serve a stale version until CI commits back.
 BICEP_COMPILED=false
 if command -v az &>/dev/null && [[ -f "azure-function/infra/main.bicep" ]]; then
-  echo "Compiling azure-function/infra/main.bicep → azuredeploy.json via az bicep"
-  az bicep build --file azure-function/infra/main.bicep --outfile azure-function/infra/azuredeploy.json
-  BICEP_COMPILED=true
+  if [[ "${DO_DRYRUN}" == "true" ]]; then
+    echo "[dry-run] would compile azure-function/infra/main.bicep → azuredeploy.json"
+    BICEP_COMPILED=true
+  else
+    echo "Compiling azure-function/infra/main.bicep → azuredeploy.json via az bicep"
+    az bicep build --file azure-function/infra/main.bicep --outfile azure-function/infra/azuredeploy.json
+    BICEP_COMPILED=true
+  fi
 else
   echo "⚠ az CLI not found (or main.bicep missing) — azuredeploy.json will be regenerated by CI if needed"
+fi
+
+# --------------------------------------------------------------------------- #
+# Build
+# --------------------------------------------------------------------------- #
+
+if [[ "${DO_COMMIT}" == "true" && "${DO_BUILD}" == "true" ]]; then
+  echo ""
+  echo "Building project to verify it compiles cleanly before tagging..."
+  if [[ "${DO_DRYRUN}" == "true" ]]; then
+    echo "[dry-run] would run: ./scripts/build.sh"
+  else
+    ./scripts/build.sh
+    echo ""
+    echo "Build succeeded."
+  fi
+elif [[ "${DO_COMMIT}" == "true" && "${DO_BUILD}" == "false" ]]; then
+  echo ""
+  echo "Skipping build (--skip-build)."
 fi
 
 # --------------------------------------------------------------------------- #
@@ -327,16 +633,37 @@ fi
 # --------------------------------------------------------------------------- #
 
 if [[ "${DO_COMMIT}" == "true" ]]; then
-  git add package.json package-lock.json config/package-solution.json
+  maybe git add package.json package-lock.json config/package-solution.json
   if [[ -f "azure-function/package.json" ]]; then
-    git add azure-function/package.json azure-function/package-lock.json 2>/dev/null || true
+    if [[ "${DO_DRYRUN}" == "true" ]]; then
+      echo "[dry-run] git add azure-function/package.json azure-function/package-lock.json"
+    else
+      git add azure-function/package.json azure-function/package-lock.json 2>/dev/null || true
+    fi
   fi
   if [[ "$BICEP_COMPILED" == "true" ]]; then
-    git add azure-function/infra/azuredeploy.json
+    maybe git add azure-function/infra/azuredeploy.json
   fi
-  git commit -m "chore: release ${VTAG}"
-  git tag -a "${VTAG}" -m "Release ${VTAG}"
+  maybe git commit -m "chore: release ${VTAG}"
+  maybe git tag -a "${VTAG}" -m "Release ${VTAG}"
   echo ""
-  echo "Created commit and tag ${VTAG}."
-  echo "Push with:  git push && git push --tags"
+  if [[ "${DO_DRYRUN}" == "true" ]]; then
+    echo "[dry-run] would create commit and tag ${VTAG}."
+  else
+    echo "Created commit and tag ${VTAG}."
+  fi
+  if [[ "${DO_PUSH}" == "true" ]]; then
+    if [[ "${DO_DRYRUN}" == "true" ]]; then
+      echo "[dry-run] would push branch and tags to origin."
+    else
+      echo "Pushing to origin..."
+      git push
+      git push --tags
+      echo "Pushed. The release workflow will start automatically."
+    fi
+  else
+    if [[ "${DO_DRYRUN}" == "false" ]]; then
+      echo "Push with:  git push && git push --tags"
+    fi
+  fi
 fi
