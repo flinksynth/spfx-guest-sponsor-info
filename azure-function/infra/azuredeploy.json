@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.41.2.15936",
-      "templateHash": "2872817296854409910"
+      "templateHash": "11299032576628616274"
     },
     "name": "Guest Sponsor Info – Azure Function Proxy",
     "description": "Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights.",
@@ -254,6 +254,40 @@
         "description": "Minimum successful requests required before likely-attack info alert fires (avoid pure outage overlap)."
       },
       "minValue": 0
+    },
+    "enableNewReleaseAlert": {
+      "type": "bool",
+      "defaultValue": true,
+      "metadata": {
+        "category": "Monitoring",
+        "description": "Enable info-only alert when a newer GitHub release of the function is available."
+      }
+    },
+    "enableBrokenSponsorAlert": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "category": "Monitoring",
+        "description": "Enable operational alert when a hard-deleted Entra object remains referenced as a sponsor (Graph 404)."
+      }
+    },
+    "newReleaseAlertEvaluationFrequencyInMinutes": {
+      "type": "int",
+      "defaultValue": 60,
+      "metadata": {
+        "category": "Monitoring",
+        "description": "KQL evaluation frequency for the new-release alert in minutes."
+      },
+      "minValue": 5
+    },
+    "newReleaseAlertWindowInMinutes": {
+      "type": "int",
+      "defaultValue": 720,
+      "metadata": {
+        "category": "Monitoring",
+        "description": "KQL lookback window for the new-release alert in minutes (default 720 = 12 h covers two 6-hour timer intervals)."
+      },
+      "minValue": 60
     },
     "dailyMemoryTimeQuotaGBs": {
       "type": "int",
@@ -811,6 +845,18 @@
           "likelyAttackMinSuccessThreshold": {
             "value": "[parameters('likelyAttackMinSuccessThreshold')]"
           },
+          "enableNewReleaseAlert": {
+            "value": "[parameters('enableNewReleaseAlert')]"
+          },
+          "newReleaseAlertEvaluationFrequencyInMinutes": {
+            "value": "[parameters('newReleaseAlertEvaluationFrequencyInMinutes')]"
+          },
+          "newReleaseAlertWindowInMinutes": {
+            "value": "[parameters('newReleaseAlertWindowInMinutes')]"
+          },
+          "enableBrokenSponsorAlert": {
+            "value": "[parameters('enableBrokenSponsorAlert')]"
+          },
           "operationalActionGroupResourceIds": {
             "value": "[parameters('operationalActionGroupResourceIds')]"
           },
@@ -834,7 +880,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.41.2.15936",
-              "templateHash": "7151424266842534356"
+              "templateHash": "9206832646292928164"
             },
             "name": "Guest Sponsor Info – Monitoring",
             "description": "Log Analytics Workspace, Application Insights, Action Groups, and KQL alert rules."
@@ -877,6 +923,20 @@
               "defaultValue": true,
               "metadata": {
                 "description": "Enable info-only alert for likely attack/noise spikes (high 401/403 from many IPs)."
+              }
+            },
+            "enableNewReleaseAlert": {
+              "type": "bool",
+              "defaultValue": true,
+              "metadata": {
+                "description": "Enable info-only alert when a newer GitHub release of the function is available."
+              }
+            },
+            "enableBrokenSponsorAlert": {
+              "type": "bool",
+              "defaultValue": false,
+              "metadata": {
+                "description": "Enable operational alert when a hard-deleted Entra object remains referenced as a sponsor (Graph 404)."
               }
             },
             "alertEvaluationFrequencyInMinutes": {
@@ -961,6 +1021,22 @@
                 "description": "Minimum successful requests required before likely-attack info alert fires (avoid pure outage overlap)."
               }
             },
+            "newReleaseAlertEvaluationFrequencyInMinutes": {
+              "type": "int",
+              "defaultValue": 60,
+              "minValue": 5,
+              "metadata": {
+                "description": "KQL evaluation frequency for the new-release alert in minutes."
+              }
+            },
+            "newReleaseAlertWindowInMinutes": {
+              "type": "int",
+              "defaultValue": 720,
+              "minValue": 60,
+              "metadata": {
+                "description": "KQL lookback window for the new-release alert in minutes. Must be at least twice the function timer interval (6 h) to tolerate one missed timer invocation."
+              }
+            },
             "operationalActionGroupResourceIds": {
               "type": "array",
               "defaultValue": [],
@@ -1002,6 +1078,10 @@
           "variables": {
             "logAnalyticsWorkspaceName": "[format('{0}-logs', parameters('functionAppName'))]",
             "appInsightsResourceName": "[format('{0}-insights', parameters('functionAppName'))]",
+            "newReleaseAlertQueryRaw": "let window = __WINDOW__m;\ntraces\n| where timestamp > ago(window)\n| where message has \"[NEW_RELEASE_AVAILABLE]\"\n| extend latestVersion = extract(@\"latestVersion=(\\\\d+\\\\.\\\\d+\\\\.\\\\d+)\", 1, message)\n| where isnotempty(latestVersion)\n| project latestVersion\n",
+            "newReleaseAlertQuery": "[replace(variables('newReleaseAlertQueryRaw'), '__WINDOW__', string(parameters('newReleaseAlertWindowInMinutes')))]",
+            "brokenSponsorAlertQueryRaw": "let window = __WINDOW__m;\ntraces\n| where timestamp > ago(window)\n| where message has \"[BROKEN_SPONSOR_REF]\"\n| extend sponsorId = extract(@\"sponsorId=([a-f0-9]{8}\\\\.\\\\.\\\\.[a-f0-9]{4})\", 1, message)\n| where isnotempty(sponsorId)\n| project sponsorId\n",
+            "brokenSponsorAlertQuery": "[replace(variables('brokenSponsorAlertQueryRaw'), '__WINDOW__', string(parameters('alertWindowInMinutes')))]",
             "serviceOutageAlertQueryRaw": "let window = __WINDOW__m;\nlet req = requests\n| where timestamp > ago(window)\n| where name contains \"getGuestSponsors\";\nlet total = toscalar(req | count);\nlet failures5xx = toscalar(req | where resultCode startswith \"5\" or resultCode == \"504\" | count);\nlet success = toscalar(req | where resultCode startswith \"2\" | count);\nprint total=total, failures5xx=failures5xx, success=success,\n      successRatePct = iff(total == 0, 100.0, todouble(success) * 100.0 / todouble(total))\n| where total >= __MIN_REQUESTS__\n| where failures5xx >= __FAILURE_COUNT__ or successRatePct < __SUCCESS_RATE_PCT__\n",
             "serviceOutageAlertQuery": "[replace(replace(replace(replace(variables('serviceOutageAlertQueryRaw'), '__WINDOW__', string(parameters('alertWindowInMinutes'))), '__MIN_REQUESTS__', string(parameters('serviceOutageMinRequests'))), '__FAILURE_COUNT__', string(parameters('serviceOutageFailureCountThreshold'))), '__SUCCESS_RATE_PCT__', string(parameters('serviceOutageSuccessRatePercentThreshold')))]",
             "authConfigRegressionAlertQueryRaw": "let window = __WINDOW__m;\ntraces\n| where timestamp > ago(window)\n| where message has \"Client validation (\"\n| extend reasonCode = tostring(customDimensions.reasonCode)\n| where reasonCode in (\"AUTH_CONFIG_TENANT_MISSING\", \"AUTH_CONFIG_AUDIENCE_MISSING\")\n| summarize hits = count() by reasonCode\n| where hits >= __HITS_THRESHOLD__\n",
@@ -1183,6 +1263,96 @@
               "dependsOn": [
                 "[resourceId('Microsoft.Insights/components', variables('appInsightsResourceName'))]",
                 "[resourceId('Microsoft.Insights/actionGroups', format('{0}-info-ag', parameters('functionAppName')))]"
+              ]
+            },
+            {
+              "condition": "[parameters('enableNewReleaseAlert')]",
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}-new-release-kql', parameters('functionAppName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "description": "Info-only alert when a newer GitHub release of the Guest Sponsor Info function is available. Fires once per unique version; auto-mitigates when the function is updated.",
+                "enabled": true,
+                "scopes": ["[resourceId('Microsoft.Insights/components', variables('appInsightsResourceName'))]"],
+                "evaluationFrequency": "[format('PT{0}M', parameters('newReleaseAlertEvaluationFrequencyInMinutes'))]",
+                "windowSize": "[format('PT{0}M', parameters('newReleaseAlertWindowInMinutes'))]",
+                "severity": 4,
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "[variables('newReleaseAlertQuery')]",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "dimensions": [
+                        {
+                          "name": "latestVersion",
+                          "operator": "Include",
+                          "values": ["*"]
+                        }
+                      ],
+                      "failingPeriods": {
+                        "numberOfEvaluationPeriods": 1,
+                        "minFailingPeriodsToAlert": 1
+                      }
+                    }
+                  ]
+                },
+                "actions": {
+                  "actionGroups": "[variables('effectiveInfoActionGroupIds')]"
+                },
+                "autoMitigate": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/components', variables('appInsightsResourceName'))]",
+                "[resourceId('Microsoft.Insights/actionGroups', format('{0}-info-ag', parameters('functionAppName')))]"
+              ]
+            },
+            {
+              "condition": "[parameters('enableBrokenSponsorAlert')]",
+              "type": "Microsoft.Insights/scheduledQueryRules",
+              "apiVersion": "2021-08-01",
+              "name": "[format('{0}-broken-sponsor-ref-kql', parameters('functionAppName'))]",
+              "location": "[parameters('location')]",
+              "tags": "[parameters('tags')]",
+              "properties": {
+                "description": "Operational alert when a hard-deleted Entra object remains referenced as a sponsor (Graph 404). Fires per unique pseudonymized sponsor OID; auto-mitigates when the reference is resolved.",
+                "enabled": true,
+                "scopes": ["[resourceId('Microsoft.Insights/components', variables('appInsightsResourceName'))]"],
+                "evaluationFrequency": "[format('PT{0}M', parameters('alertEvaluationFrequencyInMinutes'))]",
+                "windowSize": "[format('PT{0}M', parameters('alertWindowInMinutes'))]",
+                "severity": 3,
+                "criteria": {
+                  "allOf": [
+                    {
+                      "query": "[variables('brokenSponsorAlertQuery')]",
+                      "timeAggregation": "Count",
+                      "operator": "GreaterThan",
+                      "threshold": 0,
+                      "dimensions": [
+                        {
+                          "name": "sponsorId",
+                          "operator": "Include",
+                          "values": ["*"]
+                        }
+                      ],
+                      "failingPeriods": {
+                        "numberOfEvaluationPeriods": 1,
+                        "minFailingPeriodsToAlert": 1
+                      }
+                    }
+                  ]
+                },
+                "actions": {
+                  "actionGroups": "[variables('effectiveOperationalActionGroupIds')]"
+                },
+                "autoMitigate": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Insights/components', variables('appInsightsResourceName'))]",
+                "[resourceId('Microsoft.Insights/actionGroups', format('{0}-ops-ag', parameters('functionAppName')))]"
               ]
             }
           ],
