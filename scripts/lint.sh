@@ -10,18 +10,8 @@ set -euo pipefail
 # Always run from the repository root so npm scripts resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# Colours are disabled in CI, when NO_COLOR is set, or when stdout is not a TTY.
-if [[ -t 1 && "${CI:-}" == "" && "${NO_COLOR:-}" == "" && "${TERM:-}" != "dumb" ]]; then
-  C_RED=$'\033[0;31m'
-  C_GRN=$'\033[0;32m'
-  C_BLD=$'\033[1m'
-  C_RST=$'\033[0m'
-else
-  C_RED=''
-  C_GRN=''
-  C_BLD=''
-  C_RST=''
-fi
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
 
 EXIT=0
 

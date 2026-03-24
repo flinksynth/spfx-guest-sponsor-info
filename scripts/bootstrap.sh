@@ -20,20 +20,8 @@ set -euo pipefail
 # Always run from the repository root so paths resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
-# Colours are disabled in CI, when NO_COLOR is set, or when stdout is not a TTY.
-if [[ -t 1 && "${CI:-}" == "" && "${NO_COLOR:-}" == "" && "${TERM:-}" != "dumb" ]]; then
-  C_GRN=$'\033[0;32m'
-  C_BLD=$'\033[1m'
-  C_DIM=$'\033[2m'
-  C_CYN=$'\033[0;36m'
-  C_RST=$'\033[0m'
-else
-  C_GRN=''
-  C_BLD=''
-  C_DIM=''
-  C_CYN=''
-  C_RST=''
-fi
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
 
 echo "${C_DIM}Installing web part dependencies…${C_RST}"
 npm install
