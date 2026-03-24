@@ -93,6 +93,60 @@ bump_version() {
   esac
 }
 
+# suggest_bump [<base_tag>]
+# Analyses Conventional Commits since <base_tag> (or the last git tag) and
+# returns "major", "minor", or "patch".
+suggest_bump() {
+  local base_tag="${1:-}"
+  if [[ -z "$base_tag" ]]; then
+    base_tag=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || true)
+  fi
+
+  local range="HEAD"
+  if [[ -n "$base_tag" ]]; then
+    # Only analyse commits that are not reachable from the base tag
+    range="${base_tag}..HEAD"
+  fi
+
+  local log
+  log=$(git log "$range" --format="%s%x00%b%x00" 2>/dev/null || true)
+
+  if [[ -z "$log" ]]; then
+    echo "patch"
+    return
+  fi
+
+  local bump="patch"
+
+  # Patterns stored in variables — required for complex ERE in bash [[ =~ ]]
+  local re_breaking='^[a-zA-Z]+(\([^)]*\))?!:'
+  local re_feat='^feat(\([^)]*\))?:'
+
+  # Read NUL-delimited pairs: subject, body
+  while IFS= read -r -d $'\0' subject && IFS= read -r -d $'\0' body; do
+    [[ -z "$subject" ]] && continue
+
+    # Breaking change: exclamation mark after type/scope, e.g. feat!: or feat(x)!:
+    if [[ "$subject" =~ $re_breaking ]]; then
+      echo "major"
+      return
+    fi
+
+    # Breaking change in footer or body (BREAKING CHANGE: or BREAKING-CHANGE:)
+    if echo "$body" | grep -qiE '^(BREAKING CHANGE|BREAKING-CHANGE):'; then
+      echo "major"
+      return
+    fi
+
+    # Feature commit → at least minor
+    if [[ "$subject" =~ $re_feat ]] && [[ "$bump" != "major" ]]; then
+      bump="minor"
+    fi
+  done <<<"$log"
+
+  echo "$bump"
+}
+
 # --------------------------------------------------------------------------- #
 # Argument parsing
 # --------------------------------------------------------------------------- #
@@ -143,19 +197,53 @@ if [[ -z "$TAG" ]]; then
   NEXT_MINOR=$(bump_version "$CURRENT_SEMVER" minor)
   NEXT_MAJOR=$(bump_version "$CURRENT_SEMVER" major)
 
+  # Determine recommended bump from Conventional Commits since last tag
+  LAST_TAG=$(git describe --tags --match "v*" --abbrev=0 2>/dev/null || true)
+  RECOMMENDED=$(suggest_bump "$LAST_TAG")
+
+  # Map recommendation to menu choice number and default version
+  case "$RECOMMENDED" in
+    major)
+      DEFAULT_CHOICE=3
+      DEFAULT_VER="$NEXT_MAJOR"
+      ;;
+    minor)
+      DEFAULT_CHOICE=2
+      DEFAULT_VER="$NEXT_MINOR"
+      ;;
+    *)
+      DEFAULT_CHOICE=1
+      DEFAULT_VER="$NEXT_PATCH"
+      ;;
+  esac
+
+  # Build menu labels — mark recommended entry with ★
+  LABEL_PATCH="patch  →  ${NEXT_PATCH}"
+  LABEL_MINOR="minor  →  ${NEXT_MINOR}"
+  LABEL_MAJOR="major  →  ${NEXT_MAJOR}"
+  case "$RECOMMENDED" in
+    major) LABEL_MAJOR="${LABEL_MAJOR}  ★ recommended" ;;
+    minor) LABEL_MINOR="${LABEL_MINOR}  ★ recommended" ;;
+    *) LABEL_PATCH="${LABEL_PATCH}  ★ recommended" ;;
+  esac
+
   echo ""
   echo "Current version: ${CURRENT_LABEL}"
+  if [[ -n "$LAST_TAG" ]]; then
+    COMMIT_COUNT=$(git rev-list "${LAST_TAG}..HEAD" --count 2>/dev/null || echo "?")
+    echo "Commits since ${LAST_TAG}: ${COMMIT_COUNT}"
+  fi
   echo ""
   echo "Suggested next versions:"
-  echo "  1) patch  →  ${NEXT_PATCH}"
-  echo "  2) minor  →  ${NEXT_MINOR}"
-  echo "  3) major  →  ${NEXT_MAJOR}"
+  echo "  1) ${LABEL_PATCH}"
+  echo "  2) ${LABEL_MINOR}"
+  echo "  3) ${LABEL_MAJOR}"
   echo "  4) Enter a custom version"
   echo ""
 
   while true; do
-    read -rp "Select [1-4] or press Enter for patch (${NEXT_PATCH}): " CHOICE
-    CHOICE="${CHOICE:-1}"
+    read -rp "Select [1-4] or press Enter for recommended (${DEFAULT_VER}): " CHOICE
+    CHOICE="${CHOICE:-${DEFAULT_CHOICE}}"
     case "$CHOICE" in
       1)
         TAG="$NEXT_PATCH"
