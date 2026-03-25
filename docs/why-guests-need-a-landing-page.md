@@ -296,8 +296,8 @@ Several links that almost no guest knows exist — but that matter:
 - **View accepted terms and conditions**: If your organization uses Conditional Access
   policies that require guests to accept terms of use before accessing resources, most guests
   have no idea they can review what they agreed to. The MyAccount portal surfaces this
-  under **Organizations → Privacy**. A direct link to the organizations view:
-  `https://myaccount.microsoft.com/organizations?tenantId={yourTenantId}`
+  under a dedicated terms acceptance page. A direct link:
+  `https://myaccount.microsoft.com/termsofuse/myacceptances?tenantId={yourTenantId}`
   Providing this link gives guests the transparency they are entitled to — and rarely receive.
 
 - **Manage security information**: For guests whose multi-factor authentication is registered
