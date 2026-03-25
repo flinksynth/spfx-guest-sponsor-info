@@ -166,12 +166,6 @@ const useStyles = makeStyles({
   // side shows a beaker / preview eye with "DEMO" text (representing demo mode).
   // Both sides are separated by a thin vertical divider.  The currently selected
   // side is subtly highlighted with a brand-colour glow.  Approx. 320 × 120 px.
-  optionGroup: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: tokens.spacingVerticalS,
-    marginBottom: tokens.spacingVerticalM,
-  },
   optionCard: {
     display: 'flex',
     alignItems: 'flex-start',
@@ -213,11 +207,6 @@ const useStyles = makeStyles({
     marginTop: tokens.spacingVerticalXS,
   },
   // ── Action rows ────────────────────────────────────────────────────────────
-  actionsRow: {
-    display: 'flex',
-    justifyContent: 'flex-end',
-    width: '100%',
-  },
   actionsSplit: {
     display: 'flex',
     justifyContent: 'space-between',
@@ -233,10 +222,6 @@ const useStyles = makeStyles({
       color: tokens.colorNeutralForeground2,
       textDecorationLine: 'underline',
     },
-  },
-  actionsRight: {
-    display: 'flex',
-    gap: tokens.spacingHorizontalS,
   },
 });
 
