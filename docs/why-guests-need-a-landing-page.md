@@ -197,6 +197,26 @@ unambiguous entrance for everyone who is not yet sure where they belong.
 The goal is not a polished marketing experience. The goal is orientation — getting the guest
 from "where am I?" to "I know exactly what to do" in under two minutes.
 
+One decision that is easy to overlook at setup time but impossible to reverse later: the
+default language of the site collection. SharePoint's site language is set at creation and
+cannot be changed afterwards. If your organization works internationally — or invites guests
+from multiple countries — create the Entrance Area site in English. It is the safest common
+denominator, and it avoids a situation where all navigation elements and system labels are
+locked in a language that does not serve parts of your audience.
+
+That said, English as the site language does not mean English as the only language on the
+page. SharePoint's multilingual pages feature lets you publish translated versions of the
+same page for different language audiences. It is worth using. Think carefully about where
+your guests actually come from: project partners in other countries, suppliers, customers.
+A customer who lands on a page in their own language and receives information in their native
+tongue has a genuinely different experience than one who has to parse a foreign language
+under pressure. This is not just a quality-of-life detail — for many cultures it carries
+real weight. French-speaking guests, in particular, tend to notice and appreciate being
+addressed in French in a way that goes beyond mere preference. Taking the time to provide a
+French translation of the Entrance Area is a small gesture with an outsized effect. The same
+applies to other languages depending on your guest population. The translation effort for a
+focused, well-scoped Entrance Area page is modest — and it only needs to be done once.
+
 ### Branding Does Part of the Work
 
 One element that contributes to that orientation without any extra effort is branding itself.
