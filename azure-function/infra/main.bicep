@@ -4,7 +4,7 @@ metadata name = 'Guest Sponsor Info – Azure Function Proxy'
 metadata description = 'Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights.'
 metadata repository = 'https://github.com/workoho/spfx-guest-sponsor-info'
 metadata author = 'Workoho GmbH'
-metadata license = 'AGPL-3.0-only'
+metadata license = 'PolyForm-Shield-1.0.0'
 
 @metadata({ category: 'Basics' })
 @description('Azure region for all resources.')

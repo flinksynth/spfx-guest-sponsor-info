@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# SPDX-FileCopyrightText: 2026 Workoho GmbH <https://workoho.com>
-# SPDX-FileCopyrightText: 2026 Julian Pawlowski <https://github.com/jpawlowski>
-# SPDX-License-Identifier: AGPL-3.0-only
+# Copyright 2026 Workoho GmbH <https://workoho.com>
+# Author: Julian Pawlowski <https://github.com/jpawlowski>
+# Licensed under PolyForm Shield License 1.0.0 <https://polyformproject.org/licenses/shield/1.0.0>
 #
 # Run all linters (TypeScript/ESLint, Markdown, Bicep, Shell) for both
 # the SPFx web part and the Azure Function.

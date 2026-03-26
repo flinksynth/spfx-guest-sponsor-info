@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Workoho GmbH <https://workoho.com>
 // SPDX-FileCopyrightText: 2026 Julian Pawlowski <https://github.com/jpawlowski>
-// SPDX-License-Identifier: AGPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-PolyForm-Shield-1.0.0
 
 import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/functions';
 import { createHmac, randomUUID, timingSafeEqual } from 'crypto';
@@ -768,15 +768,53 @@ function getBooleanValue(source: Record<string, unknown>, key: string): boolean 
 }
 
 /**
+ * Returns true when a plan entry has an active-or-grace-period capability status.
+ * Both 'Enabled' (fully active) and 'Warning' (grace period — plan will be removed
+ * but the service is still accessible) count as "available" for sponsor eligibility.
+ */
+function isPlanActive(capabilityStatus: unknown): boolean {
+  return capabilityStatus === 'Enabled' || capabilityStatus === 'Warning';
+}
+
+/**
+ * Returns true when the assignedPlans array contains at least one active plan of any type.
+ * Used for the 'any' sponsor filter mode.
+ */
+function assignedPlansHaveAny(plans: unknown): boolean {
+  if (!Array.isArray(plans)) return false;
+  return (plans as Array<{ capabilityStatus?: unknown }>)
+    .some(p => isPlanActive(p.capabilityStatus));
+}
+
+/**
+ * Returns true when the assignedPlans array contains at least one active Exchange Online plan.
+ * Exchange plans are identified by service === 'exchange'.
+ * Both 'Enabled' and 'Warning' capabilityStatus count as active.
+ */
+function assignedPlansHaveExchange(plans: unknown): boolean {
+  if (!Array.isArray(plans)) return false;
+  return (plans as Array<{ service?: unknown; capabilityStatus?: unknown }>)
+    .some(p => p.service === 'exchange' && isPlanActive(p.capabilityStatus));
+}
+
+/**
  * Returns true when the assignedPlans array contains at least one active Teams plan.
- * Teams plans are identified by service === 'TeamspaceAPI' with capabilityStatus === 'Enabled'.
- * Returns false for any non-array input (undefined, null, unexpected type).
+ * Teams plans are identified by service === 'TeamspaceAPI'.
+ * Both 'Enabled' and 'Warning' capabilityStatus count as active.
  */
 function assignedPlansHaveTeams(plans: unknown): boolean {
   if (!Array.isArray(plans)) return false;
   return (plans as Array<{ service?: unknown; capabilityStatus?: unknown }>)
-    .some(p => p.service === 'TeamspaceAPI' && p.capabilityStatus === 'Enabled');
+    .some(p => p.service === 'TeamspaceAPI' && isPlanActive(p.capabilityStatus));
 }
+
+/**
+ * Allowed values for the `sponsorFilter` query parameter.
+ * Validated server-side before use — the raw query string value is never passed
+ * directly to Graph or used in a filter expression.
+ */
+const VALID_SPONSOR_FILTERS = ['any', 'exchange', 'teams'] as const;
+type SponsorFilter = typeof VALID_SPONSOR_FILTERS[number];
 
 /**
  * Validates and normalizes HTTP status codes. Returns a valid HTTP status in the
@@ -1069,7 +1107,18 @@ export async function getGuestSponsors(
     return jsonResponse(mockResult, 200, request, correlationId);
   }
 
-  context.log(`Fetching sponsors for caller ${redactGuid(callerOid)}`);
+  // Parse and validate sponsor eligibility filter parameters sent by the web part.
+  // Both values are strictly validated against known-good constants before use —
+  // the raw query string is never forwarded to Graph or embedded in a filter string.
+  const rawFilter = request.query.get('sponsorFilter') ?? 'teams';
+  const sponsorFilter: SponsorFilter = (VALID_SPONSOR_FILTERS as readonly string[]).includes(rawFilter)
+    ? rawFilter as SponsorFilter
+    : 'teams';
+  // requireUserMailbox: true unless the web part explicitly sends 'false'.
+  const requireUserMailbox = request.query.get('requireUserMailbox') !== 'false';
+
+  context.log(`Fetching sponsors for caller ${redactGuid(callerOid)}`
+    + ` [sponsorFilter=${sponsorFilter}, requireUserMailbox=${requireUserMailbox}]`);
 
   try {
     const credential = new DefaultAzureCredential();
@@ -1146,7 +1195,10 @@ export async function getGuestSponsors(
     const sponsorBatchRequests: IBatchRequest[] = candidates.map((sponsor, index) => ({
       id: `exists-${index}`,
       method: 'GET',
-      url: `/users/${sponsor.id}?$select=id,accountEnabled,isResourceAccount,assignedPlans${hasMailboxSettings ? ',mailboxSettings' : ''}&$expand=manager($select=id,displayName,givenName,surname,jobTitle,department,accountEnabled)`,
+      // Include mailboxSettings only when the permission is granted AND the admin
+      // configured "require user mailbox type". Without that setting, the mailbox
+      // type check is skipped entirely, making the extra field wasted bandwidth.
+      url: `/users/${sponsor.id}?$select=id,accountEnabled,isResourceAccount,assignedPlans${hasMailboxSettings && requireUserMailbox ? ',mailboxSettings' : ''}&$expand=manager($select=id,displayName,givenName,surname,jobTitle,department,accountEnabled)`,
     }));
 
     // When TeamMember.Read.All is granted, add a joinedTeams sub-request to the
@@ -1208,24 +1260,6 @@ export async function getGuestSponsors(
       const sponsorEnabled = existsBody !== undefined
         ? getBooleanValue(existsBody, 'accountEnabled')
         : undefined;
-      // Determine userPurpose from mailboxSettings when the permission is available.
-      // Accepted values: 'user' (cloud mailbox) and 'linked' (on-premises mailbox).
-      // Any other value (shared, room, equipment, …) means this is not a real person
-      // that should appear as a sponsor.  When mailboxSettings is absent (permission
-      // not granted or user has no Exchange mailbox object) we fail-open so that a
-      // missing permission never silently hides sponsors.
-      let hasUserMailbox = true;
-      if (hasMailboxSettings && existsBody !== undefined) {
-        const mb = existsBody.mailboxSettings;
-        if (mb !== null && mb !== undefined) {
-          const userPurpose = typeof (mb as Record<string, unknown>).userPurpose === 'string'
-            ? (mb as Record<string, unknown>).userPurpose as string
-            : undefined;
-          if (userPurpose !== undefined) {
-            hasUserMailbox = userPurpose === 'user' || userPurpose === 'linked';
-          }
-        }
-      }
       // isResourceAccount flags Teams Room devices, Common Area Phones, and other
       // resource accounts — these are never valid sponsors regardless of their licenses.
       // Fail-open when the property is absent (undefined) so a transient Graph response
@@ -1233,9 +1267,53 @@ export async function getGuestSponsors(
       const isResourceAccount = existsBody !== undefined
         ? getBooleanValue(existsBody, 'isResourceAccount') === true
         : false;
-      // Treat missing, soft-deleted, disabled, resource, or non-user-mailbox sponsors as unavailable.
+
+      const assignedPlans = existsBody?.assignedPlans;
+
+      // License eligibility: controlled by the sponsorFilter query parameter.
+      //   'any'      — at least one plan with Enabled or Warning capabilityStatus
+      //   'exchange' — at least one Exchange Online plan (service='exchange') active
+      //   'teams'    — at least one Teams plan (service='TeamspaceAPI') active (default)
+      const meetsLicenseFilter =
+        sponsorFilter === 'any'      ? assignedPlansHaveAny(assignedPlans) :
+        sponsorFilter === 'exchange' ? assignedPlansHaveExchange(assignedPlans) :
+                                       assignedPlansHaveTeams(assignedPlans);
+
+      // Mailbox eligibility: controlled by the requireUserMailbox query parameter.
+      //
+      // requireUserMailbox=true (default):
+      //   Check mailboxSettings.userPurpose when MailboxSettings.Read is granted.
+      //   Accepted values: 'user' (cloud mailbox) and 'linked' (on-premises mailbox).
+      //   Any other value (shared, room, equipment, …) marks this as non-eligible.
+      //   Fail-open when MailboxSettings.Read is NOT granted so a missing permission
+      //   never silently hides a legitimately configured sponsor.
+      //
+      // requireUserMailbox=false:
+      //   Skip the mailbox-type check entirely. Use an active Exchange Online license
+      //   as a proxy for "has some mailbox" — works without MailboxSettings.Read.
+      let hasUserMailbox = true;
+      if (requireUserMailbox) {
+        if (hasMailboxSettings && existsBody !== undefined) {
+          const mb = existsBody.mailboxSettings;
+          if (mb !== null && mb !== undefined) {
+            const userPurpose = typeof (mb as Record<string, unknown>).userPurpose === 'string'
+              ? (mb as Record<string, unknown>).userPurpose as string
+              : undefined;
+            if (userPurpose !== undefined) {
+              hasUserMailbox = userPurpose === 'user' || userPurpose === 'linked';
+            }
+          }
+        }
+        // else hasMailboxSettings=false → fail-open (hasUserMailbox stays true)
+      } else {
+        // "Any mailbox" mode: Exchange Online license is the proxy for mailbox existence.
+        hasUserMailbox = assignedPlansHaveExchange(assignedPlans);
+      }
+
+      // Treat missing, soft-deleted, disabled, resource, insufficiently-licensed,
+      // or wrong-mailbox-type sponsors as unavailable.
       const exists = existsResponse?.status === 404 ? false
-        : sponsorEnabled !== false && !isResourceAccount && hasUserMailbox;
+        : sponsorEnabled !== false && !isResourceAccount && meetsLicenseFilter && hasUserMailbox;
 
       // Emit a throttled warn for hard-deleted sponsors (Graph 404).  A persistent
       // 404 indicates a broken sponsor reference — the Entra object no longer exists

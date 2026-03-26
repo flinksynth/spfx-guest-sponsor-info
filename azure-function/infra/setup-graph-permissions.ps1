@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2026 Workoho GmbH <https://workoho.com>
-# SPDX-FileCopyrightText: 2026 Julian Pawlowski <https://github.com/jpawlowski>
-# SPDX-License-Identifier: AGPL-3.0-only
-
 <#
 .SYNOPSIS
     Grants the Function App's Managed Identity the required Microsoft Graph application roles
@@ -38,6 +34,12 @@
       -ManagedIdentityObjectId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" `
       -TenantId "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy" `
       -FunctionAppClientId "zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz"
+
+.NOTES
+    Copyright 2026 Workoho GmbH <https://workoho.com>
+    Author: Julian Pawlowski <https://github.com/jpawlowski>
+    Licensed under PolyForm Shield License 1.0.0
+    <https://polyformproject.org/licenses/shield/1.0.0>
 #>
 param(
     [Parameter(Mandatory)][string]$ManagedIdentityObjectId,

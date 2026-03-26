@@ -3,7 +3,8 @@
   "version": "0.21.0",
   "description": "Azure Function proxy for /me/sponsors — serves guest sponsor data to the SPFx web part.",
   "homepage": "https://github.com/workoho/spfx-guest-sponsor-info",
-  "license": "AGPL-3.0-only",
+  "private": true,
+  "license": "LicenseRef-PolyForm-Shield-1.0.0",
   "author": {
     "name": "Workoho GmbH",
     "url": "https://workoho.com"

@@ -32,7 +32,7 @@ details. The layout matches the built-in SharePoint People web part.
 Works out of the box with any standard Microsoft 365 environment — no
 third-party tools or paid add-ons required. Every feature below relies solely
 on Microsoft Graph, SharePoint Framework, and the included optional Azure
-Function. [EasyLife 365 Collaboration](https://easylife365.cloud/) pairs
+Function. [EasyLife 365 Collaboration](https://easylife365.cloud/products/collaboration/) pairs
 naturally as a companion: it automates sponsor assignments and the full guest
 lifecycle so the right information stays accurate over time — solid on its
 own, stronger together. [Workoho](https://www.workoho.com/), the author of
@@ -71,7 +71,7 @@ this web part, is a Platinum EasyLife 365 partner and happy to advise.
   the guest receives a clear notice instead of an empty page
 - **Automatic sponsor delegation** — when sponsors are stored in priority order
   (primary, secondary, tertiary … as tools like
-  [EasyLife 365](https://easylife365.cloud/) do), the web part honours that
+  [EasyLife 365 Collaboration](https://easylife365.cloud/products/collaboration/) do), the web part honours that
   order: if a higher-priority sponsor is unavailable, the next active one steps
   in automatically — no configuration change needed; unavailable sponsors are
   still shown as read-only tiles so the guest sees the full picture
@@ -277,7 +277,11 @@ az login                       # authenticate for Graph API access
 
 ## License
 
-AGPL-3.0-only — see [LICENSE](LICENSE) for details.
+PolyForm Shield License 1.0.0 — see [LICENSE](LICENSE) for details.
+
+Copyright © 2026 [Workoho GmbH](https://workoho.com/)
+
+Author: [Julian Pawlowski](https://github.com/jpawlowski)
 
 ## Disclaimer
 

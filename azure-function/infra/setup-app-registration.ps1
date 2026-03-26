@@ -1,7 +1,3 @@
-# SPDX-FileCopyrightText: 2026 Workoho GmbH <https://workoho.com>
-# SPDX-FileCopyrightText: 2026 Julian Pawlowski <https://github.com/jpawlowski>
-# SPDX-License-Identifier: AGPL-3.0-only
-
 <#
 .SYNOPSIS
     Creates or updates the Entra App Registration needed for the Azure Function
@@ -30,6 +26,12 @@
 
 .EXAMPLE
     ./setup-app-registration.ps1 -TenantId "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"
+
+.NOTES
+    Copyright 2026 Workoho GmbH <https://workoho.com>
+    Author: Julian Pawlowski <https://github.com/jpawlowski>
+    Licensed under PolyForm Shield License 1.0.0
+    <https://polyformproject.org/licenses/shield/1.0.0>
 #>
 param(
     [Parameter(Mandatory)][string]$TenantId,

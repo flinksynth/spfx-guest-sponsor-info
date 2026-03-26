@@ -2,7 +2,7 @@
   "name": "guest-sponsor-info",
   "version": "0.21.0",
   "description": "SharePoint Online web part that shows the Microsoft Entra sponsors of the signed-in guest user",
-  "license": "AGPL-3.0-only",
+  "license": "LicenseRef-PolyForm-Shield-1.0.0",
   "author": {
     "name": "Workoho GmbH",
     "url": "https://workoho.com"
