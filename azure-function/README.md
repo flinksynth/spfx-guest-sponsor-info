@@ -1,5 +1,12 @@
 # Guest Sponsor Info – Azure Function
 
+<p align="center">
+  <img src="../images/icon-rounded.svg" width="96" height="96" alt="Guest Sponsor Info icon" />
+</p>
+
+Part of [**Guest Sponsor Info**](../README.md) — a SharePoint Online web part
+for guest landing pages in Microsoft Entra resource tenants.
+
 HTTP-triggered Azure Function (Node.js 22, Azure Functions v4) that acts as a
 proxy between the SharePoint web part and Microsoft Graph.
 
@@ -199,3 +206,17 @@ to Azure CLI (`az login`) or a service principal when `AZURE_CLIENT_ID`,
 | `infra/main.bicep` | Azure infrastructure (Function App, Storage, MI, EasyAuth, Alerts) |
 | `infra/azuredeploy.json` | ARM template compiled from Bicep (used by "Deploy to Azure" button) |
 | `local.settings.json.example` | Template for local development settings |
+
+## License
+
+PolyForm Shield License 1.0.0 — see [LICENSE](../LICENSE) for details.
+
+Copyright © 2026 [Workoho GmbH](https://workoho.com/)
+
+Author: [Julian Pawlowski](https://github.com/jpawlowski)
+
+## Disclaimer
+
+**THIS CODE IS PROVIDED *AS IS* WITHOUT WARRANTY OF ANY KIND, EITHER EXPRESS
+OR IMPLIED, INCLUDING ANY IMPLIED WARRANTIES OF FITNESS FOR A PARTICULAR
+PURPOSE, MERCHANTABILITY, OR NON-INFRINGEMENT.**
