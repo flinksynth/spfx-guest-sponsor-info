@@ -80,6 +80,19 @@ updates:
       - dependency-name: "@types/node"
         update-types: ["version-update:semver-major"]
 
+  # ── Bundler dependencies (Jekyll website) ──────────────────────────────────
+  - package-ecosystem: bundler
+    directory: /website
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Europe/Berlin
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
   # ── GitHub Actions ────────────────────────────────────────────────────────
   - package-ecosystem: github-actions
     directory: /
@@ -96,6 +109,7 @@ updates:
       actions-core:
         patterns:
           - "actions/*"
+          - "ruby/*"
       actions-release:
         patterns:
           - "softprops/action-gh-release"
