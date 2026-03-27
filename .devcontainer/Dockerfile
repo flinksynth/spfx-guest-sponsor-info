@@ -52,7 +52,7 @@ RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
   && tar -xJf "node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
   && rm "node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" SHASUMS256.txt \
   && corepack enable \
-  && npm install --global yo @microsoft/generator-sharepoint@1.22.2 \
+  && npm install --global @rushstack/heft yo @microsoft/generator-sharepoint@1.22.2 \
   && npm cache clean --force
 
 # Azure Functions Core Tools v4 — enables `func start` for local function development.
