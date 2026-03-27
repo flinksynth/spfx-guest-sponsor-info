@@ -1,0 +1,95 @@
+meta:
+  description: >-
+    Guest Sponsor Info — a free SharePoint Framework web part that shows
+    Microsoft Entra sponsors to B2B guest users with live contact cards,
+    Teams presence, and 14 languages.
+
+nav:
+  home: Home
+  features: Features
+  aria_label: Main navigation
+  toggle: Toggle menu
+  switch_lang: Zur deutschen Version wechseln
+
+hero:
+  title: Let your guests know who to call
+  subtitle: >-
+    A SharePoint Framework web part that shows B2B guest users their
+    assigned Microsoft Entra sponsors — live contact cards with photos,
+    Teams presence, and one-click communication.
+  cta_primary: Download Latest Release
+  cta_secondary: Explore Features
+  illustration_alt: >-
+    Illustration showing sponsor contact cards connecting to a guest user
+  badge_languages: 14 Languages
+  badge_privacy: Privacy-First
+  badge_opensource: Open Source
+
+features:
+  section_title: Everything guests need — nothing they don't
+  section_subtitle: >-
+    Purpose-built for the moment a guest user lands in your tenant
+    and needs to know who their contact is.
+  cards:
+    title: Live Sponsor Cards
+    description: >-
+      Rich contact cards with profile photos, job titles, email, phone,
+      and office address — loaded live from Microsoft Graph, never stale.
+  presence:
+    title: Real-Time Teams Presence
+    description: >-
+      See whether a sponsor is Available, Busy, In a Meeting, or Away —
+      with coloured status indicators that update automatically.
+  teams:
+    title: Teams Chat & Call
+    description: >-
+      One-click deep links to start a Teams chat or call with the sponsor,
+      with built-in detection for "Teams not provisioned yet" states.
+  privacy:
+    title: Privacy-First Architecture
+    description: >-
+      All data stays in your Microsoft 365 tenant. No external services,
+      no tracking, no data leaves your boundary. Period.
+  multilingual:
+    title: 14 Languages Built In
+    description: >-
+      English, German, French, Spanish, Italian, Danish, Finnish, Japanese,
+      Norwegian, Swedish, Chinese, Portuguese, Polish, and Dutch — including
+      formal and informal modes.
+  delegation:
+    title: Automatic Sponsor Delegation
+    description: >-
+      When a primary sponsor is unavailable, the next sponsor in priority
+      order steps in automatically. Disabled accounts and shared mailboxes
+      are filtered out.
+
+cta:
+  title: Ready to improve your guest experience?
+  description: >-
+    Deploy in minutes with the included Azure Function and ARM template.
+    Free and open source under the PolyForm Shield License.
+  deploy: Deployment Guide
+  github: View on GitHub
+
+footer:
+  tagline: >-
+    Helping B2B guest users find their contacts since day one.
+  product: Product
+  releases: Releases
+  source_code: Source Code
+  docs: Documentation
+  deployment: Deployment
+  architecture: Architecture
+  operations: Operations
+  legal: Legal
+  privacy: Privacy Policy
+  terms: Terms of Use
+  telemetry: Telemetry
+  license: >-
+    Licensed under PolyForm Shield 1.0.0.
+
+error:
+  title: "404"
+  message: This page could not be found.
+  go_home_en: Go to English Home
+  go_home_de: Go to German Home

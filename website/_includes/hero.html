@@ -1,0 +1,28 @@
+{%- assign strings = site.data[page.lang].strings -%}
+
+<section class="hero">
+    <div class="container hero-inner">
+        <div class="hero-text">
+            <h1 class="hero-title">{{ strings.hero.title }}</h1>
+            <p class="hero-subtitle">{{ strings.hero.subtitle }}</p>
+            <div class="hero-actions">
+                <a href="https://github.com/{{ site.repository }}/releases" class="btn btn-primary" target="_blank"
+                    rel="noopener">
+                    {{ strings.hero.cta_primary }}
+                </a>
+                <a href="{{ '/' | append: page.lang | append: '/features/' | relative_url }}" class="btn btn-secondary">
+                    {{ strings.hero.cta_secondary }}
+                </a>
+            </div>
+            <div class="hero-badges">
+                <span class="badge">{{ strings.hero.badge_languages }}</span>
+                <span class="badge">{{ strings.hero.badge_privacy }}</span>
+                <span class="badge">{{ strings.hero.badge_opensource }}</span>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <img src="{{ '/assets/images/hero-illustration.svg' | relative_url }}"
+                alt="{{ strings.hero.illustration_alt }}" class="hero-illustration" width="520" height="400">
+        </div>
+    </div>
+</section>

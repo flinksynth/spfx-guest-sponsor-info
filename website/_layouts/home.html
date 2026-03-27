@@ -1,0 +1,10 @@
+---
+layout: default
+---
+{%- assign strings = site.data[page.lang].strings -%}
+
+{%- include hero.html -%}
+{%- include features.html -%}
+{%- include cta-section.html -%}
+
+{{ content }}
