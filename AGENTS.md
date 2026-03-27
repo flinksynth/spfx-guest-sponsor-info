@@ -172,6 +172,35 @@ Use the variables from `scripts/colors.sh` — never copy the detection block in
 Colours are automatically suppressed when `$CI` is set, stdout is not a TTY,
 `$NO_COLOR` is set, or `$TERM` is `"dumb"`.
 
+### Callout boxes
+
+`scripts/colors.sh` also provides box functions that draw a coloured frame
+around developer-facing messages so they stand out from build output:
+
+| Function | Border colour | Purpose |
+|---|---|---|
+| `hint` | Cyan | Developer tips, alternative approaches, good-to-know info |
+| `next_steps` | Green | What to do after the script finishes |
+| `important` | Yellow | Critical action items that must be done |
+
+Pass each line as a separate argument; pass `""` for a blank separator line:
+
+```bash
+hint "Edit ${C_BLD}.env${C_RST} and set SPFX_SERVE_TENANT_DOMAIN" \
+     "${C_DIM}(or export it on your host OS)${C_RST}"
+
+next_steps "${C_BLD}./scripts/dev-webpart.sh${C_RST}  # start the SPFx dev server" \
+           "${C_BLD}./scripts/dev-function.sh${C_RST} # start Azure Function locally"
+
+important "Edit azure-function/local.settings.json" \
+          "" \
+          "Required:" \
+          "  TENANT_ID — your Entra tenant ID"
+```
+
+Prefer these box functions over plain `echo` for any message a developer should
+not miss (setup instructions, next steps, required configuration).
+
 ### Comments
 
 Bash is not self-documenting. Comment non-obvious constructs, especially:

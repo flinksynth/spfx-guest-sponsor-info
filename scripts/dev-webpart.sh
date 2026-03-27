@@ -35,6 +35,9 @@ set -euo pipefail
 # Always run from the repository root so paths resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
+
 # Load .env if present (overrides any containerEnv value for this session).
 ENV_FILE=".env"
 if [[ -f "${ENV_FILE}" ]]; then
@@ -47,21 +50,21 @@ fi
 SPFX_SERVE_TENANT_DOMAIN="${SPFX_SERVE_TENANT_DOMAIN:-}"
 
 if [[ -z "${SPFX_SERVE_TENANT_DOMAIN}" ]]; then
-  echo "ERROR: SPFX_SERVE_TENANT_DOMAIN is not set."
-  echo "  The local workbench was removed in SPFx 1.17."
-  echo "  A SharePoint Online tenant is required to test the web part."
-  echo ""
-  echo "  Option 1 — this terminal session only (lost when the terminal closes):"
-  echo "    export SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com"
-  echo ""
-  echo "  Option 2 — persistent in this container (all terminals, survives VS Code restarts):"
-  echo "    cp -n .env.example .env   # skip if .env already exists"
-  echo "    echo 'SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com' >> .env"
-  echo "    This script sources .env on every run, so it works with any shell."
-  echo ""
-  echo "  Option 3 — permanent across future container rebuilds (set once on your host OS):"
-  echo "    echo 'export SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com' >> ~/.bashrc"
-  echo "    Use ~/.zshrc for zsh. Takes effect the next time this container is rebuilt."
+  echo "${C_RED}ERROR:${C_RST} SPFX_SERVE_TENANT_DOMAIN is not set."
+  important "The local workbench was removed in SPFx 1.17." \
+    "A SharePoint Online tenant is required to test the web part." \
+    "" \
+    "${C_BLD}Option 1${C_RST} — this terminal session only (lost when the terminal closes):" \
+    "  export SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com" \
+    "" \
+    "${C_BLD}Option 2${C_RST} — persistent in this container (all terminals, survives VS Code restarts):" \
+    "  cp -n .env.example .env   # skip if .env already exists" \
+    "  echo 'SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com' >> .env" \
+    "  ${C_DIM}This script sources .env on every run, so it works with any shell.${C_RST}" \
+    "" \
+    "${C_BLD}Option 3${C_RST} — permanent across future container rebuilds (set once on your host OS):" \
+    "  echo 'export SPFX_SERVE_TENANT_DOMAIN=contoso.sharepoint.com' >> ~/.bashrc" \
+    "  ${C_DIM}Use ~/.zshrc for zsh. Takes effect the next time this container is rebuilt.${C_RST}"
   exit 1
 fi
 
@@ -75,9 +78,10 @@ fi
 
 echo "Tenant: ${SPFX_SERVE_TENANT_DOMAIN}"
 echo "Starting local development server..."
-echo "Hosted workbench: https://${SPFX_SERVE_TENANT_DOMAIN}/_layouts/15/workbench.aspx"
-echo "  → Accept the certificate at https://localhost:4321 first (once per browser)"
-echo ""
+hint "Hosted workbench:" \
+  "  ${C_BLD}https://${SPFX_SERVE_TENANT_DOMAIN}/_layouts/15/workbench.aspx${C_RST}" \
+  "" \
+  "→ Accept the certificate at ${C_BLD}https://localhost:4321${C_RST} first (once per browser)"
 echo "Press Ctrl+C to stop."
 echo ""
 

@@ -384,9 +384,11 @@ if [[ "${DO_COMMIT}" == "true" ]]; then
     echo "${C_GRN}✓${C_RST} Pushed. The release workflow will start automatically."
   else
     if [[ "$RETAG" == "true" ]]; then
-      echo "${C_DIM}Push with:  git push && git push --force origin refs/tags/${VTAG}${C_RST}"
+      next_steps "Push with:" \
+        "  ${C_BLD}git push && git push --force origin refs/tags/${VTAG}${C_RST}"
     else
-      echo "${C_DIM}Push with:  git push && git push --tags${C_RST}"
+      next_steps "Push with:" \
+        "  ${C_BLD}git push && git push --tags${C_RST}"
     fi
   fi
 fi

@@ -16,8 +16,11 @@ set -euo pipefail
 # Always run from the repository root so npm scripts resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
+
 echo "Running tests..."
 npm test
 
 echo ""
-echo "Coverage report: jest-output/coverage/lcov-report/index.html"
+hint "Coverage report: ${C_BLD}jest-output/coverage/lcov-report/index.html${C_RST}"

@@ -22,6 +22,9 @@ set -euo pipefail
 # Always run from the repository root so npm scripts resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
+
 echo "[ 1/6 ] ESLint --fix (TypeScript — web part)..."
 npm run fix:ts
 echo "  ✓ done"
@@ -47,4 +50,5 @@ npm run fix:sh
 echo "  ✓ done"
 
 echo ""
-echo "✓ All fixers ran. Run scripts/lint.sh to verify no issues remain."
+echo "${C_GRN}✓${C_RST} All fixers ran."
+next_steps "Run ${C_BLD}scripts/lint.sh${C_RST} to verify no issues remain."

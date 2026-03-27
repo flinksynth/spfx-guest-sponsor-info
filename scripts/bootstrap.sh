@@ -35,14 +35,13 @@ if [[ ! -f "${ENV_FILE}" ]]; then
   cp .env.example "${ENV_FILE}"
   echo ""
   echo "${C_GRN}✓${C_RST} Created .env from .env.example."
-  echo "  ${C_CYN}→${C_RST} Edit ${C_BLD}.env${C_RST} and set ${C_BLD}SPFX_SERVE_TENANT_DOMAIN${C_RST}=<your-tenant>.sharepoint.com"
-  echo "  ${C_DIM}(or export SPFX_SERVE_TENANT_DOMAIN on your host OS — see .devcontainer/devcontainer.json)${C_RST}"
+  hint "Edit ${C_BLD}.env${C_RST} and set ${C_BLD}SPFX_SERVE_TENANT_DOMAIN${C_RST}=<your-tenant>.sharepoint.com" \
+    "${C_DIM}(or export SPFX_SERVE_TENANT_DOMAIN on your host OS — see .devcontainer/devcontainer.json)${C_RST}"
 else
   echo ""
   echo "${C_DIM}.env already exists — skipped.${C_RST}"
 fi
 
-echo ""
-echo "${C_GRN}✓ Bootstrap complete.${C_RST} Next steps:"
-echo "  ${C_BLD}./scripts/dev-webpart.sh${C_RST}    # start the SPFx dev server"
-echo "  ${C_BLD}./scripts/dev-function.sh${C_RST}   # start the Azure Function locally"
+echo "${C_GRN}✓ Bootstrap complete.${C_RST}"
+next_steps "${C_BLD}./scripts/dev-webpart.sh${C_RST}    # start the SPFx dev server" \
+  "${C_BLD}./scripts/dev-function.sh${C_RST}   # start the Azure Function locally"

@@ -31,6 +31,9 @@ SCRIPT_DIR="${BASH_SOURCE[0]%/*}"
 ROOT_DIR="${SCRIPT_DIR}/.."
 FUNC_DIR="${ROOT_DIR}/azure-function"
 
+# shellcheck source=scripts/colors.sh
+source "${SCRIPT_DIR}/colors.sh"
+
 # Load .env if present (shares SPFX_SERVE_TENANT_DOMAIN etc. with dev-webpart.sh).
 ENV_FILE="${ROOT_DIR}/.env"
 if [[ -f "${ENV_FILE}" ]]; then
@@ -43,21 +46,21 @@ fi
 # --- Preflight checks ---
 
 if ! command -v func &>/dev/null; then
-  echo "ERROR: Azure Functions Core Tools (func) not found."
+  echo "${C_RED}ERROR:${C_RST} Azure Functions Core Tools (func) not found."
   echo "  Install: npm i -g azure-functions-core-tools@4 --unsafe-perm true"
   echo "  In the dev container it is pre-installed."
   exit 1
 fi
 
 if ! command -v az &>/dev/null; then
-  echo "WARNING: Azure CLI (az) not found."
+  echo "${C_YLW}WARNING:${C_RST} Azure CLI (az) not found."
   echo "  The function uses DefaultAzureCredential which falls back to"
   echo "  Azure CLI for local Graph API access. Install it or set"
   echo "  AZURE_CLIENT_ID / AZURE_TENANT_ID / AZURE_CLIENT_SECRET for"
   echo "  service-principal auth."
   echo ""
 elif ! az account show &>/dev/null 2>&1; then
-  echo "WARNING: Azure CLI is not logged in."
+  echo "${C_YLW}WARNING:${C_RST} Azure CLI is not logged in."
   echo "  Run 'az login' so the function can call Microsoft Graph locally."
   echo "  The function uses DefaultAzureCredential which tries Azure CLI"
   echo "  credentials when Managed Identity is not available."
@@ -72,18 +75,14 @@ SETTINGS_EXAMPLE="${FUNC_DIR}/local.settings.json.example"
 if [[ ! -f "${SETTINGS_FILE}" ]]; then
   echo "Creating local.settings.json from template..."
   cp "${SETTINGS_EXAMPLE}" "${SETTINGS_FILE}"
-  echo ""
-  echo "  ╭──────────────────────────────────────────────────────────────╮"
-  echo "  │  IMPORTANT: Edit azure-function/local.settings.json         │"
-  echo "  │                                                             │"
-  echo "  │  Required:                                                  │"
-  echo "  │    TENANT_ID          — your Entra tenant ID (GUID)         │"
-  echo "  │    ALLOWED_AUDIENCE   — client ID of the app registration   │"
-  echo "  │    CORS_ALLOWED_ORIGIN — https://<tenant>.sharepoint.com    │"
-  echo "  │                                                             │"
-  echo "  │  The file is in .gitignore and will not be committed.       │"
-  echo "  ╰──────────────────────────────────────────────────────────────╯"
-  echo ""
+  important "Edit ${C_BLD}azure-function/local.settings.json${C_RST}" \
+    "" \
+    "Required:" \
+    "  ${C_BLD}TENANT_ID${C_RST}          — your Entra tenant ID (GUID)" \
+    "  ${C_BLD}ALLOWED_AUDIENCE${C_RST}   — client ID of the app registration" \
+    "  ${C_BLD}CORS_ALLOWED_ORIGIN${C_RST} — https://<tenant>.sharepoint.com" \
+    "" \
+    "${C_DIM}The file is in .gitignore and will not be committed.${C_RST}"
 fi
 
 # --- Dependencies ---
@@ -111,15 +110,14 @@ export NODE_ENV="${NODE_ENV:-development}"
 export NODE_OPTIONS="${NODE_OPTIONS:+${NODE_OPTIONS} }--dns-result-order=ipv4first"
 
 echo "Starting Azure Function..."
-echo "  Endpoint: http://localhost:7071/api/getGuestSponsors"
-echo ""
-echo "  Test with:"
-echo "    curl http://localhost:7071/api/getGuestSponsors \\"
-echo "      -H 'X-Dev-User-OID: <guest-user-oid>'"
-echo ""
-echo "  To connect the SPFx web part, set the Function URL property to:"
-echo "    localhost:7071   (use VS Code port forwarding for HTTPS)"
-echo ""
+hint "Endpoint: ${C_BLD}http://localhost:7071/api/getGuestSponsors${C_RST}" \
+  "" \
+  "Test with:" \
+  "  curl http://localhost:7071/api/getGuestSponsors \\" \
+  "    -H 'X-Dev-User-OID: <guest-user-oid>'" \
+  "" \
+  "To connect the SPFx web part, set the Function URL property to:" \
+  "  ${C_BLD}localhost:7071${C_RST}   (use VS Code port forwarding for HTTPS)"
 echo "Press Ctrl+C to stop."
 echo ""
 
