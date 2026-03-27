@@ -80,4 +80,4 @@ For questions about these Terms of Use:
 
 **Workoho GmbH**\
 [yourfriends@workoho.com](mailto:yourfriends@workoho.com)\
-[workoho.com](https://workoho.com?utm_source=guest-sponsor-info-webpart&utm_medium=documentation&utm_campaign=docs&utm_content=terms-contact)
+[workoho.com](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=terms-of-use)

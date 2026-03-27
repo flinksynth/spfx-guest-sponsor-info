@@ -204,7 +204,8 @@ dependency on that resolution path even though it is normally fast.
 > for automated Microsoft 365 guest lifecycle management and can ensure that a static
 > site-access group is populated for every guest invitation — including guests who
 > would otherwise be invited implicitly through Teams or SharePoint.
-> [Workoho](https://www.workoho.com/), the author of this web part, is a Platinum
+> [Workoho](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=deployment),
+> the author of this web part, is a Platinum
 > implementation partner of EasyLife 365.
 
 ### External sharing

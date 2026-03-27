@@ -16,6 +16,8 @@ details. The layout matches the built-in SharePoint People web part.
 - [SharePoint Framework](https://aka.ms/spfx)
 - [SharePoint Online](https://www.microsoft.com/microsoft-365)
 - [Microsoft Entra ID – External Identities (B2B)](https://learn.microsoft.com/azure/active-directory/external-identities/)
+- [Azure Functions](https://learn.microsoft.com/azure/azure-functions/functions-overview)
+- [Microsoft Graph](https://learn.microsoft.com/graph/overview)
 
 ## Solution
 
@@ -30,16 +32,18 @@ details. The layout matches the built-in SharePoint People web part.
 | SharePoint Online | Modern team or communication site |
 | Microsoft Entra | Guest accounts with one or more sponsors assigned |
 | Microsoft Graph permissions | `User.Read` · `User.ReadBasic.All` (· `Presence.Read.All` optional) |
+| Azure subscription | Required to host the included Guest Sponsor API (Azure Function) |
 
 ## Features
 
 Works out of the box with any standard Microsoft 365 environment — no
 third-party tools or paid add-ons required. Every feature below relies solely
-on Microsoft Graph, SharePoint Framework, and the included optional Azure
-Function. [EasyLife 365 Collaboration](https://easylife365.cloud/products/collaboration/) pairs
+on Microsoft Graph, SharePoint Framework, and the included Guest Sponsor API.
+[EasyLife 365 Collaboration](https://easylife365.cloud/products/collaboration/) pairs
 naturally as a companion: it automates sponsor assignments and the full guest
 lifecycle so the right information stays accurate over time — solid on its
-own, stronger together. [Workoho](https://www.workoho.com/), the author of
+own, stronger together.
+[Workoho](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=readme), the author of
 this web part, is a Platinum EasyLife 365 partner and happy to advise.
 
 - **"Who is my contact here?"** — guests see their sponsor's photo, name, and
@@ -94,7 +98,8 @@ this web part, is a Platinum EasyLife 365 partner and happy to advise.
 > handles the full lifecycle of Microsoft 365 collaboration workspaces — Teams, SharePoint
 > team sites, Viva Engage communities, and more — including guest onboarding and sponsor
 > management. This web part then takes care of the guest-facing experience.
-> [Workoho](https://www.workoho.com/), the author of this web part, is a Platinum sales and
+> [Workoho](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=readme),
+> the author of this web part, is a Platinum sales and
 > implementation partner of EasyLife 365 and happy to help.
 >
 > Full feature descriptions, design decisions, and the problem this solves:
@@ -283,7 +288,7 @@ az login                       # authenticate for Graph API access
 
 PolyForm Shield License 1.0.0 — see [LICENSE](LICENSE) for details.
 
-Copyright © 2026 [Workoho GmbH](https://workoho.com/)
+Copyright © 2026 [Workoho GmbH](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=readme)
 
 Author: [Julian Pawlowski](https://github.com/jpawlowski)
 

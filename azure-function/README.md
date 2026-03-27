@@ -211,7 +211,7 @@ to Azure CLI (`az login`) or a service principal when `AZURE_CLIENT_ID`,
 
 PolyForm Shield License 1.0.0 — see [LICENSE](../LICENSE) for details.
 
-Copyright © 2026 [Workoho GmbH](https://workoho.com/)
+Copyright © 2026 [Workoho GmbH](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=af-readme)
 
 Author: [Julian Pawlowski](https://github.com/jpawlowski)
 

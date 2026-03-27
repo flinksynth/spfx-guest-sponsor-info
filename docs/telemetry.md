@@ -20,7 +20,7 @@ pid-18fb4033-c9f3-41fa-a5db-e3a03b012939
 Microsoft uses this GUID to forward aggregated Azure consumption figures
 (compute hours, storage transactions, and similar billing signals) for that
 resource group to
-[Workoho](https://workoho.com?utm_source=guest-sponsor-info-webpart&utm_medium=documentation&utm_campaign=docs&utm_content=deployment-docs)
+[Workoho](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=telemetry)
 via Partner Center. This helps Workoho understand how the solution is used and
 justify continued development.
 

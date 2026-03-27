@@ -322,6 +322,7 @@ including guest onboarding workflows and sponsor assignments. The two tools are
 designed to complement each other: EasyLife 365 keeps the directory data
 current; this web part surfaces it to the guest.
 
-[Workoho](https://workoho.com/), the author of this web part, is a Platinum
+[Workoho](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=features),
+the author of this web part, is a Platinum
 sales and implementation partner of EasyLife 365 and can help with both the
 technical rollout and the collaboration governance design around it.

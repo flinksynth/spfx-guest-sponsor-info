@@ -252,7 +252,7 @@ For privacy-related questions about this Solution:
 
 **Workoho GmbH**\
 [privacy@workoho.com](mailto:privacy@workoho.com)\
-[workoho.com](https://workoho.com?utm_source=guest-sponsor-info-webpart&utm_medium=documentation&utm_campaign=docs&utm_content=privacy-policy-contact)
+[workoho.com](https://workoho.com/?utm_source=gsiw&utm_medium=docs&utm_campaign=repo&utm_content=privacy-policy)
 
 For responsible disclosure of security vulnerabilities related to this
 Solution, contact [security@workoho.com](mailto:security@workoho.com).
