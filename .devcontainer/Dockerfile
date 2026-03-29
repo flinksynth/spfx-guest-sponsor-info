@@ -55,8 +55,14 @@ RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
   && grep " node-v${NODE_VERSION}-linux-${node_arch}.tar.xz$" SHASUMS256.txt | sha256sum -c - \
   && tar -xJf "node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
   && rm "node-v${NODE_VERSION}-linux-${node_arch}.tar.xz" SHASUMS256.txt \
-  && corepack enable \
-  && npm install --global @rushstack/heft yo @microsoft/generator-sharepoint@1.22.2 \
+  && corepack enable
+
+# Keep the global SPFx generator version in sync with package.json.
+COPY package.json /tmp/package.json
+
+RUN SPFX_VERSION="$(jq -r '.config.spfxVersion // .dependencies["@microsoft/sp-core-library"]' /tmp/package.json)" \
+  && npm install --global @rushstack/heft yo "@microsoft/generator-sharepoint@${SPFX_VERSION}" \
+  && rm -f /tmp/package.json \
   && npm cache clean --force
 
 # Azure Functions Core Tools v4 — enables `func start` for local function development.
@@ -95,5 +101,21 @@ RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
   --retry 3 --retry-delay 2 --retry-all-errors \
   "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_${shfmt_arch}" \
   && chmod +x /usr/local/bin/shfmt
+
+# actionlint — GitHub Actions workflow linter (https://github.com/rhysd/actionlint).
+# Validates action names, expression types, job/step schema, and permission scopes —
+# catches semantic errors in workflow files that YAML formatting tools cannot detect.
+ARG ACTIONLINT_VERSION=1.7.7
+RUN arch="${TARGETARCH:-$(dpkg --print-architecture)}" \
+  && case "${arch}" in \
+  amd64|x86_64) al_arch="amd64" ;; \
+  arm64|aarch64) al_arch="arm64" ;; \
+  *) echo "Unsupported architecture: ${arch}" >&2; exit 1 ;; \
+  esac \
+  && curl -fsSLo /tmp/actionlint.tar.gz \
+  --retry 3 --retry-delay 2 --retry-all-errors \
+  "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_${al_arch}.tar.gz" \
+  && tar -xzf /tmp/actionlint.tar.gz -C /usr/local/bin actionlint \
+  && rm /tmp/actionlint.tar.gz
 
 

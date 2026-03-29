@@ -31,7 +31,7 @@
       // Verify-DeploymentGuid.ps1 (Connect-AzAccount, Get-AzResourceGroupDeployment,
       // Get-AzResourceGroupDeploymentOperation). The full Az meta-package is
       // intentionally omitted — it would add ~500 MB without adding capability.
-      "resources": "Microsoft.Graph.Authentication;Microsoft.Graph.Applications;Az.Accounts;Az.Resources"
+      "resources": "Microsoft.Graph.Authentication;Microsoft.Graph.Applications;Az.Accounts;Az.Resources;PSScriptAnalyzer"
     },
     // PnP PowerShell — cross-platform module for SharePoint Online management:
     // .sppkg deployment to app catalog, site configuration, permission management.

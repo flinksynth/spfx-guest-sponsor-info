@@ -101,6 +101,9 @@ export GEM_HOME="${HOME}/.gems"
 export PATH="${GEM_HOME}/bin:${PATH}"
 if [[ -f website/Gemfile ]]; then
   echo "Installing Jekyll gems for local website development..."
+  # The apt package ruby-dev only ships 'bundle3.1', not the bare 'bundle'
+  # command. Install bundler into GEM_HOME so 'bundle' is available on PATH.
+  gem install bundler --no-document --quiet
   if (cd website && bundle install --jobs 4 --retry 2 2>&1); then
     echo "${C_GRN}✓${C_RST} Jekyll gems installed."
   else
