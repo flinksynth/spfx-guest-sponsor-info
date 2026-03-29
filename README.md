@@ -219,7 +219,7 @@ Create the App Registration
 required — no clone needed):
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-app-registration.ps1'))) -TenantId "<tenant-id>"
+& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-app-registration.ps1')))
 ```
 
 Then click the button to deploy to Azure:
@@ -229,16 +229,13 @@ Then click the button to deploy to Azure:
 After deployment, grant Graph permissions and configure the App Registration:
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-graph-permissions.ps1'))) `
-  -ManagedIdentityObjectId "<oid-from-deployment-output>" `
-  -TenantId "<tenant-id>" `
-  -FunctionAppClientId "<client-id>"
+& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-graph-permissions.ps1')))
 ```
 
 In the web part property pane, open the **Guest Sponsor API** section and enter
 the **Guest Sponsor API Base URL** and the **Guest Sponsor API Client ID
 (App Registration)**. The Client ID comes from the App Registration named
-**"Guest Sponsor Info – SharePoint Web Part Auth"** in your Entra tenant.
+**"Guest Sponsor Info - SharePoint Web Part Auth"** in your Entra tenant.
 
 > Full deployment details (Flex Consumption, Deployment Stacks, Azure Maps,
 > updating, security assessment, legacy options without the Guest Sponsor API):
