@@ -60,25 +60,6 @@ az deployment group create \
 Or via the [Deploy to Azure](../README.md#deploy-to-azure) button: expand
 Telemetry in the parameter form and uncheck Enable Telemetry.
 
-## Verify Attribution (Workoho developers only)
-
-After a fresh deployment, run
-[`Verify-DeploymentGuid.ps1`](../azure-function/infra/Verify-DeploymentGuid.ps1)
-to confirm that Azure correlated the `pid-*` deployment with your real
-resources:
-
-```powershell
-.\azure-function\infra\Verify-DeploymentGuid.ps1 `
-  -deploymentName pid-18fb4033-c9f3-41fa-a5db-e3a03b012939 `
-  -resourceGroupName <your-resource-group>
-```
-
-A non-empty list of Azure resource IDs means attribution is working. An empty
-list means the `pid-*` deployment was not part of the same ARM correlation
-scope (for example, if it was added manually after the fact) and no attribution
-will be credited. See the script header for prerequisites (Az PowerShell
-module).
-
 ## Contact
 
 For telemetry and privacy questions about this Solution, contact

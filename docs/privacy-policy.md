@@ -52,14 +52,14 @@ data is stored beyond the current browser session or function invocation.
 |-|-|-|-|
 | Guest user's UPN / `loginName` | SharePoint page context | Detect the `#EXT#` marker to identify guest accounts | No — evaluated in memory only, never transmitted |
 | Guest user's Entra object ID (OID) | Entra ID token (via MSAL) | Authenticate requests to the Azure Function API | No — present only in the short-lived Bearer token |
-| Sponsor display name, given name, surname | Microsoft Graph | Render the sponsor name on the card | No — held in browser memory for the page lifetime |
-| Sponsor job title, department | Microsoft Graph | Display role context on the card | No |
+| Sponsor display name, given name, surname | Azure Function API | Render the sponsor name on the card | No — held in browser memory for the page lifetime |
+| Sponsor job title, department | Azure Function API | Display role context on the card | No |
 | Sponsor profile photo | Microsoft Graph CDN | Show a visual identifier on the card; initials fallback when absent | No — decoded in browser memory |
-| Sponsor email address | Microsoft Graph | Render mailto link on the card | No |
-| Sponsor phone numbers (business, mobile) | Microsoft Graph | Render click-to-call links on the card | No |
-| Sponsor office location, city, country, address | Microsoft Graph | Render address and map hint on the card | No |
-| Sponsor Teams presence (availability, activity) | Microsoft Graph / Azure Function | Show presence indicator on the card | No — polled periodically, held in browser memory |
-| Sponsor's manager: display name, job title, department, photo | Microsoft Graph | Render manager context on the card | No |
+| Sponsor email address | Azure Function API | Render mailto link on the card | No |
+| Sponsor phone numbers (business, mobile) | Azure Function API | Render click-to-call links on the card | No |
+| Sponsor office location, city, country, address | Azure Function API | Render address and map hint on the card | No |
+| Sponsor Teams presence (availability, activity) | Azure Function API | Show presence indicator on the card | No — polled periodically, held in browser memory |
+| Sponsor's manager: display name, job title, department, photo | Azure Function API | Render manager context on the card | No |
 | Guest's own Teams provisioning status | Azure Function (via Microsoft Graph) | Enable/disable Teams chat and call buttons | No |
 
 ### Azure Function API (runs in your Azure subscription)
@@ -88,26 +88,10 @@ from the Function App. This data is stored in a Log Analytics workspace inside
 
 ## Microsoft Graph Permissions
 
-The Solution uses two permission tiers depending on whether the optional Azure
-Function component is deployed.
-
-### Web Part — Delegated Permissions (acting as the signed-in guest user)
-
-These permissions are requested by the SharePoint package and must be approved
-by a Microsoft 365 administrator in the API Access page of the SharePoint
-Admin Centre.
-
-| Permission | Purpose | Required? |
-|-|-|-|
-| `User.Read` | Read the signed-in guest user's own profile and look up their sponsors via `/me/sponsors` | **Required** |
-| `User.ReadBasic.All` | Read basic profile fields (display name, photo, email) of the sponsor users | **Required** when the Azure Function is not deployed (direct Graph path) |
-| `Presence.Read.All` | Read real-time Teams presence status for sponsors | Optional — cards show without presence indicator if not granted |
-
-> **Note:** In the recommended deployment with the Azure Function proxy the web
-> part authenticates to the Function App rather than to Microsoft Graph directly.
-> `User.ReadBasic.All` and `Presence.Read.All` are still declared in the package
-> to support the optional direct-Graph fallback path and may be reduced by the
-> tenant admin when the Function proxy is always available.
+The web part has **no Microsoft Graph permissions of its own**. It authenticates
+exclusively to the Azure Function (using the Function's App Registration as the
+token audience). All Graph calls are made server-side by the Azure Function
+through its Managed Identity.
 
 ### Azure Function — Application Permissions (acting as its own Managed Identity)
 
@@ -118,10 +102,11 @@ own consent.
 
 | Permission | Purpose | Required? |
 |-|-|-|
-| `User.Read.All` | Read any user's full profile including `accountEnabled` status and sponsor list; resolve sponsor details and manager via `$expand` | **Required** (minimum for the Function path) |
-| `Presence.Read.All` | Read real-time Teams presence for sponsors and the guest's own presence (used as a Teams provisioning signal) | Optional — presence indicators and Teams provisioning detection are disabled without it |
-| `MailboxSettings.Read` | Read `mailboxSettings.userPurpose` to filter shared mailboxes, room accounts, and equipment accounts out of the sponsor list (supplements the always-active `isResourceAccount` filter) | Optional — filter is simply skipped without it |
-| `TeamMember.Read.All` | Read the guest's joined Teams to determine whether their Teams guest account has been provisioned | Optional — sponsors can still be shown; Teams chat/call buttons default to enabled |
+| `User.ReadBasic.All` | Read sponsor basic profile fields (display name, given name, surname, mail, photo) | **Required** minimum — one of `User.ReadBasic.All`, `User.Read.All`, or `Directory.Read.All` must be granted |
+| `User.Read.All` | Read any user's full profile including `accountEnabled` status; enables filtering of disabled accounts | Optional (replaces `User.ReadBasic.All`; recommended for full functionality) |
+| `Presence.Read.All` | Read real-time Teams presence status for sponsors and detect guest Teams provisioning | Optional — presence indicators disabled without it |
+| `MailboxSettings.Read` | Read `mailboxSettings.userPurpose` to filter shared mailboxes, room accounts, and equipment accounts from the sponsor list | Optional — filter is skipped without it |
+| `TeamMember.Read.All` | Read the guest's joined Teams to determine whether their Teams account has been provisioned | Optional — Teams chat/call buttons default to enabled without it |
 
 By default, the `setup-graph-permissions.ps1` script grants **all four
 permissions**. A tenant administrator may choose to omit optional permissions;

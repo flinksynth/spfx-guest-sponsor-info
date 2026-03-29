@@ -271,13 +271,7 @@ something is genuinely unrecoverable:
 
 | Data path | Permissions used |
 |---|---|
-| Azure Function (recommended) | `User.Read.All` · `Presence.Read.All` *(optional)* — on the Managed Identity, guests never hold these |
-| Direct Graph (legacy fallback) | `User.Read` · `User.ReadBasic.All` — avoids `User.Read.All` entirely |
-
-On the delegated (direct Graph) path, `User.ReadBasic.All` is chosen over the
-broader `User.Read.All` deliberately. `ReadBasic` exposes only:
-display name, given name, surname, mail, and profile photo. It does **not**
-expose `accountEnabled` or other sensitive directory properties.
+| Azure Function | `User.Read.All` · `Presence.Read.All` *(optional)* — on the Managed Identity, guests never hold these |
 
 ---
 

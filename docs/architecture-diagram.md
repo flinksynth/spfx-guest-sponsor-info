@@ -207,43 +207,6 @@ flowchart TB
 
 ---
 
-## Fallback Path — Direct Graph (legacy, no Guest Sponsor API)
-
-When no Guest Sponsor API URL is configured, the web part calls Microsoft Graph
-directly with the guest's delegated token. This requires the guest account to
-hold an Entra directory role (*Directory Readers*) — impractical at scale.
-The Guest Sponsor API removes that requirement.
-
-```mermaid
-flowchart LR
-    classDef webpart  fill:#1d4ed8,stroke:#1e3a8a,color:#ffffff,font-weight:bold
-    classDef token    fill:#fef3c7,stroke:#d97706,color:#78350f,font-weight:bold
-    classDef msgraph  fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,font-weight:bold
-
-    subgraph browser["💻 Guest's Browser"]
-        WP2["🖥️ Guest Sponsor Info Web Part"]:::webpart
-    end
-
-    subgraph entra2["🔐 Microsoft Entra ID"]
-        TokenSvc2["🔑 Token Service"]:::token
-    end
-
-    Graph2[("🕸️ Microsoft Graph (delegated)")]:::msgraph
-
-    WP2 -- "acquire token" --> TokenSvc2
-    WP2 -- "sponsors · profiles · photos (needs Directory Readers role)" --> Graph2
-    WP2 -. "presence (optional)" .-> Graph2
-
-    style browser fill:#eff6ff,stroke:#3b82f6
-    style entra2  fill:#fffbeb,stroke:#d97706
-
-    linkStyle 0   stroke:#d97706,stroke-width:2px
-    linkStyle 1   stroke:#3b82f6,stroke-width:2px
-    linkStyle 2   stroke:#3b82f6,stroke-width:1.5px
-```
-
----
-
 ## Component Summary
 
 | Component | Role |

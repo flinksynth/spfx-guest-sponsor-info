@@ -18,7 +18,6 @@ For security and telemetry details, see
 - [SharePoint Deployment](#sharepoint-deployment)
 - [Guest Sponsor API](#guest-sponsor-api)
 - [Administration and Operations](#administration-and-operations)
-- [Legacy Options (no Guest Sponsor API)](#legacy-options-no-guest-sponsor-api)
 
 ---
 
@@ -226,26 +225,6 @@ For background on how SharePoint sharing levels interact, see
 [External sharing overview](https://learn.microsoft.com/sharepoint/external-sharing-overview)
 in the Microsoft documentation.
 
-### Required Graph permissions
-
-All three permissions below are **pre-authorized by Microsoft** for the
-*SharePoint Online Client Extensibility Web Application Principal*. No manual
-consent in **SharePoint Admin Center → Advanced → API access** is needed —
-the queue will simply be empty.
-
-| Scope | Resource | Reason |
-|---|---|---|
-| `User.Read` | Microsoft Graph | Read the signed-in user's own profile and sponsor list |
-| `User.ReadBasic.All` | Microsoft Graph | Fetch sponsor name, mail, job title, department, phone |
-| `Presence.Read.All` | Microsoft Graph | **Optional.** Show online presence status of sponsors |
-
-For full details on each permission, see the
-[Microsoft Graph permissions reference](https://learn.microsoft.com/graph/permissions-reference).
-
-> **Why not `User.Read.All`?**
-> `User.ReadBasic.All` is sufficient for sponsor profiles and does not expose
-> sensitive account data such as `accountEnabled` or `onPremisesSyncEnabled`.
-
 ---
 
 ## Guest Sponsor API
@@ -263,13 +242,13 @@ as its identity provider.
 [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)):
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-app-registration.ps1'))) -TenantId "<your-tenant-id>"
+& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-app-registration.ps1')))
 ```
 
 **Option B — from a local clone:**
 
 ```powershell
-./azure-function/infra/setup-app-registration.ps1 -TenantId "<your-tenant-id>"
+./azure-function/infra/setup-app-registration.ps1
 ```
 
 <details>
@@ -284,8 +263,8 @@ Invoke-WebRequest `
 # Review the script content before running it:
 Get-Content setup-app-registration.ps1
 
-# Run it:
-./setup-app-registration.ps1 -TenantId "<your-tenant-id>"
+# Run it (prompts interactively for any required values):
+./setup-app-registration.ps1
 ```
 
 </details>
@@ -296,7 +275,7 @@ Copy the **Client ID** printed at the end.
 <summary>Option D — manual alternative (Azure Portal)</summary>
 
 1. **Microsoft Entra admin center → App registrations → New registration**.
-2. Name: `Guest Sponsor Info – SharePoint Web Part Auth`; Supported
+2. Name: `Guest Sponsor Info - SharePoint Web Part Auth`; Supported
    account types: *Accounts in this organizational directory only*.
 3. **Expose an API → Set** Application ID URI:
    `api://guest-sponsor-info-proxy/<clientId>`.
@@ -420,19 +399,13 @@ Outputs**:
 [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)):
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-graph-permissions.ps1'))) `
-  -ManagedIdentityObjectId "<oid-from-deployment-output>" `
-  -TenantId "<your-tenant-id>" `
-  -FunctionAppClientId "<client-id-from-pre-step>"
+& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-graph-permissions.ps1')))
 ```
 
 **Option B — from a local clone:**
 
 ```powershell
-./azure-function/infra/setup-graph-permissions.ps1 `
-  -ManagedIdentityObjectId "<oid-from-deployment-output>" `
-  -TenantId "<your-tenant-id>" `
-  -FunctionAppClientId "<client-id-from-pre-step>"
+./azure-function/infra/setup-graph-permissions.ps1
 ```
 
 This script:
@@ -455,7 +428,7 @@ In the property pane (**Guest Sponsor API** group):
 - **Guest Sponsor API Base URL** — e.g.
   `https://guest-sponsor-info-xyz.azurewebsites.net`
 - **Guest Sponsor API Client ID (App Registration)** — the Client ID from the
-  App Registration named **"Guest Sponsor Info – SharePoint Web Part Auth"**
+  App Registration named **"Guest Sponsor Info - SharePoint Web Part Auth"**
   in your Entra tenant (created in the pre-step)
 
 ---
@@ -470,51 +443,3 @@ Deployment and day-2 operations are split into separate guides:
   threat boundaries, and deployment trust assumptions.
 - [telemetry.md](telemetry.md) for Customer Usage Attribution, opt-out,
   and verification steps.
-
----
-
-## Legacy Options (no Guest Sponsor API)
-
-If you cannot deploy the Guest Sponsor API, guests need an Entra directory role
-to call `/me/sponsors` directly. The Guest Sponsor API approach is strongly
-preferred — see the
-[security assessment in architecture.md](architecture.md#security) for why.
-
-<details>
-<summary>Legacy Option A – Custom role (requires Entra ID P1 or P2)</summary>
-
-A custom role scoped to
-`microsoft.directory/users/sponsors/read` is the least-privilege legacy
-approach.
-
-1. **Microsoft Entra admin center → Roles and admins → New custom role**.
-2. Name: `Sponsor Viewer`.
-3. Permissions → search `sponsors` → add
-   `microsoft.directory/users/sponsors/read`.
-4. Open the role → **Add assignments** → select the security group containing
-   your guests.
-
-**Caveats:**
-
-- Role-assignable groups require `isAssignableToRole = true` (cannot be set on
-  existing groups). Dynamic membership is not supported.
-- This permission is **not self-scoped**: guests can read other guests' sponsor
-  relationships.
-
-**Risk level: Low.**
-
-</details>
-
-<details>
-<summary>Legacy Option B – Directory Readers built-in role (no P1/P2
-required)</summary>
-
-1. **Microsoft Entra admin center → Roles and admins → Directory Readers**.
-2. **Add assignments** → select the security group containing your guests.
-
-**Warning:** Directory Readers grants much broader directory read access than
-just sponsors. Only use as a last resort.
-
-**Risk level: Low–Medium** (broader directory exposure).
-
-</details>

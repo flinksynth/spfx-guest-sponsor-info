@@ -337,6 +337,25 @@ cd azure-function && func start      # in another terminal
 
 The VS Code task "npm watch (functions)" also provides this.
 
+### Verify Attribution (Workoho developers only)
+
+After a fresh ARM deployment, run
+[`Verify-DeploymentGuid.ps1`](../azure-function/infra/Verify-DeploymentGuid.ps1)
+to confirm that Azure correlated the `pid-*` deployment with your real
+resources:
+
+```powershell
+.\azure-function\infra\Verify-DeploymentGuid.ps1 `
+  -deploymentName pid-18fb4033-c9f3-41fa-a5db-e3a03b012939 `
+  -resourceGroupName <your-resource-group>
+```
+
+A non-empty list of Azure resource IDs means attribution is working. An empty
+list means the `pid-*` deployment was not part of the same ARM correlation
+scope (for example, if it was added manually after the fact) and no attribution
+will be credited. See the script header for prerequisites (Az PowerShell
+module).
+
 ## Build from Source
 
 ```bash
@@ -385,8 +404,9 @@ tags. Preview release notes before tagging:
   keys to **all** locale files.
 - No bundled placeholder images — use live profile photos from Graph; fall back
   to initials.
-- Graph permissions: `User.Read` and `User.ReadBasic.All` only. Do not
-  introduce `User.Read.All` or broader scopes on the web part side.
+- The web part has no Microsoft Graph permissions of its own. All data fetching
+  goes through the Azure Function via `AadHttpClient`. Do not add
+  `webApiPermissionRequests` entries or introduce direct Graph calls.
 
 ## Stack Constraints
 
@@ -404,7 +424,7 @@ tags. Preview release notes before tagging:
 
 | File | Purpose |
 |---|---|
-| `src/webparts/guestSponsorInfo/services/SponsorService.ts` | All Graph logic |
+| `src/webparts/guestSponsorInfo/services/SponsorService.ts` | All proxy call logic (Azure Function API) |
 | `src/webparts/guestSponsorInfo/components/GuestSponsorInfo.tsx` | Main component |
 | `src/webparts/guestSponsorInfo/components/SponsorCard.tsx` | Individual card |
 | `docs/architecture.md` | Design decisions and limitations |

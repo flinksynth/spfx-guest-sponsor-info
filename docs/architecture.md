@@ -74,13 +74,8 @@ unaffected.
   - Function returns presence status only — sponsor list is never re-fetched
 ```
 
-No Entra directory role needed for the guest. The function is the only party that
+No Entra directory role needed for the guest. The Azure Function is the only party that
 holds `User.Read.All`; the guest never sees that permission.
-
-### Direct Graph (legacy fallback)
-
-When no Guest Sponsor API URL is configured, the web part calls `GET /v1.0/me/sponsors` directly.
-Requires the guest to hold an Entra directory role (e.g. Directory Readers) — see README.
 
 ## Graph Permissions
 
@@ -91,21 +86,6 @@ Requires the guest to hold an Entra directory role (e.g. Directory Readers) — 
 | `User.Read.All` | `/users/{oid}/sponsors`, `$batch` profile checks, `accountEnabled` |
 | `Presence.Read.All` | **Optional.** `/communications/getPresencesByUserId`. Requires Teams licensing. Skipped when absent — sponsors render without presence indicator. |
 | `MailboxSettings.Read` | **Optional.** Filter shared/room/equipment mailboxes. Skipped when absent. |
-
-### Direct path (delegated, via SharePoint API access panel)
-
-| Permission | Purpose |
-|---|---|
-| `User.Read` | `/me/sponsors`. Also requires Directory Readers role. |
-| `User.ReadBasic.All` | Existence checks (`/users/{id}`), profile photos |
-| `Presence.Read.All` | **Optional.** Presence status for sponsor cards. Skipped when not consented. |
-
-### Why no `User.Read.All` on the delegated path
-
-Reading `accountEnabled` requires `User.Read.All`. On the delegated path we avoid this
-scope and instead probe with `GET /users/{id}?$select=id` — HTTP 404 = deleted, 200 =
-still exists. Disabled-but-not-deleted sponsors remain visible until hard-deleted.
-The Guest Sponsor API path does not have this limitation.
 
 ## Profile Photos
 
