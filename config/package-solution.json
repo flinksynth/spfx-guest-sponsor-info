@@ -27,9 +27,9 @@
     ],
     "developer": {
       "name": "Workoho GmbH",
-      "websiteUrl": "https://github.com/workoho/spfx-guest-sponsor-info",
-      "privacyUrl": "https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/privacy-policy.md",
-      "termsOfUseUrl": "https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/terms-of-use.md",
+      "websiteUrl": "https://guest-sponsor-info.workoho.cloud/",
+      "privacyUrl": "https://guest-sponsor-info.workoho.cloud/privacy/",
+      "termsOfUseUrl": "https://guest-sponsor-info.workoho.cloud/terms/",
       "mpnId": "6553067"
     },
     "metadata": {
