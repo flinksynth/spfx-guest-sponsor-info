@@ -38,34 +38,35 @@ export PATH="${GEM_HOME}/bin:${PATH}"
 
 if ! command -v ruby &>/dev/null; then
   echo "${C_RED}ERROR:${C_RST} Ruby not found."
-  echo "  The dev container should have Ruby pre-installed."
-  echo "  Try rebuilding the container."
+  important "The dev container should have Ruby pre-installed." \
+    "Try rebuilding the container."
   exit 1
 fi
 
 if ! command -v bundle &>/dev/null; then
   echo "${C_RED}ERROR:${C_RST} Bundler not found."
-  echo "  Install it with: gem install bundler"
+  important "Install it with: ${C_BLD}gem install bundler${C_RST}"
   exit 1
 fi
 
 if ! command -v jekyll &>/dev/null; then
   echo "${C_RED}ERROR:${C_RST} Jekyll not found."
-  echo "  Run: cd ${WEBSITE_DIR} && bundle install"
+  important "Run: ${C_BLD}cd ${WEBSITE_DIR} && bundle install${C_RST}"
   exit 1
 fi
 
 # --- Dependencies ---
 
 if [[ ! -d "${WEBSITE_DIR}/vendor" && ! -f "${WEBSITE_DIR}/Gemfile.lock" ]]; then
-  echo "Installing Jekyll gems..."
+  echo "${C_DIM}Installing Jekyll gems…${C_RST}"
   (cd "${WEBSITE_DIR}" && bundle install --jobs 4 --retry 2)
+  echo "${C_GRN}✓${C_RST} Jekyll gems installed."
   echo ""
 fi
 
 # --- Start ---
 
-echo "Starting Jekyll development server..."
+echo "${C_BLD}Starting Jekyll development server…${C_RST}"
 hint "Website: ${C_BLD}http://localhost:4000${C_RST}" \
   "" \
   "Live-reload is enabled — changes are applied automatically." \

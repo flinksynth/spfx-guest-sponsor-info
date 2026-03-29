@@ -27,22 +27,39 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 # shellcheck source=scripts/colors.sh
 source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
 
-echo "${C_DIM}Installing web part dependencies…${C_RST}"
-npm ci
+step() {
+  echo "${C_BLD}[ $1 ] $2${C_RST}"
+}
 
-echo "${C_BLD}Building solution (compile · bundle · test · package)…${C_RST}"
+step "1/4" "Installing web part dependencies…"
+gha_group_start "Install web part dependencies"
+npm ci
+gha_group_end
+
+step "2/4" "Building solution (compile · bundle · test · package)…"
+gha_group_start "Build web part solution"
 npm run build
+gha_group_end
 
 PKG="sharepoint/solution/guest-sponsor-info.sppkg"
 if [[ ! -f "$PKG" ]]; then
   echo "${C_RED}ERROR:${C_RST} Expected artifact not found: ${PKG}" >&2
+  gha_error "Expected artifact not found: ${PKG}"
   exit 1
 fi
 
-echo "${C_DIM}Installing Azure Function dependencies…${C_RST}"
+step "3/4" "Installing Azure Function dependencies…"
+gha_group_start "Install Azure Function dependencies"
 npm ci --prefix azure-function
+gha_group_end
 
-echo "${C_BLD}Building Azure Function…${C_RST}"
+step "4/4" "Building Azure Function…"
+gha_group_start "Build Azure Function"
 npm run build --prefix azure-function
+gha_group_end
 
 echo "${C_GRN}✓${C_RST} Artifact ready: ${C_BLD}$(du -sh "$PKG" | cut -f1)${C_RST}  ${PKG}"
+gha_notice "Build complete: ${PKG} is ready."
+next_steps "Build complete." \
+  "Deploy package: ${C_BLD}sharepoint/solution/guest-sponsor-info.sppkg${C_RST}" \
+  "Optional checks: ${C_BLD}scripts/lint.sh${C_RST} and ${C_BLD}scripts/test.sh${C_RST}"

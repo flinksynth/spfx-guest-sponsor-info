@@ -6,9 +6,13 @@
 # Guided SPFx version upgrade.
 #
 # Usage:
+#   scripts/upgrade-spfx.sh
+#   scripts/upgrade-spfx.sh --upgrade-latest
 #   scripts/upgrade-spfx.sh <new-spfx-version>
 #
 # Example:
+#   scripts/upgrade-spfx.sh
+#   scripts/upgrade-spfx.sh --upgrade-latest
 #   scripts/upgrade-spfx.sh 1.23.0
 #
 # SPFx is NOT upgraded with 'npm update'. The @microsoft/sp-* packages form a
@@ -23,41 +27,119 @@ set -euo pipefail
 # Always run from the repository root so npm scripts resolve correctly.
 cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
+
+header() {
+  echo "${C_BLD}═══════════════════════════════════════════════════════════${C_RST}"
+  echo "${C_BLD}  $*${C_RST}"
+  echo "${C_BLD}═══════════════════════════════════════════════════════════${C_RST}"
+  echo ""
+}
+
+step() {
+  echo "${C_CYN}[ $1 ]${C_RST} $2"
+}
+
+ok() {
+  echo "  ${C_GRN}✓${C_RST} $*"
+}
+
+fail() {
+  echo "  ${C_RED}ERROR:${C_RST} $*" >&2
+}
+
 NEW_VERSION="${1:-}"
-if [[ -z "${NEW_VERSION}" ]]; then
-  echo "Usage: $0 <new-spfx-version>  (e.g. 1.23.0)" >&2
+
+CURRENT_CONFIG_SPFX="$(node -p "require('./package.json').config?.spfxVersion || ''")"
+CURRENT_DEP_SPFX="$(node -p "require('./package.json').dependencies['@microsoft/sp-core-library'] || ''")"
+YO_VERSION="$(node -p "require('./package.json').config?.yoVersion || '7.0.0'")"
+
+if [[ -z "${CURRENT_CONFIG_SPFX}" ]]; then
+  fail "package.json config.spfxVersion is not set."
+  important "Add ${C_BLD}config.spfxVersion${C_RST} to ${C_BLD}package.json${C_RST} before running this script."
   exit 1
+fi
+
+if [[ "${CURRENT_CONFIG_SPFX}" != "${CURRENT_DEP_SPFX}" ]]; then
+  fail "package.json is inconsistent."
+  important \
+    "config.spfxVersion=${CURRENT_CONFIG_SPFX}" \
+    "@microsoft/sp-core-library=${CURRENT_DEP_SPFX}" \
+    "" \
+    "Align them first, then rerun ${C_BLD}scripts/upgrade-spfx.sh${C_RST}."
+  exit 1
+fi
+
+if [[ -z "${NEW_VERSION}" ]]; then
+  LATEST_SPFX="$(npm view @microsoft/sp-core-library version 2>/dev/null || true)"
+  if [[ -z "${LATEST_SPFX}" ]]; then
+    fail "Could not fetch latest SPFx version from npm."
+    hint "Check your network connection and run again."
+    exit 1
+  fi
+
+  header "SPFx version check"
+  echo "  Current (package.json config.spfxVersion): ${CURRENT_CONFIG_SPFX}"
+  echo "  Latest  (@microsoft/sp-core-library):      ${LATEST_SPFX}"
+  echo ""
+
+  if [[ "${CURRENT_CONFIG_SPFX}" == "${LATEST_SPFX}" ]]; then
+    ok "You are up to date."
+    hint "No action needed."
+  else
+    important "A newer SPFx version is available: ${CURRENT_CONFIG_SPFX} -> ${LATEST_SPFX}"
+    next_steps \
+      "${C_BLD}scripts/upgrade-spfx.sh ${LATEST_SPFX}${C_RST}         # upgrade to latest" \
+      "${C_BLD}scripts/upgrade-spfx.sh <version>${C_RST}      # choose specific target" \
+      "${C_BLD}npm view @microsoft/sp-core-library versions${C_RST} # list available versions"
+  fi
+  exit 0
+fi
+
+if [[ "${NEW_VERSION}" == "--upgrade-latest" ]]; then
+  LATEST_SPFX="$(npm view @microsoft/sp-core-library version 2>/dev/null || true)"
+  if [[ -z "${LATEST_SPFX}" ]]; then
+    fail "Could not fetch latest SPFx version from npm."
+    hint "Check your network connection and run again."
+    exit 1
+  fi
+
+  if [[ "${CURRENT_CONFIG_SPFX}" == "${LATEST_SPFX}" ]]; then
+    ok "Already up to date (${CURRENT_CONFIG_SPFX}). Nothing to upgrade."
+    exit 0
+  fi
+
+  hint "Auto mode: upgrading from ${CURRENT_CONFIG_SPFX} to latest ${LATEST_SPFX}."
+  NEW_VERSION="${LATEST_SPFX}"
 fi
 
 # Strip leading 'v' if provided.
 NEW_VERSION="${NEW_VERSION#v}"
 
-echo "═══════════════════════════════════════════════════════════"
-echo "  SPFx upgrade guide → ${NEW_VERSION}"
-echo "═══════════════════════════════════════════════════════════"
-echo ""
+header "SPFx upgrade guide -> ${NEW_VERSION}"
 
 # ── Step 1: Check for a clean working tree ────────────────────────────────
-echo "[ 1/6 ] Checking working tree..."
+step "1/6" "Checking working tree..."
 if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo "  ERROR: You have uncommitted changes. Commit or stash them first." >&2
+  fail "You have uncommitted changes. Commit or stash them first."
   exit 1
 fi
-echo "  ✓ Working tree is clean."
+ok "Working tree is clean."
 echo ""
 
 # ── Step 2: Verify the target SPFx version exists on npm ─────────────────
-echo "[ 2/6 ] Verifying SPFx ${NEW_VERSION} exists on npm..."
+step "2/6" "Verifying SPFx ${NEW_VERSION} exists on npm..."
 if ! npm view "@microsoft/sp-core-library@${NEW_VERSION}" version >/dev/null 2>&1; then
-  echo "  ERROR: @microsoft/sp-core-library@${NEW_VERSION} not found on npm." >&2
-  echo "  Check available versions: npm view @microsoft/sp-core-library versions" >&2
+  fail "@microsoft/sp-core-library@${NEW_VERSION} not found on npm."
+  hint "Check available versions: ${C_BLD}npm view @microsoft/sp-core-library versions${C_RST}"
   exit 1
 fi
-echo "  ✓ Version ${NEW_VERSION} exists."
+ok "Version ${NEW_VERSION} exists."
 echo ""
 
 # ── Step 3: Check Node.js compatibility ──────────────────────────────────
-echo "[ 3/6 ] Node.js compatibility..."
+step "3/6" "Node.js compatibility..."
 echo "  Current Node: $(node --version)"
 echo "  → Check the SPFx ${NEW_VERSION} release notes for the required Node range:"
 echo "    https://learn.microsoft.com/sharepoint/dev/spfx/compatibility"
@@ -71,7 +153,10 @@ echo "    - .nvmrc"
 echo ""
 
 # ── Step 4: Install updated packages ─────────────────────────────────────
-echo "[ 4/6 ] Installing SPFx ${NEW_VERSION} packages..."
+step "4/6" "Installing SPFx ${NEW_VERSION} packages..."
+echo "  Updating package.json config.spfxVersion..."
+npm pkg set "config.spfxVersion=${NEW_VERSION}" >/dev/null
+
 SPFX_DEPS=(
   "@microsoft/sp-component-base@${NEW_VERSION}"
   "@microsoft/sp-core-library@${NEW_VERSION}"
@@ -92,39 +177,45 @@ SPFX_DEV_DEPS=(
 npm install "${SPFX_DEPS[@]}"
 npm install --save-dev "${SPFX_DEV_DEPS[@]}"
 
+if [[ -f ".yo-rc.json" ]]; then
+  echo "  Updating .yo-rc.json generator version..."
+  tmp_file="$(mktemp)"
+  jq --arg version "${NEW_VERSION}" '."@microsoft/generator-sharepoint".version = $version' \
+    .yo-rc.json >"${tmp_file}"
+  mv "${tmp_file}" .yo-rc.json
+fi
+
 # Install matching Rushstack packages (versions are coordinated with SPFx).
 echo ""
 echo "  Rushstack packages are managed by @microsoft/spfx-web-build-rig."
 echo "  Run 'npm install' to let npm resolve compatible versions from the lockfile."
 npm install
-echo "  ✓ Packages installed."
+ok "Packages installed."
 echo ""
 
 # ── Step 5: Run yo to regenerate scaffolded config ───────────────────────
-echo "[ 5/6 ] Regenerating config via Yeoman..."
+step "5/6" "Regenerating config via Yeoman..."
 echo "  The Yeoman generator updates config files (tsconfig, heft configs, etc.)."
 echo "  You will be asked whether to overwrite each file — review diffs carefully."
-echo ""
-echo "  Install the updated generator first:"
-echo "    npm install --global @microsoft/generator-sharepoint@${NEW_VERSION}"
-echo "  Then run:"
-echo "    yo @microsoft/sharepoint --skip-install"
-echo ""
-echo "  → Also update the generator version pinned in .devcontainer/Dockerfile:"
-echo "    npm install --global yo @microsoft/generator-sharepoint@${NEW_VERSION}"
-echo ""
+hint \
+  "Install the updated generator first:" \
+  "${C_BLD}npm install --global yo@${YO_VERSION} @microsoft/generator-sharepoint@${NEW_VERSION}${C_RST}" \
+  "Then run:" \
+  "${C_BLD}yo @microsoft/sharepoint --skip-install${C_RST}" \
+  "" \
+  "Note: .devcontainer/Dockerfile and Copilot setup derive generator version" \
+  "from package.json config.spfxVersion."
 
 # ── Step 6: Verify the build ─────────────────────────────────────────────
-echo "[ 6/6 ] Verify the upgrade..."
-echo "  Run the full build and test suite to confirm everything works:"
-echo "    npm test"
-echo "    npm run lint"
-echo "    npm run build    (produces the .sppkg)"
-echo ""
-echo "  If the build passes, commit with:"
-echo "    git add package.json package-lock.json config/"
-echo "    git commit -m \"chore: upgrade SPFx to ${NEW_VERSION}\""
-echo ""
-echo "═══════════════════════════════════════════════════════════"
-echo "  Upgrade preparation complete. Manual steps remain — see above."
-echo "═══════════════════════════════════════════════════════════"
+step "6/6" "Verify the upgrade..."
+next_steps \
+  "Run the full build and test suite:" \
+  "${C_BLD}npm test${C_RST}" \
+  "${C_BLD}npm run lint${C_RST}" \
+  "${C_BLD}npm run build${C_RST}  # produces the .sppkg" \
+  "" \
+  "If everything passes, commit with:" \
+  "${C_BLD}git add package.json package-lock.json config/${C_RST}" \
+  "${C_BLD}git commit -m \"chore: upgrade SPFx to ${NEW_VERSION}\"${C_RST}"
+
+ok "Upgrade preparation complete. Manual steps remain (see hints/next steps above)."

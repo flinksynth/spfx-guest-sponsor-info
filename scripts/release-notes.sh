@@ -21,6 +21,12 @@
 
 set -euo pipefail
 
+# Always run from the repository root so relative paths resolve correctly.
+cd "$(dirname "${BASH_SOURCE[0]}")/.."
+
+# shellcheck source=scripts/colors.sh
+source "$(dirname "${BASH_SOURCE[0]}")/colors.sh"
+
 # ── Pinned version ───────────────────────────────────────────────────────────
 # Update this string to upgrade git-cliff.
 # The devcontainer post-create.sh and the release workflow both read
@@ -32,23 +38,26 @@ if ! command -v git-cliff &>/dev/null; then
   ARCH="$(uname -m)"
   OS="$(uname -s)"
   if [[ "${OS}" != "Linux" ]]; then
-    echo "ERROR: git-cliff is not installed and auto-install is only supported" >&2
-    echo "       on Linux. Install manually:" >&2
-    echo "       https://git-cliff.org/docs/installation" >&2
+    echo "${C_RED}ERROR:${C_RST} git-cliff is not installed and auto-install is only supported on Linux." >&2
+    gha_error "git-cliff is not installed and auto-install is only supported on Linux."
+    important "Install git-cliff manually:" \
+      "${C_BLD}https://git-cliff.org/docs/installation${C_RST}"
     exit 1
   fi
   case "${ARCH}" in
     x86_64) TRIPLE="x86_64-unknown-linux-musl" ;;
     aarch64) TRIPLE="aarch64-unknown-linux-musl" ;;
     *)
-      echo "ERROR: git-cliff auto-install is not supported for ${ARCH}." >&2
-      echo "       Install manually: https://git-cliff.org/docs/installation" >&2
+      echo "${C_RED}ERROR:${C_RST} git-cliff auto-install is not supported for ${ARCH}." >&2
+      gha_error "git-cliff auto-install is not supported for ${ARCH}."
+      important "Install git-cliff manually:" \
+        "${C_BLD}https://git-cliff.org/docs/installation${C_RST}"
       exit 1
       ;;
   esac
   INSTALL_DIR="${HOME}/.local/bin"
   TARBALL="git-cliff-${GIT_CLIFF_VERSION}-${TRIPLE}.tar.gz"
-  echo "git-cliff not found — installing v${GIT_CLIFF_VERSION} into ${INSTALL_DIR}..." >&2
+  echo "${C_DIM}git-cliff not found — installing v${GIT_CLIFF_VERSION} into ${INSTALL_DIR}…${C_RST}" >&2
   mkdir -p "${INSTALL_DIR}"
   TARBALL_TMP="$(mktemp)"
   # SC2064: expand $TARBALL_TMP now so the trap captures the exact path.
@@ -64,9 +73,15 @@ if ! command -v git-cliff &>/dev/null; then
   trap - EXIT
   chmod +x "${INSTALL_DIR}/git-cliff"
   export PATH="${INSTALL_DIR}:${PATH}"
-  echo "git-cliff ${GIT_CLIFF_VERSION} installed." >&2
+  echo "${C_GRN}✓${C_RST} git-cliff ${GIT_CLIFF_VERSION} installed." >&2
+  gha_notice "git-cliff ${GIT_CLIFF_VERSION} installed successfully."
 fi
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(pwd)"
+
+if [[ "${1:-}" != "--help" && "${1:-}" != "-h" ]]; then
+  hint "Generating release notes from ${C_BLD}${REPO_ROOT}/cliff.toml${C_RST}" \
+    "Output is written to stdout. Redirect with ${C_BLD}> RELEASE_NOTES.md${C_RST} if needed." >&2
+fi
 
 git-cliff --config "${REPO_ROOT}/cliff.toml" --strip header "${@:---unreleased}"

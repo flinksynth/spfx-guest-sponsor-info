@@ -15,6 +15,10 @@
 #   - $NO_COLOR is set (https://no-color.org)
 #   - $TERM is "dumb"
 #
+# Optional override for CI logs:
+#   - set FORCE_COLOR_IN_CI=1 to keep ANSI colours enabled in CI even when
+#     stdout is not a TTY (useful for GitHub Actions logs)
+#
 # Available variables (all exported so sub-shells can inherit them):
 #   C_RED  C_GRN  C_YLW  C_CYN  C_BLD  C_DIM  C_RST
 #
@@ -22,8 +26,31 @@
 #   hint       "line1" "line2" …   # cyan   — developer tips, good-to-know
 #   next_steps "line1" "line2" …   # green  — what to do after the script finishes
 #   important  "line1" "line2" …   # yellow — critical action items
+#
+# GitHub Actions annotation helpers:
+#   gha_notice       "message"
+#   gha_warning      "message"
+#   gha_error        "message"
+#   gha_group_start  "title"    # open a foldable log group
+#   gha_group_end               # close the current log group
 
-if [[ -t 1 && "${CI:-}" == "" && "${NO_COLOR:-}" == "" && "${TERM:-}" != "dumb" ]]; then
+if [[ "${NO_COLOR:-}" != "" || "${TERM:-}" == "dumb" ]]; then
+  C_RED=''
+  C_GRN=''
+  C_YLW=''
+  C_CYN=''
+  C_BLD=''
+  C_DIM=''
+  C_RST=''
+elif [[ "${FORCE_COLOR_IN_CI:-}" != "" && "${CI:-}" != "" ]]; then
+  C_RED=$'\033[0;31m'
+  C_GRN=$'\033[0;32m'
+  C_YLW=$'\033[1;33m'
+  C_CYN=$'\033[0;36m'
+  C_BLD=$'\033[1m'
+  C_DIM=$'\033[2m'
+  C_RST=$'\033[0m'
+elif [[ -t 1 && "${CI:-}" == "" ]]; then
   C_RED=$'\033[0;31m'
   C_GRN=$'\033[0;32m'
   C_YLW=$'\033[1;33m'
@@ -42,6 +69,37 @@ else
 fi
 
 export C_RED C_GRN C_YLW C_CYN C_BLD C_DIM C_RST
+
+# ── GitHub Actions annotations ───────────────────────────────────────────────
+# Emit workflow annotations only when running inside GitHub Actions.
+# Write to stderr so scripts can still redirect stdout to files safely.
+_gha_escape() {
+  local value="$1"
+  value="${value//'%'/'%25'}"
+  value="${value//$'\r'/'%0D'}"
+  value="${value//$'\n'/'%0A'}"
+  printf '%s' "${value}"
+}
+
+_gha_emit() {
+  local level="$1" message="$2"
+  [[ "${GITHUB_ACTIONS:-}" == "true" ]] || return 0
+  printf '::%s::%s\n' "${level}" "$(_gha_escape "${message}")" >&2
+}
+
+gha_notice() { _gha_emit notice "$1"; }
+gha_warning() { _gha_emit warning "$1"; }
+gha_error() { _gha_emit error "$1"; }
+
+# Log group folding — only active inside GitHub Actions.
+# Use gha_group_start / gha_group_end to wrap verbose command output so it
+# is collapsed by default in the Actions log viewer.
+gha_group_start() {
+  [[ "${GITHUB_ACTIONS:-}" == "true" ]] && printf '::group::%s\n' "$1" || true
+}
+gha_group_end() {
+  [[ "${GITHUB_ACTIONS:-}" == "true" ]] && printf '::endgroup::\n' || true
+}
 
 # ── Callout box helpers ──────────────────────────────────────────────────────
 # Draw a coloured box (open right side) around one or more lines of text.

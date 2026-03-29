@@ -3,8 +3,8 @@
 # Author: Julian Pawlowski <https://github.com/jpawlowski>
 # Licensed under PolyForm Shield License 1.0.0 <https://polyformproject.org/licenses/shield/1.0.0>
 #
-# Auto-fix all lint issues (TypeScript/ESLint, Markdown, JSON, shell) for both
-# the SPFx web part and the Azure Function.
+# Auto-fix all lint issues (TypeScript/ESLint, Markdown, YAML, JSON, shell)
+# for both the SPFx web part, website docs, and the Azure Function.
 #
 # Usage:
 #   scripts/lint-fix.sh
@@ -14,8 +14,8 @@
 # Run scripts/lint.sh afterwards to verify no issues remain.
 #
 # For CI use scripts/lint.sh instead — it never modifies files.
-# Note: Bicep lint (az bicep lint) and shellcheck have no auto-fix mode;
-# they are included in scripts/lint.sh but skipped here.
+# Note: Bicep lint (az bicep lint), shellcheck, actionlint, and PSScriptAnalyzer have no auto-fix
+# mode; they are included in scripts/lint.sh but skipped here.
 
 set -euo pipefail
 
@@ -35,17 +35,22 @@ npm run fix:ts:func
 echo "  ✓ done"
 
 echo ""
-echo "[ 3/5 ] Markdownlint --fix (Docs)..."
+echo "[ 3/6 ] Markdownlint --fix (Docs + Website)..."
 npm run fix:md
 echo "  ✓ done"
 
 echo ""
-echo "[ 4/5 ] Prettier --write (JSON/JSONC)..."
+echo "[ 4/6 ] Prettier --write (YAML — all)..."
+npm run fix:yml
+echo "  ✓ done"
+
+echo ""
+echo "[ 5/6 ] Prettier --write (JSON/JSONC)..."
 npm run fix:json
 echo "  ✓ done"
 
 echo ""
-echo "[ 5/5 ] shfmt --write (shell scripts)..."
+echo "[ 6/6 ] shfmt --write (shell scripts)..."
 npm run fix:sh
 echo "  ✓ done"
 

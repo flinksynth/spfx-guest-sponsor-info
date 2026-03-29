@@ -175,6 +175,7 @@ for arg in "$@"; do
       ;;
     -*)
       echo "${C_RED}Unknown option:${C_RST} $arg" >&2
+      gha_error "Unknown option: $arg"
       echo "Run '$0 --help' for usage." >&2
       exit 1
       ;;
@@ -183,6 +184,7 @@ for arg in "$@"; do
         TAG="$arg"
       else
         echo "${C_RED}Unexpected argument:${C_RST} $arg" >&2
+        gha_error "Unexpected argument: $arg"
         echo "Run '$0 --help' for usage." >&2
         exit 1
       fi
@@ -304,10 +306,12 @@ SPFX_VER="${SEMVER}.0" # SPFx requires four-part version (major.minor.patch.buil
 
 if ! [[ "$SEMVER" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][a-zA-Z0-9.]+)?$ ]]; then
   echo "${C_RED}Error:${C_RST} '${C_BLD}${SEMVER}${C_RST}' is not a valid SemVer string (expected e.g. 1.2.3)." >&2
+  gha_error "Invalid SemVer string: ${SEMVER}"
   exit 1
 fi
 
 echo "${C_BLD}Stamping version:${C_RST} ${C_CYN}${SEMVER}${C_RST}  ${C_DIM}(SPFx: ${SPFX_VER})${C_RST}"
+gha_notice "Stamping version ${SEMVER} (SPFx ${SPFX_VER})."
 
 # --------------------------------------------------------------------------- #
 # Stamp files
@@ -391,4 +395,8 @@ if [[ "${DO_COMMIT}" == "true" ]]; then
         "  ${C_BLD}git push && git push --tags${C_RST}"
     fi
   fi
+fi
+
+if [[ "${DO_COMMIT}" == "true" ]]; then
+  gha_notice "Version ${VTAG} prepared successfully."
 fi
