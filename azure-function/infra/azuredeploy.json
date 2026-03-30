@@ -7,7 +7,7 @@
       "version": "0.41.2.15936",
       "templateHash": "3752820722782831946"
     },
-    "name": "Guest Sponsor Info – Azure Function Proxy",
+    "name": "Guest Sponsor API for Microsoft Entra B2B",
     "description": "Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights.",
     "repository": "https://github.com/workoho/spfx-guest-sponsor-info",
     "author": "Workoho GmbH",
@@ -41,7 +41,7 @@
       "type": "string",
       "metadata": {
         "category": "Basics",
-        "description": "Globally unique name for the Function App (2–58 characters, letters, numbers, and hyphens only)."
+        "description": "Globally unique name for the Function App (2-58 characters, letters, numbers, and hyphens only)."
       },
       "minLength": 2,
       "maxLength": 58
@@ -67,7 +67,7 @@
       "defaultValue": 1,
       "metadata": {
         "category": "Hosting",
-        "description": "Number of always-ready (pre-warmed) instances for the Function App (Flex Consumption plan only). 0 = purely on-demand (cold starts possible). 1 = one instance kept warm — eliminates cold starts (~€2–5/month). Ignored when hostingPlan = \"Consumption\"."
+        "description": "Number of always-ready (pre-warmed) instances for the Function App (Flex Consumption plan only). 0 = purely on-demand (cold starts possible). 1 = one instance kept warm — eliminates cold starts (~€2-5/month). Ignored when hostingPlan = \"Consumption\"."
       },
       "minValue": 0
     },
@@ -76,7 +76,7 @@
       "defaultValue": 10,
       "metadata": {
         "category": "Hosting",
-        "description": "Hard upper bound on the number of instances the Flex Consumption plan may scale out to (Flex Consumption plan only). Acts as a cost ceiling — scale-out stops at this limit regardless of demand. Valid range: 1–1000. Default: 10. Ignored when hostingPlan = \"Consumption\"."
+        "description": "Hard upper bound on the number of instances the Flex Consumption plan may scale out to (Flex Consumption plan only). Acts as a cost ceiling — scale-out stops at this limit regardless of demand. Valid range: 1-1000. Default: 10. Ignored when hostingPlan = \"Consumption\"."
       },
       "minValue": 1,
       "maxValue": 1000
@@ -904,7 +904,7 @@
               "version": "0.41.2.15936",
               "templateHash": "9206832646292928164"
             },
-            "name": "Guest Sponsor Info – Monitoring",
+            "name": "Guest Sponsor Info - Monitoring",
             "description": "Log Analytics Workspace, Application Insights, Action Groups, and KQL alert rules."
           },
           "parameters": {

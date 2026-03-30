@@ -1,4 +1,4 @@
-# Guest Sponsor Info – Azure Function
+# Guest Sponsor API for Microsoft Entra B2B
 
 <p align="center">
   <img src="../images/icon-rounded.svg" width="96" height="96" alt="Guest Sponsor Info icon" />

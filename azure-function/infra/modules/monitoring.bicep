@@ -1,4 +1,4 @@
-metadata name = 'Guest Sponsor Info – Monitoring'
+metadata name = 'Guest Sponsor API for Microsoft Entra B2B - Monitoring'
 metadata description = 'Log Analytics Workspace, Application Insights, Action Groups, and KQL alert rules.'
 
 @description('Azure region for all monitoring resources.')

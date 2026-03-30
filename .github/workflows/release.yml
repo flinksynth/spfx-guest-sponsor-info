@@ -134,4 +134,3 @@ jobs:
             azure-function/infra/main.bicep
             azure-function/infra/setup-app-registration.ps1
             azure-function/infra/setup-graph-permissions.ps1
-            azure-function/infra/Write-Callout.ps1

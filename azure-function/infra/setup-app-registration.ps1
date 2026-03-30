@@ -35,6 +35,7 @@
     Licensed under PolyForm Shield License 1.0.0
     <https://polyformproject.org/licenses/shield/1.0.0>
 #>
+#Requires -Version 5.1
 param(
   [string]$TenantId,
   [string]$DisplayName = 'Guest Sponsor Info - SharePoint Web Part Auth'
@@ -42,32 +43,231 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-# Dot-source callout box helpers when running from a local clone.
-# When executed via iwr (remote one-liner), $PSScriptRoot is empty and the
-# file won't exist — fall back to plain Write-Host stubs so the script still
-# runs without visual callout boxes.
-$calloutFile = Join-Path $PSScriptRoot 'Write-Callout.ps1'
-if ($PSScriptRoot -and (Test-Path $calloutFile)) {
-  . $calloutFile
-}
-else {
-  # Minimal stubs — print lines without the fancy box frame.
-  function Write-Hint { param([Parameter(ValueFromRemainingArguments)][string[]]$L) Write-Host ''; foreach ($l in $L) { if ($l) { Write-Host "  $l" } }; Write-Host '' }
-  function Write-NextSteps { param([Parameter(ValueFromRemainingArguments)][string[]]$L) Write-Host ''; foreach ($l in $L) { if ($l) { Write-Host "  $l" } }; Write-Host '' }
-  function Write-Important { param([Parameter(ValueFromRemainingArguments)][string[]]$L) Write-Host ''; foreach ($l in $L) { if ($l) { Write-Host "  $l" -ForegroundColor Yellow } }; Write-Host '' }
+# ── Console output encoding ───────────────────────────────────────────────────
+# Switch to UTF-8 early so box-drawing characters and symbols (✓, ⚠) render
+# correctly on Windows PowerShell 5.1 which defaults to an ANSI code page.
+if ([Console]::OutputEncoding.CodePage -ne 65001) {
+  try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $OutputEncoding = [System.Text.Encoding]::UTF8
+  }
+  catch { $null = $_ <# Non-interactive host; ignore — encoding failure is non-fatal. #> }
 }
 
-# ── Module bootstrap ─────────────────────────────────────────────────────────
-foreach ($module in @(
-    'Microsoft.Graph.Authentication',
-    'Microsoft.Graph.Applications'
-  )) {
-  if (-not (Get-Module -ListAvailable -Name $module)) {
-    Write-Host "Installing $module module..." -ForegroundColor Cyan
-    Install-Module $module -Scope CurrentUser -Force
+# ── Callout box helpers ───────────────────────────────────────────────────────
+# Embedded directly so the script works on any machine without Write-Callout.ps1,
+# whether run from a local clone, via iwr, or on a bare system with no repo files.
+#
+# Write-Host vs Write-Output in this script:
+#   Write-Host   → Information stream (stream 6). Goes straight to the operator's
+#                  console; cannot be captured by $x = <cmd> or piped downstream.
+#                  Correct for: status messages, prompts, and colored callout boxes —
+#                  anything that is purely for the operator's eyes.
+#   Write-Output → Success stream (stream 1). Values flow into the pipeline and
+#                  can be captured by $x = <cmd>. Use only when a function must
+#                  hand data back to its caller. This script has no such functions,
+#                  so Write-Output is not used.
+# PSAvoidUsingWriteHost is suppressed in PSScriptAnalyzerSettings.psd1.
+function Write-Box {
+  param(
+    [Parameter(Mandatory)][string]$Title,
+    [Parameter(Mandatory)][ConsoleColor]$Color,
+    [Parameter(ValueFromRemainingArguments)][string[]]$Lines
+  )
+  # Detect whether the console can render Unicode box-drawing characters.
+  # UTF-8 encodes U+2500 as 3 bytes; a legacy ANSI code page returns 1 byte.
+  $_u = $false
+  try { $_u = ([Console]::OutputEncoding.GetBytes([char]0x2500)).Length -gt 1 }
+  catch { $_u = $false }
+  if ($_u) {
+    $H = [char]0x2500; $TL = [char]0x256D; $V = [char]0x2502; $BL = [char]0x2570
   }
-  Import-Module $module
+  else {
+    $H = '-'; $TL = '+'; $V = '|'; $BL = '+'
+  }
+  $dashes = 56 - $Title.Length
+  if ($dashes -lt 4) { $dashes = 4 }
+  Write-Host ''
+  Write-Host "  $TL$H " -ForegroundColor $Color -NoNewline
+  Write-Host $Title -ForegroundColor $Color -NoNewline
+  Write-Host " $($H * $dashes)" -ForegroundColor $Color
+  Write-Host "  $V" -ForegroundColor $Color
+  foreach ($line in $Lines) {
+    if ([string]::IsNullOrEmpty($line)) {
+      Write-Host "  $V" -ForegroundColor $Color
+    }
+    else {
+      Write-Host "  $V" -ForegroundColor $Color -NoNewline
+      Write-Host "  $line"
+    }
+  }
+  Write-Host "  $V" -ForegroundColor $Color
+  Write-Host "  $BL$($H * 59)" -ForegroundColor $Color
+  Write-Host ''
 }
+function Write-Hint {
+  param([Parameter(ValueFromRemainingArguments)][string[]]$Lines)
+  Write-Box -Title 'HINT' -Color Cyan @Lines
+}
+function Write-NextSteps {
+  param([Parameter(ValueFromRemainingArguments)][string[]]$Lines)
+  Write-Box -Title 'NEXT STEPS' -Color Green @Lines
+}
+function Write-Important {
+  param([Parameter(ValueFromRemainingArguments)][string[]]$Lines)
+  Write-Box -Title 'IMPORTANT' -Color Yellow @Lines
+}
+
+# ── Module prerequisite helper ────────────────────────────────────────────────
+# Checks whether a required PowerShell module is installed and, if not, offers
+# to install it from the PowerShell Gallery. Handles:
+#   - Windows PowerShell 5.1 and PowerShell 7+ on Windows, Linux, and macOS
+#   - Scope selection (CurrentUser / AllUsers) on Windows
+#   - OneDrive Known Folder Move (KFM) warning when CurrentUser is chosen
+#   - NuGet package provider bootstrap (required by Install-Module on PS 5.1)
+#   - Prefers Install-PSResource (PSResourceGet) on PS 7+ when available
+function Install-RequiredModule {
+  [CmdletBinding()]
+  param(
+    [Parameter(Mandatory)][string]$Name
+  )
+
+  if (Get-Module -ListAvailable -Name $Name) {
+    Import-Module -Name $Name
+    return
+  }
+
+  Write-Host ''
+  Write-Host "  Module '$Name' is not installed." -ForegroundColor Yellow
+  $answer = (Read-Host "  Install '$Name' from the PowerShell Gallery? [Y/n]").Trim()
+  if ($answer -ne '' -and $answer -notmatch '^[Yy]') {
+    Write-Host "  Aborted. '$Name' is required — cannot continue." -ForegroundColor Red
+    exit 1
+  }
+
+  # ── Choose installation scope ─────────────────────────────────────────────
+  # On Windows (PS 5.1, which only runs on Windows, and PS 7+ when $IsWindows)
+  # prompt the user to choose a scope. On Linux/macOS only CurrentUser applies.
+  $scope = 'CurrentUser'
+  # PS 5.1 has no $IsWindows; major version < 6 implies Windows-only runtime.
+  $onWindows = ($PSVersionTable.PSVersion.Major -lt 6) -or $IsWindows
+
+  if ($onWindows) {
+    $isAdmin = ([Security.Principal.WindowsPrincipal] `
+        [Security.Principal.WindowsIdentity]::GetCurrent()
+    ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+
+    Write-Host ''
+    Write-Host '  Installation scope:' -ForegroundColor Cyan
+    Write-Host '    [1] CurrentUser  – installed in your profile folder (no admin required)'
+    Write-Host '    [2] AllUsers     – installed system-wide               (requires admin)'
+    Write-Host ''
+
+    if (-not $isAdmin) {
+      Write-Host '  Note: You are not running as administrator.' -ForegroundColor DarkGray
+      Write-Host '  AllUsers scope requires elevation. Defaulting to CurrentUser.' -ForegroundColor DarkGray
+      $scopeChoice = '1'
+    }
+    else {
+      do {
+        $scopeChoice = (Read-Host '  Scope [1/2, default: 1]').Trim()
+        if ($scopeChoice -eq '') { $scopeChoice = '1' }
+      } while ($scopeChoice -notin @('1', '2'))
+    }
+
+    $scope = if ($scopeChoice -eq '2') { 'AllUsers' } else { 'CurrentUser' }
+
+    # ── OneDrive Known Folder Move (KFM) warning ──────────────────────────
+    # When OneDrive "Folder Backup" (Known Folder Move) redirects the Documents
+    # folder to OneDrive, the CurrentUser PowerShell module path lives inside
+    # that synced folder. Installed module DLLs are then uploaded to OneDrive,
+    # which can cause DLL-lock conflicts during sync and slow first-use on every
+    # machine sharing the same OneDrive account.
+    if ($scope -eq 'CurrentUser') {
+      $docsPath = [Environment]::GetFolderPath(
+        [Environment+SpecialFolder]::MyDocuments)
+      # Check all known OneDrive environment variables (personal, commercial, generic).
+      $oneDrivePaths = @($env:OneDriveConsumer, $env:OneDriveCommercial, $env:OneDrive) |
+      Where-Object { $_ }
+      $kfmActive = $false
+      foreach ($odPath in $oneDrivePaths) {
+        if ($docsPath.StartsWith($odPath, [StringComparison]::OrdinalIgnoreCase)) {
+          $kfmActive = $true
+          break
+        }
+      }
+
+      if ($kfmActive) {
+        Write-Host ''
+        Write-Host '  ⚠  OneDrive Folder Backup is active (Known Folder Move / KFM).' `
+          -ForegroundColor Yellow
+        Write-Host '     Your Documents folder is currently synced to OneDrive:' -ForegroundColor Yellow
+        Write-Host "     $docsPath" -ForegroundColor DarkCyan
+        Write-Host ''
+        Write-Host '  PowerShell modules installed in CurrentUser scope are stored inside'
+        Write-Host '  your Documents folder and will therefore be synced to OneDrive.'
+        Write-Host '  This may cause:'
+        Write-Host '    - DLL files locked by the OneDrive sync client during module load'
+        Write-Host '    - Sync conflicts when the same account is active on another computer'
+        Write-Host '    - Slow availability after installation until OneDrive sync completes'
+        Write-Host ''
+        Write-Host '  Recommendation: choose AllUsers scope (option 2) instead, or pause'
+        Write-Host '  OneDrive sync while installing the modules.'
+        Write-Host ''
+        $cont = (Read-Host '  Continue with CurrentUser scope anyway? [y/N]').Trim()
+        if ($cont -notmatch '^[Yy]') {
+          Write-Host '  Aborted.' -ForegroundColor Red
+          exit 1
+        }
+      }
+    }
+
+    # ── NuGet package provider (required by Install-Module on PS 5.1) ──────
+    # Windows PowerShell 5.1 ships without the NuGet provider; Install-Module
+    # silently fails unless the provider (>= 2.8.5.201) is present.
+    if ($PSVersionTable.PSVersion.Major -lt 6) {
+      $nuget = Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue
+      if (-not $nuget -or $nuget.Version -lt [Version]'2.8.5.201') {
+        Write-Host ''
+        Write-Host '  Installing NuGet package provider (required on Windows PowerShell…)' `
+          -ForegroundColor Cyan
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 `
+          -Scope $scope -Force | Out-Null
+        Write-Host '  ✓ NuGet provider installed.' -ForegroundColor Green
+      }
+    }
+  }
+
+  # Trust PSGallery to avoid interactive confirmation prompts.
+  $gallery = Get-PSRepository -Name PSGallery -ErrorAction SilentlyContinue
+  if ($gallery -and $gallery.InstallationPolicy -ne 'Trusted') {
+    Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+  }
+
+  Write-Host ''
+  Write-Host "  Installing '$Name' (scope: $scope) …" -ForegroundColor Cyan
+
+  # PowerShell 7+ with PSResourceGet: use Install-PSResource when available.
+  # PSResourceGet is the modern package manager that ships with PS 7.4+ and
+  # handles dependency resolution, side-by-side versions, and parallel downloads.
+  if ($PSVersionTable.PSVersion.Major -ge 7 -and
+    (Get-Command Install-PSResource -ErrorAction SilentlyContinue)) {
+    Install-PSResource -Name $Name -Scope $scope -TrustRepository -Quiet `
+      -ErrorAction Stop
+  }
+  else {
+    # PowerShell 5.1 and PS 7 without PSResourceGet: use Install-Module.
+    Install-Module -Name $Name -Scope $scope -Force -AllowClobber -ErrorAction Stop
+  }
+
+  Import-Module -Name $Name
+  Write-Host "  ✓ '$Name' installed and imported." -ForegroundColor Green
+  Write-Host ''
+}
+
+# ── Module bootstrap ──────────────────────────────────────────────────────────
+Install-RequiredModule -Name 'Microsoft.Graph.Authentication'
+Install-RequiredModule -Name 'Microsoft.Graph.Applications'
 
 # ── Interactive parameter prompts ─────────────────────────────────────────────
 # Each prompt shows a title, a short description, and where to find the value,
@@ -215,7 +415,8 @@ if ($app.SignInAudience -ne 'AzureADMyOrg') {
 
 # 6. Identifier URI
 $expectedUri = "api://guest-sponsor-info-proxy/$clientId"
-$currentUris = $app.IdentifierUris ?? @()
+# The null-coalescing operator ?? is PS7+ only; use if/else for PS5.1 compat.
+$currentUris = if ($null -eq $app.IdentifierUris) { @() } else { $app.IdentifierUris }
 if ($currentUris -notcontains $expectedUri) {
   Write-Host "  Fixing IdentifierUris: adding $expectedUri" `
     -ForegroundColor Yellow

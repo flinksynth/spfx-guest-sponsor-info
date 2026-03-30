@@ -856,7 +856,7 @@ function jsonErrorResponse(
 }
 
 /**
- * HTTP GET – returns the sponsors of the calling user.
+ * HTTP GET - returns the sponsors of the calling user.
  *
  * Authentication is handled by EasyAuth (Azure App Service Authentication).
  * The function reads the caller OID from the X-MS-CLIENT-PRINCIPAL-ID header
@@ -1628,7 +1628,7 @@ app.http('getGuestSponsors', {
 });
 
 /**
- * HTTP GET – returns Microsoft Teams presence for a list of Entra object IDs.
+ * HTTP GET - returns Microsoft Teams presence for a list of Entra object IDs.
  *
  * Designed to serve presence refresh polls from the SPFx web part after the
  * initial sponsor load.  Using application permissions (Managed Identity) keeps
@@ -1637,7 +1637,7 @@ app.http('getGuestSponsors', {
  * on tenants with restrictive guest-access policies.
  *
  * Query parameter:
- *   ids  – comma-separated list of up to MAX_SPONSORS Entra object IDs (GUIDs).
+ *   ids  - comma-separated list of up to MAX_SPONSORS Entra object IDs (GUIDs).
  *
  * If Presence.Read.All has not been granted to the Managed Identity the endpoint
  * returns HTTP 200 with an empty presences array and logs a warning.  The caller
@@ -1954,7 +1954,7 @@ app.http('getPresence', {
 });
 
 /**
- * HTTP GET – lightweight health-check endpoint.
+ * HTTP GET - lightweight health-check endpoint.
  *
  * Returns HTTP 200 with the function version.  No authentication checks,
  * no Graph calls — EasyAuth still gates access at the infrastructure level,
@@ -1982,7 +1982,7 @@ app.http('ping', {
 });
 
 /**
- * HTTP GET – returns the latest published GitHub release version cached in memory.
+ * HTTP GET - returns the latest published GitHub release version cached in memory.
  *
  * The timer trigger in `checkGitHubRelease` fetches the GitHub Releases API once
  * every six hours (and on every cold start) and stores the result in module-level
@@ -1992,16 +1992,16 @@ app.http('ping', {
  * single outbound GitHub request per six-hour window.
  *
  * Response body (JSON):
- *   latestVersion  – semver string of the latest GitHub release (no leading "v"),
+ *   latestVersion  - semver string of the latest GitHub release (no leading "v"),
  *                    or null when the timer has not yet completed its first run.
- *   url            – HTML URL of the GitHub release page, or null.
- *   functionVersion – the currently deployed function version.
+ *   url            - HTML URL of the GitHub release page, or null.
+ *   functionVersion - the currently deployed function version.
  *
  * No caller-identity or Graph work is performed here.  EasyAuth gates access
  * at the infrastructure level (same as /api/ping).
  */
 /**
- * HTTP GET – returns the profile photo of a sponsor or their manager, proxied via
+ * HTTP GET - returns the profile photo of a sponsor or their manager, proxied via
  * the function's Managed Identity (User.Read.All).
  *
  * This allows the SPFx web part to lazy-load manager photos without making direct
@@ -2009,12 +2009,12 @@ app.http('ping', {
  * the solution package (isolated iFrames cannot acquire Graph tokens for guest callers).
  *
  * Query parameter:
- *   userId – Entra object ID of the user whose photo to return.
+ *   userId - Entra object ID of the user whose photo to return.
  *            Must be a sponsor or manager of one of the caller's sponsors
  *            (validated via the presence token or a live Graph lookup).
  *
  * Header (optional but recommended):
- *   X-Presence-Token – the signed token issued by getGuestSponsors.
+ *   X-Presence-Token - the signed token issued by getGuestSponsors.
  *                      When present, enables stateless zero-Graph-call validation.
  *
  * Returns:

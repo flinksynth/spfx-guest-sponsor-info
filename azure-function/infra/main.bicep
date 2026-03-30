@@ -1,7 +1,7 @@
 targetScope = 'resourceGroup'
 
-metadata name = 'Guest Sponsor Info – Azure Function Proxy'
-metadata description = 'Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights.'
+metadata name = 'Guest Sponsor API for Microsoft Entra B2B'
+metadata description = 'Deploys an Azure Function App that acts as a Graph API proxy for the Guest Sponsor Info for Microsoft Entra B2B SharePoint web part. Includes a Storage Account, App Service Plan, EasyAuth configuration, Managed Identity role assignments, Log Analytics Workspace, and Application Insights.'
 metadata repository = 'https://github.com/workoho/spfx-guest-sponsor-info'
 metadata author = 'Workoho GmbH'
 metadata license = 'PolyForm-Shield-1.0.0'
@@ -37,12 +37,12 @@ param functionClientId string
 param hostingPlan string = 'Consumption'
 
 @metadata({ category: 'Hosting' })
-@description('Number of always-ready (pre-warmed) instances for the Function App (Flex Consumption plan only). 0 = purely on-demand (cold starts possible). 1 = one instance kept warm — eliminates cold starts (~€2–5/month). Ignored when hostingPlan = "Consumption".')
+@description('Number of always-ready (pre-warmed) instances for the Function App (Flex Consumption plan only). 0 = purely on-demand (cold starts possible). 1 = one instance kept warm — eliminates cold starts (~€2-5/month). Ignored when hostingPlan = "Consumption".')
 @minValue(0)
 param alwaysReadyInstances int = 1
 
 @metadata({ category: 'Hosting' })
-@description('Hard upper bound on the number of instances the Flex Consumption plan may scale out to (Flex Consumption plan only). Acts as a cost ceiling — scale-out stops at this limit regardless of demand. Valid range: 1–1000. Default: 10. Ignored when hostingPlan = "Consumption".')
+@description('Hard upper bound on the number of instances the Flex Consumption plan may scale out to (Flex Consumption plan only). Acts as a cost ceiling — scale-out stops at this limit regardless of demand. Valid range: 1-1000. Default: 10. Ignored when hostingPlan = "Consumption".')
 @minValue(1)
 @maxValue(1000)
 param maximumFlexInstances int = 10
@@ -401,7 +401,7 @@ resource deployZipScript 'Microsoft.Resources/deploymentScripts@2023-08-01' = if
       { name: 'CONTAINER', value: deploymentContainerName }
       { name: 'PACKAGE_URL', value: resolvedPackageUrl }
     ]
-    // Retry loop to handle RBAC propagation delay (typically 30–60 s after role assignment).
+    // Retry loop to handle RBAC propagation delay (typically 30-60 s after role assignment).
     scriptContent: '''
       set -euo pipefail
       curl -sSfL -o /tmp/function.zip "$PACKAGE_URL"
