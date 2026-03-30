@@ -568,7 +568,7 @@ const CopyButton: React.FC<{ value: string; ariaLabel: string }> = ({ value, ari
     navigator.clipboard.writeText(value).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-    }).catch(() => { /* clipboard access denied – silently ignore */ });
+    }).catch(() => { /* clipboard access denied - silently ignore */ });
   };
 
   return (
@@ -901,7 +901,7 @@ const SponsorCard: React.FC<ISponsorCardProps> = ({
 
   // Manager avatar size scales with the number of text rows shown:
   //   2 rows (name + job title + department) → 64 px  (one above extra-large natural)
-  //   0–1 rows                              → 56 px  (extra-large natural size)
+  //   0-1 rows                              → 56 px  (extra-large natural size)
   const managerThreeLines =
     showManagerJobTitle && showManagerDepartment && !!sponsor.managerDepartment;
   const managerAvatarSize: 56 | 64 = managerThreeLines ? 64 : 56;

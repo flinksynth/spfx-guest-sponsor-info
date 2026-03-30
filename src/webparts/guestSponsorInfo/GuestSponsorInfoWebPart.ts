@@ -74,7 +74,7 @@ export interface IGuestSponsorInfoWebPartProps {
    * Replaces the former mockTeamsUnavailable boolean with a dropdown selection.
    * Default: 'none'.
    */
-  /** Maximum number of sponsors shown to visitors on the live page (1–5). Default: 2. */
+  /** Maximum number of sponsors shown to visitors on the live page (1-5). Default: 2. */
   maxSponsorCount: number;
   mockSimulatedHint: 'none' | 'teamsAccessPending' | 'versionMismatch' | 'sponsorUnavailable' | 'noSponsors';
   /** Show the "Teams not set up yet" notice to guest users. Default: true. */
@@ -1444,7 +1444,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                     const subtextColor = this._v9Theme.colorNeutralForeground3;
 
                     const setupGuideHref =
-                      'https://github.com/workoho/spfx-guest-sponsor-info/blob/main/README.md#deploy-the-guest-sponsor-api';
+                      'https://guest-sponsor-info.workoho.cloud/setup';
 
                     const isConfigured = !!(this.properties.functionUrl && this.properties.functionClientId);
                     const isOk = isConfigured && this._proxyStatus === 'ok';

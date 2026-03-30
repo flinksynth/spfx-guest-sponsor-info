@@ -11,7 +11,7 @@ export interface ISponsorsResult {
   activeSponsors: ISponsor[];
   /**
    * Number of sponsor entries that were excluded because their directory object
-   * could no longer be found (HTTP 404 – hard-deleted or past the soft-delete
+   * could no longer be found (HTTP 404 - hard-deleted or past the soft-delete
    * recycle-bin period).  Accounts that are merely disabled (accountEnabled ===
    * false) still appear in activeSponsors because reading that property requires
    * User.Read.All, which is only available to the Azure Function's Managed Identity.

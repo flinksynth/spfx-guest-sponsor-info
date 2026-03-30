@@ -186,7 +186,7 @@ define([], function() {
     "MapProviderOpenStreetMapOption": "OpenStreetMap",
     "MapProviderNoneOption": "Deaktiveret (intet kortlink)",
     "AddressMapProviderHint": "Aktiver mindst by og land — det er nok til, at enhver korttjeneste kan vise en meningsfuld placering.",
-    "AzureMapsPreviewHint": "Tilføj din Azure Maps-abonnementsnøgle for at vise en lille kortforhåndsvisning i kontaktsektionen. Hvis du har udrullet Guest Sponsor API'et, er der inkluderet en Azure Maps-konto – kopiér nøglen fra dens godkendelsesindstillinger. Uden nøgle vises kun kortlinket ovenfor.",
+    "AzureMapsPreviewHint": "Tilføj din Azure Maps-abonnementsnøgle for at vise en lille kortforhåndsvisning i kontaktsektionen. Hvis du har udrullet Guest Sponsor API'et, er der inkluderet en Azure Maps-konto - kopiér nøglen fra dens godkendelsesindstillinger. Uden nøgle vises kun kortlinket ovenfor.",
     "CityFieldLabel": "By",
     "CountryFieldLabel": "Land",
     "CopyCityAriaLabel": "Kopiér by",

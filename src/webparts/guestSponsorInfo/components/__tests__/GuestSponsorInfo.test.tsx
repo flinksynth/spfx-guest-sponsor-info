@@ -162,9 +162,9 @@ describe('GuestSponsorInfo', () => {
     });
   });
 
-  // ── View mode – non-guest visitor ────────────────────────────────────────────
+  // ── View mode - non-guest visitor ────────────────────────────────────────────
 
-  describe('view mode – non-guest visitor', () => {
+  describe('view mode - non-guest visitor', () => {
     it('renders nothing so the web part is invisible to members', () => {
       mockIsGuestUser.mockReturnValue(false);
       act(() => {
@@ -180,9 +180,9 @@ describe('GuestSponsorInfo', () => {
     });
   });
 
-  // ── View mode – guest visitor ────────────────────────────────────────────────
+  // ── View mode - guest visitor ────────────────────────────────────────────────
 
-  describe('view mode – guest visitor', () => {
+  describe('view mode - guest visitor', () => {
     it('does not call getSponsorsViaProxy when neither functionUrl nor aadHttpClient is provided', () => {
       act(() => { renderWebPart({ functionUrl: undefined, aadHttpClient: undefined }); });
       expect(mockGetSponsors).not.toHaveBeenCalled();

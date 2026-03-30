@@ -79,8 +79,8 @@ the fallback link renders whenever showAddressMap is enabled.
 ```text
 chore(i18n): add native translations for VersionMismatchMessage
 
-Translate into da-dk, fi-fi, ja-jp, nb-no, sv-se, pt-br,
-zh-cn, pl-pl, and nl-nl — all 14 locale files now covered.
+Translate into da-dk, fi-fi, ja-jp, nb-no, sv-se, pt-pt,
+zh-cn, pl-pl, and nl-nl — all 17 locale files now covered.
 ```
 
 ```text

@@ -37,10 +37,10 @@ import wizardSuccessIllustration from '../assets/wizard-success.svg';
 import wizardSuccessIllustrationDark from '../assets/wizard-success-dark.svg';
 
 /**
- * URL of the Azure Function deployment guide on GitHub.
+ * URL of the deployment guide on the project website.
  * Shown as a help link in step 2 when the admin chooses the API path.
  */
-const GITHUB_SETUP_URL = 'https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/deployment.md';
+const GITHUB_SETUP_URL = 'https://guest-sponsor-info.workoho.cloud/setup';
 
 /**
  * Builds the versioned "Deploy to Azure" portal URL for a given semver string.
@@ -763,7 +763,7 @@ const WelcomeDialog: React.FC<IWelcomeDialogProps> = ({ open, onCommit, onSkip, 
   return (
     <div className={classes.root}>
       <div className={classes.card}>
-        {/* Card header: wizard title + dismiss (X) button on steps 0–2 */}
+        {/* Card header: wizard title + dismiss (X) button on steps 0-2 */}
         <div className={classes.cardHeader}>
           <Text as="h2" className={classes.wizardTitle}>{stepTitle}</Text>
           {step < 3 && (

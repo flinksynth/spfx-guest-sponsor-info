@@ -96,8 +96,8 @@ The release workflow is documented in `docs/development.md` → "Publishing a Re
 - No bundled placeholder images. Use live profile photos from Graph; fall back to initials.
 - Styles use `makeStyles` + `tokens` from `@fluentui/react-components` (Griffel) for all component-level
   styles. Do not add CSS/SCSS module files.
-- Locale strings follow the SPFx AMD `define()` pattern in `loc/*.js`; add new keys to all 14 locale files
-  (en-us, de-de, fr-fr, es-es, it-it, da-dk, fi-fi, ja-jp, nb-no, nl-nl, pl-pl, pt-br, sv-se, zh-cn).
+- Locale strings follow the SPFx AMD `define()` pattern in `loc/*.js`; add new keys to all 17 locale files
+  (cs-cz, da-dk, de-de, en-us, es-es, fi-fi, fr-fr, hu-hu, it-it, ja-jp, nb-no, nl-nl, pl-pl, pt-pt, ro-ro, sv-se, zh-cn).
 
 ## Shell scripts (`scripts/*.sh`)
 

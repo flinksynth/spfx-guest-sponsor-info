@@ -17,7 +17,7 @@ export interface IWelcomeSetupConfig {
 }
 
 export interface IGuestSponsorInfoProps {
-  /** SPFx login name (UPN) of the current user – used as a fallback for guest detection. */
+  /** SPFx login name (UPN) of the current user - used as a fallback for guest detection. */
   loginName: string;
   /**
    * Direct flag from `pageContext.user.isExternalGuestUser` — the authoritative indicator
@@ -44,9 +44,9 @@ export interface IGuestSponsorInfoProps {
    * making live Graph calls.
    */
   mockMode: boolean;
-  /** Maximum number of sponsors to display on the live page (1–5). Default: 2. */
+  /** Maximum number of sponsors to display on the live page (1-5). Default: 2. */
   maxSponsorCount: number;
-  /** Number of mock sponsor cards to display in demo mode (1–5). Default: 2. */
+  /** Number of mock sponsor cards to display in demo mode (1-5). Default: 2. */
   mockSponsorCount: number;
   /** Notification to simulate in demo mode. Default: 'none'. */
   mockSimulatedHint: 'none' | 'teamsAccessPending' | 'versionMismatch' | 'sponsorUnavailable' | 'noSponsors';

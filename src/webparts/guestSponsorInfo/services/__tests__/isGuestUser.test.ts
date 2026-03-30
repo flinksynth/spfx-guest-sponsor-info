@@ -26,7 +26,7 @@ describe('isGuestUser', () => {
     expect(isGuestUser('')).toBe(false);
   });
 
-  it('is case-sensitive – Entra UPNs always use uppercase #EXT#', () => {
+  it('is case-sensitive - Entra UPNs always use uppercase #EXT#', () => {
     expect(isGuestUser('alice_contoso.com#ext#@fabrikam.onmicrosoft.com')).toBe(false);
   });
 });

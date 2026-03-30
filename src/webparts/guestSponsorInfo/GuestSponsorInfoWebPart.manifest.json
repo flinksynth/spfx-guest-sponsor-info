@@ -16,20 +16,20 @@
         "default": "Communication"
       },
       "title": {
-        "default": "Guest Sponsor Info",
-        "da-dk": "Gæstesponsoroplysninger",
-        "de-de": "Gast-Sponsor-Info",
-        "es-es": "Información del patrocinador invitado",
-        "fi-fi": "Vieraan sponsoritiedot",
-        "fr-fr": "Infos sur le sponsor invité",
-        "it-it": "Info sponsor ospite",
-        "ja-jp": "ゲストスポンサー情報",
-        "nb-no": "Gjestesponsorinformasjon",
-        "nl-nl": "Gastsponsors",
-        "pl-pl": "Informacje o sponsorze gościa",
-        "pt-br": "Informações do Patrocinador Convidado",
-        "sv-se": "Gästsponsorsinfo",
-        "zh-cn": "访客赞助商信息"
+        "default": "Guest Sponsor Info for Microsoft Entra B2B",
+        "da-dk": "Guest Sponsor Info til Microsoft Entra B2B",
+        "de-de": "Guest Sponsor Info für Microsoft Entra B2B",
+        "es-es": "Guest Sponsor Info para Microsoft Entra B2B",
+        "fi-fi": "Guest Sponsor Info varten Microsoft Entra B2B",
+        "fr-fr": "Guest Sponsor Info pour Microsoft Entra B2B",
+        "it-it": "Guest Sponsor Info per Microsoft Entra B2B",
+        "ja-jp": "Microsoft Entra B2B 向け Guest Sponsor Info",
+        "nb-no": "Guest Sponsor Info for Microsoft Entra B2B",
+        "nl-nl": "Guest Sponsor Info voor Microsoft Entra B2B",
+        "pl-pl": "Guest Sponsor Info dla Microsoft Entra B2B",
+        "pt-pt": "Guest Sponsor Info para Microsoft Entra B2B",
+        "sv-se": "Guest Sponsor Info för Microsoft Entra B2B",
+        "zh-cn": "适用于 Microsoft Entra B2B 的 Guest Sponsor Info"
       },
       "description": {
         "default": "Shows the sponsors of the signed-in Microsoft Entra guest user",
@@ -43,7 +43,7 @@
         "nb-no": "Viser sponsorer for den innloggede Microsoft Entra-gjestebrukeren",
         "nl-nl": "Toont de sponsors van de aangemelde Microsoft Entra-gastgebruiker",
         "pl-pl": "Wyświetla sponsorów zalogowanego użytkownika-gościa Microsoft Entra",
-        "pt-br": "Exibe os patrocinadores do usuário convidado do Microsoft Entra conectado",
+        "pt-pt": "Apresenta os patrocinadores do utilizador convidado do Microsoft Entra com sessão iniciada",
         "sv-se": "Visar sponsorer för den inloggade Microsoft Entra-gästanvändaren",
         "zh-cn": "显示已登录的 Microsoft Entra 来宾用户的赞助商"
       },
