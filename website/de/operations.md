@@ -1,7 +1,7 @@
 ---
 layout: doc
 lang: de
-title: Betriebsleitfaden
+title: Operations Guide
 permalink: /de/operations/
 description: >-
   Day-2-Betriebsreferenz — Web Part aktualisieren, Azure Maps
@@ -9,7 +9,7 @@ description: >-
 lead: >-
   Laufende Administrationsaufgaben für SharePoint- und
   Azure-Administratoren. Für die Ersteinrichtung verwenden Sie
-  die Bereitstellungsanleitung.
+  die Setup-Anleitung.
 github_doc: operations.md
 ---
 

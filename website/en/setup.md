@@ -1,18 +1,18 @@
 ---
 layout: doc
 lang: en
-title: Deployment Guide
+title: Setup Guide
 permalink: /en/setup/
 description: >-
-  Step-by-step deployment guide for the Guest Sponsor Info web part
+  Step-by-step setup guide for the Guest Sponsor Info web part
   and Guest Sponsor API — SharePoint and Azure setup.
 lead: >-
-  Initial deployment and first-time configuration reference for
+  Initial setup and configuration reference for
   SharePoint and Azure administrators.
 github_doc: deployment.md
 ---
 
-## SharePoint Deployment
+## SharePoint Setup
 
 ### Install from Microsoft AppSource
 
@@ -31,11 +31,11 @@ The solution uses `skipFeatureDeployment: false` — the web part does **not**
 become available tenant-wide automatically. After the Tenant App Catalog
 installation, a Site Collection Administrator must add the app to each site
 explicitly: **Site Contents → Add an app → Guest Sponsor Info**.
-This is intentional and prevents accidental deployment to unintended sites.
+This is intentional and prevents accidental installation on unintended sites.
 
-The required Microsoft Graph permissions (`User.Read`, `User.ReadBasic.All`,
-`Presence.Read.All`) are pre-authorized by Microsoft for SharePoint Online —
-the **API access** queue will be empty and no manual consent is needed.
+The web part requests **no Microsoft Graph permissions** of its own — the
+**API access** queue will remain empty. All Graph calls are made server-side
+by the companion Azure Function using its Managed Identity.
 
 ### Make the web part accessible to guests
 
@@ -81,7 +81,7 @@ Connect-PnPOnline -Url "https://<tenant>-admin.sharepoint.com" `
 Set-PnPTenantCdnEnabled -CdnType Public -Enable $true
 ```
 
-> CDN propagation takes **15–30 minutes**. Once active, the bundle URL changes
+> CDN propagation takes **15-30 minutes**. Once active, the bundle URL changes
 > to `publiccdn.sharepointonline.com` automatically — no reconfiguration needed.
 
 **Option B — Grant Everyone read access to the Tenant App Catalog**
@@ -111,7 +111,7 @@ Add-PnPGroupMember -LoginName "c:0(.s|true" -Group "App Catalog Visitors"
 > tenant. The Public CDN (Option A) does not have this limitation.
 
 For an advanced alternative (Site Collection App Catalog, no marketplace), see
-the full [deployment guide on GitHub](https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/deployment.md#option-c--use-a-site-collection-app-catalog).
+the full [setup guide on GitHub](https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/deployment.md#option-c--use-a-site-collection-app-catalog).
 
 ### Verify guest access to the landing page site
 
@@ -161,7 +161,7 @@ site.
 ## Guest Sponsor API
 
 The [architecture diagram]({{ '/en/architecture/' | relative_url }})
-gives a visual overview of all admin roles and deployment steps involved.
+gives a visual overview of all admin roles and setup steps involved.
 
 ### Pre-step: create the App Registration
 
@@ -212,9 +212,9 @@ Get-Content setup-app-registration.ps1
 
 Copy the **Client ID** printed at the end.
 
-### Deploy to Azure
+### Set up in Azure
 
-Click the button to start the deployment:
+Click the button to start:
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fgithub.com%2Fworkoho%2Fspfx-guest-sponsor-info%2Freleases%2Flatest%2Fdownload%2Fazuredeploy.json)
 
@@ -269,11 +269,11 @@ az stack group create \
 | | **Consumption** (default) | **Flex Consumption** |
 |---|---|---|
 | Free tier | 1M exec + 400K GB-s/month | None |
-| Cold starts | ~2–5 s after ~20 min idle | Eliminated with `alwaysReadyInstances=1` |
+| Cold starts | ~2-5 s after ~20 min idle | Eliminated with `alwaysReadyInstances=1` |
 | OS | Windows | Linux only |
 | Deploy to Azure button | Supported | Supported |
 | Cost guard | `dailyMemoryTimeQuota` | `maximumFlexInstances` |
-| Estimated cost | Free (within grant) | ~€2–5/month with 1 warm instance |
+| Estimated cost | Free (within grant) | ~€2-5/month with 1 warm instance |
 
 Check [aka.ms/flex-region](https://aka.ms/flex-region) for Flex Consumption
 regional support. Additional parameters for Flex:
@@ -291,9 +291,9 @@ az deployment group create \
       maximumFlexInstances=10
 ```
 
-### Deployment outputs
+### Setup outputs
 
-After deployment, open **Resource Group → Deployments → Outputs**:
+After setup, open **Resource Group → Deployments → Outputs**:
 
 | Output | Used for |
 |---|---|
@@ -324,7 +324,8 @@ After deployment, open **Resource Group → Deployments → Outputs**:
 This script:
 
 1. **Managed Identity Graph permissions** — assigns `User.Read.All`,
-   `Presence.Read.All` (optional), and `MailboxSettings.Read` (optional).
+   `Presence.Read.All` (optional), `MailboxSettings.Read` (optional), and
+   `TeamMember.Read.All` (optional).
 2. **App Registration setup** — exposes a `user_impersonation` scope and
    pre-authorizes *SharePoint Online Web Client Extensibility* so the web
    part can acquire tokens silently.

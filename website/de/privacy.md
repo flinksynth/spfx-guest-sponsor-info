@@ -30,10 +30,10 @@ und Azure Tenant-Grenzen statt.
 
 | Berechtigung | Typ | Zweck |
 |---|---|---|
-| `User.Read` | Delegiert | Identifikation des angemeldeten Gastbenutzers |
-| `User.ReadBasic.All` | Delegiert | Lesen grundlegender Sponsor-Profile |
 | `User.Read.All` | Anwendung (Managed Identity) | Lesen von Sponsor-Details über den API-Proxy |
 | `Presence.Read.All` | Anwendung (optional) | Teams-Präsenz-Indikatoren |
+| `MailboxSettings.Read` | Anwendung (optional) | Freigegebene Postfächer/Raum-/Gerätekonten filtern |
+| `TeamMember.Read.All` | Anwendung (optional) | Teams-Konto-Provisionierung von Gästen erkennen |
 
 ## Vollständige Richtlinie
 

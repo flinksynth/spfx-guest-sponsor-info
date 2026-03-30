@@ -1,10 +1,10 @@
 ---
 layout: features
 lang: de
-title: Funktionen
+title: Features
 permalink: /de/features/
 description: >-
-  Alle Funktionen des Guest Sponsor Info Web Parts — Live-Sponsor-Karten,
+  Alle Features des Guest Sponsor Info Web Parts — Live-Sponsor-Karten,
   Teams-Präsenz, Onboarding-Status und mehr.
 ---
 

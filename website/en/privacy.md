@@ -27,10 +27,10 @@ processing happens within your own Microsoft 365 and Azure tenant boundaries.
 
 | Scope | Type | Purpose |
 |-------|------|---------|
-| `User.Read` | Delegated | Identify the signed-in guest user |
-| `User.ReadBasic.All` | Delegated | Read sponsor basic profiles |
 | `User.Read.All` | Application (Managed Identity) | Read sponsor details via API proxy |
 | `Presence.Read.All` | Application (optional) | Teams presence indicators |
+| `MailboxSettings.Read` | Application (optional) | Filter shared/room/equipment mailboxes |
+| `TeamMember.Read.All` | Application (optional) | Detect guest Teams account provisioning |
 
 ## Full Policy
 

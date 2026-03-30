@@ -106,7 +106,7 @@ folgt. Keine Verwirrung. Kein lautloses Scheitern.
 ## Was Sie benötigen {#voraussetzungen}
 
 1. Eine SharePoint-Website als Gast-Landingpage (der Entrance Area).
-2. Eine Azure-Function-Bereitstellung (die Guest Sponsor API) — darüber ruft das
+2. Ein Azure-Function-Setup (die Guest Sponsor API) — darüber ruft das
    Web Part die Sponsor-Daten ab.
 3. Gastkonten mit zugewiesenen Sponsors in Microsoft Entra ID.
 

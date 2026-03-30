@@ -131,7 +131,7 @@ flowchart TB
     MI         -- "sponsors · profiles · presence (app perms)" --> Graph
     Func       -- "⑤ full sponsor list (one-time)"       --> WP
     Func       -. "telemetry"                            .-> AI
-    WP         -- "⑥ profile photos (delegated · direct)" --> Graph
+    WP         -- "⑥ manager photos (via proxy)"         --> EasyAuth
 
     WP         -. "⑦ presence poll (token auto-refreshed)" .-> EasyAuth
     Func       -. "⑦ presence status only"               .-> WP
@@ -150,7 +150,7 @@ flowchart TB
 | ③ | The web part calls the Guest Sponsor API with the Bearer token attached. |
 | ④ | [EasyAuth](https://learn.microsoft.com/azure/app-service/overview-authentication-authorization) validates the token before any function code runs. Invalid tokens are rejected immediately (HTTP 401). |
 | ⑤ | The function identifies the guest from the EasyAuth-confirmed OID and calls Microsoft Graph using its Managed Identity. Returns the full sponsor list in one response. |
-| ⑥ | Profile photos are loaded **directly** from Graph using the guest's own delegated token — they bypass the function entirely. |
+| ⑥ | Manager photos are fetched via the Azure Function's `/api/getPhoto` proxy endpoint. Sponsor photos are already embedded in the ⑤ response. |
 | ⑦ | After the initial load, presence is polled at adaptive intervals: **30 s** (card hovered) · **2 min** (tab visible) · **5 min** (tab hidden). |
 
 ---

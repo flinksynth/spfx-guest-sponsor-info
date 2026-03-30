@@ -100,7 +100,7 @@ silent failure.
 ## What You Need {#prerequisites}
 
 1. A SharePoint site that serves as a guest landing page (the Entrance Area).
-2. An Azure Function deployment (the Guest Sponsor API) — this is what the web
+2. An Azure Function setup (the Guest Sponsor API) — this is what the web
    part calls to retrieve sponsor data.
 3. Guest accounts with sponsors assigned in Microsoft Entra ID.
 

@@ -5,7 +5,6 @@ meta:
     Teams presence, and 14 languages.
 
 nav:
-  home: Home
   why: Why?
   features: Features
   setup: Setup
@@ -243,7 +242,7 @@ footer:
   releases: Releases
   source_code: Source Code
   docs: Documentation
-  deployment: Deployment
+  deployment: Setup
   architecture: Architecture
   operations: Operations
   legal: Legal

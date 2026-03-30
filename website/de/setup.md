@@ -1,18 +1,18 @@
 ---
 layout: doc
 lang: de
-title: Bereitstellungsanleitung
+title: Setup-Anleitung
 permalink: /de/setup/
 description: >-
-  Schritt-für-Schritt-Anleitung zur Bereitstellung des Guest Sponsor
+  Schritt-für-Schritt-Anleitung zum Setup des Guest Sponsor
   Info Web Parts und der Guest Sponsor API — SharePoint- und Azure-Setup.
 lead: >-
-  Erstmalige Bereitstellung und Konfigurationsreferenz für
+  Erstmaliges Setup und Konfigurationsreferenz für
   SharePoint- und Azure-Administratoren.
 github_doc: deployment.md
 ---
 
-## SharePoint-Bereitstellung
+## SharePoint-Setup
 
 ### Installation aus dem Microsoft AppSource
 
@@ -32,13 +32,12 @@ Die Lösung verwendet `skipFeatureDeployment: false` — das Web Part wird **nic
 automatisch mandantenweit verfügbar. Nach der Installation im Tenant App Catalog
 muss ein Site Collection-Administrator die App explizit auf der gewünschten Site
 hinzufügen: **Websiteinhalte → App hinzufügen → Guest Sponsor Info**.
-Dies ist beabsichtigt und verhindert eine versehentliche Bereitstellung auf
+Dies ist beabsichtigt und verhindert eine versehentliche Installation auf
 nicht vorgesehenen Sites.
 
-Die erforderlichen Microsoft Graph-Berechtigungen (`User.Read`,
-`User.ReadBasic.All`, `Presence.Read.All`) sind von Microsoft für SharePoint
-Online vorautorisiert — die **API-Zugriff**-Warteschlange ist leer und keine
-manuelle Zustimmung erforderlich.
+Das Web Part fordert **keine Microsoft Graph-Berechtigungen** an — die
+**API-Zugriff**-Warteschlange bleibt leer. Alle Graph-Aufrufe erfolgen
+serverseitig durch die zugehörige Azure Function über ihre Managed Identity.
 
 ### Web Part für Gastbenutzer zugänglich machen
 
@@ -86,7 +85,7 @@ Connect-PnPOnline -Url "https://<tenant>-admin.sharepoint.com" `
 Set-PnPTenantCdnEnabled -CdnType Public -Enable $true
 ```
 
-> Die CDN-Propagierung dauert **15–30 Minuten**. Danach ändert sich die
+> Die CDN-Propagierung dauert **15-30 Minuten**. Danach ändert sich die
 > Bundle-URL automatisch auf `publiccdn.sharepointonline.com` — keine
 > Neukonfiguration erforderlich.
 
@@ -119,7 +118,7 @@ Add-PnPGroupMember -LoginName "c:0(.s|true" -Group "App Catalog Visitors"
 
 Für eine erweiterte Alternative (Site Collection App Catalog, ohne
 Marketplace) siehe das vollständige
-[Deployment-Handbuch auf GitHub](https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/deployment.md#option-c--use-a-site-collection-app-catalog).
+[Setup-Dokumentation auf GitHub](https://github.com/workoho/spfx-guest-sponsor-info/blob/main/docs/deployment.md#option-c--use-a-site-collection-app-catalog).
 
 ### Gastzugriff auf die Landingpage-Site prüfen
 
@@ -166,7 +165,7 @@ Sites können nicht freizügiger sein als der Mandant erlaubt.
 
 Das [Architekturdiagramm]({{ '/de/architecture/' | relative_url }})
 gibt einen visuellen Überblick über alle Administratorrollen und
-Bereitstellungsschritte.
+Setup-Schritte.
 
 ### Vorbereitung: App-Registrierung erstellen
 
@@ -189,7 +188,7 @@ EasyAuth benötigt eine Entra App-Registrierung als Identitätsanbieter.
 
 Kopieren Sie die am Ende angezeigte **Client ID**.
 
-### In Azure bereitstellen
+### In Azure einrichten
 
 Klicken Sie auf die Schaltfläche:
 
@@ -224,18 +223,18 @@ az deployment group create \
 | | **Consumption** (Standard) | **Flex Consumption** |
 |---|---|---|
 | Free Tier | 1M Ausführungen + 400K GB-s/Monat | Keins |
-| Kaltstarts | ~2–5 s nach ~20 Min. Inaktivität | Eliminiert mit `alwaysReadyInstances=1` |
+| Kaltstarts | ~2-5 s nach ~20 Min. Inaktivität | Eliminiert mit `alwaysReadyInstances=1` |
 | Betriebssystem | Windows | Nur Linux |
 | Deploy to Azure Button | Unterstützt | Unterstützt |
 | Kostenschutz | `dailyMemoryTimeQuota` | `maximumFlexInstances` |
-| Geschätzte Kosten | Kostenlos (innerhalb des Free Tiers) | ~€2–5/Monat mit 1 warmer Instanz |
+| Geschätzte Kosten | Kostenlos (innerhalb des Free Tiers) | ~€2-5/Monat mit 1 warmer Instanz |
 
 Prüfen Sie [aka.ms/flex-region](https://aka.ms/flex-region) für die
 regionale Verfügbarkeit von Flex Consumption.
 
-### Bereitstellungsausgaben
+### Setup-Ausgaben
 
-Nach der Bereitstellung: **Ressourcengruppe → Bereitstellungen → Ausgaben**:
+Nach dem Setup: **Ressourcengruppe → Bereitstellungen → Ausgaben**:
 
 | Ausgabe | Verwendung |
 |---|---|
@@ -266,7 +265,8 @@ Nach der Bereitstellung: **Ressourcengruppe → Bereitstellungen → Ausgaben**:
 Dieses Skript:
 
 1. **Managed Identity Graph-Berechtigungen** — weist `User.Read.All`,
-   `Presence.Read.All` (optional) und `MailboxSettings.Read` (optional) zu.
+   `Presence.Read.All` (optional), `MailboxSettings.Read` (optional) und
+   `TeamMember.Read.All` (optional) zu.
 2. **App-Registrierung einrichten** — stellt einen `user_impersonation`-Scope
    bereit und autorisiert *SharePoint Online Web Client Extensibility* vorab,
    damit das Web Part Tokens lautlos abrufen kann.
@@ -282,10 +282,10 @@ Im Eigenschaftenbereich (**Guest Sponsor API**-Gruppe):
 
 ---
 
-## Administration und Betrieb
+## Administration und Operations
 
 Für den laufenden Betrieb siehe den separaten
-[Betriebsleitfaden]({{ '/de/operations/' | relative_url }}):
+[Operations Guide]({{ '/de/operations/' | relative_url }}):
 
 - [Web Part aktualisieren]({{ '/de/operations/' | relative_url }}#web-part-aktualisieren)
 - [Inline-Adresskarte konfigurieren]({{ '/de/operations/' | relative_url }}#inline-adresskarte-azure-maps)

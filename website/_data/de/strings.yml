@@ -5,10 +5,9 @@ meta:
     Live-Kontaktkarten, Teams-Präsenz und 14 Sprachen.
 
 nav:
-  home: Startseite
   why: Warum?
-  features: Funktionen
-  setup: Installation
+  features: Features
+  setup: Setup
   aria_label: Hauptnavigation
   toggle: Menü öffnen
   switch_lang: Switch to English version
@@ -25,7 +24,7 @@ hero:
     sind sie in Ihrem Tenant vorhanden, bevor Teams für sie eingerichtet ist.
     Dieses Web Part zeigt Gästen automatisch ihren zugewiesenen Ansprechpartner
     — und informiert sie ehrlich, wenn Teams noch nicht bereit ist.
-  cta_primary: Funktionen entdecken
+  cta_primary: Features entdecken
   cta_secondary: Warum?
   illustration_alt: >-
     Illustration mit Sponsor-Kontaktkarten, die sich mit einem Gastbenutzer verbinden
@@ -196,7 +195,7 @@ features_page:
 made_by:
   label: Erstellt & gepflegt von
   intro: >-
-    Microsoft 365 Governance, Identität und Gastzugriff – unser Thema.
+    Microsoft 365 Governance, Identität und Gastzugriff - unser Thema.
   description: >-
     Dieses Web Part haben wir gebaut, weil genau das unser tägliches
     Thema ist. Als Beratungsunternehmen für Microsoft 365 Collaboration,
@@ -243,7 +242,7 @@ cta:
   description: >-
     In Minuten eingerichtet mit der mitgelieferten Azure Function und
     ARM-Vorlage. Kostenlos und Open Source unter der PolyForm Shield-Lizenz.
-  deploy: Installationsanleitung
+  deploy: Setup-Anleitung
   github: Auf GitHub ansehen
 
 footer:
@@ -251,12 +250,12 @@ footer:
     Damit B2B-Gastbenutzer vom ersten Tag an ihre Kontakte finden.
   product: Produkt
   why: Warum dieses Web Part?
-  releases: Versionen
-  source_code: Quellcode
+  releases: Releases
+  source_code: Source Code
   docs: Dokumentation
-  deployment: Bereitstellung
+  deployment: Setup
   architecture: Architektur
-  operations: Betrieb
+  operations: Operations
   legal: Rechtliches
   privacy: Datenschutz
   terms: Nutzungsbedingungen
