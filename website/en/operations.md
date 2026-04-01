@@ -53,8 +53,7 @@ The ARM template deploys an Azure Maps account by default
 2. In the web part property pane:
    - Enable **Show address map preview**
    - Paste the key into **Azure Maps subscription key**
-   - Choose fallback provider (`Bing`, `Google`, `Apple`, `OpenStreetMap`,
-     `HERE`)
+   - Choose fallback provider (`Bing`, `Google`, `Apple`, `OpenStreetMap`)
 
 Without an Azure Maps key (or when geocoding fails), the card shows an
 external map link fallback.

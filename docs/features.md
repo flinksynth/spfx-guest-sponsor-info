@@ -54,7 +54,7 @@ needs to actually reach their sponsor:
 - **Office location** and **full address** (street, city, state, ZIP, country),
   configurable field by field so admins can expose exactly what is relevant
 - **Inline map preview** via Azure Maps (when a subscription key is configured),
-  or an external map link to Bing, Google, Apple Maps, OpenStreetMap, or HERE —
+  or an external map link to Bing, Google, Apple Maps, or OpenStreetMap —
   whichever fits the organisation
 - **Teams Chat** and **Audio Call** buttons that open directly in the native
   Teams client, built with the correct guest tenant context so they work even

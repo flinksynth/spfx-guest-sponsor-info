@@ -54,7 +54,7 @@ this web part, is a Platinum EasyLife 365 partner and happy to advise.
   rather than like a custom add-on
 - **Everything needed to reach out** — email, phone, and Teams Chat / Call
   buttons in one click; office address with map preview (Azure Maps) or a link
-  to the map provider of your choice (Google, Apple, Bing, OpenStreetMap, HERE)
+  to the map provider of your choice (Google, Apple, Bing, OpenStreetMap)
 - **Fully configurable contact details** — page editors choose exactly which
   fields are shown: phone numbers, full address broken down by street, city,
   state, ZIP, and country, map preview, manager section, presence status,

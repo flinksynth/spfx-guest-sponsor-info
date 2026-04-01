@@ -52,8 +52,7 @@ Die ARM-Vorlage stellt standardmäßig ein Azure Maps-Konto bereit
 2. Im Web-Part-Eigenschaftenbereich:
    - **Adresskarten-Vorschau anzeigen** aktivieren
    - Schlüssel in **Azure Maps Subscription Key** einfügen
-   - Fallback-Anbieter wählen (`Bing`, `Google`, `Apple`,
-     `OpenStreetMap`, `HERE`)
+   - Fallback-Anbieter wählen (`Bing`, `Google`, `Apple`, `OpenStreetMap`)
 
 Ohne Azure Maps-Schlüssel (oder bei fehlgeschlagenem Geocoding) zeigt
 die Karte einen Fallback-Link zum externen Kartenanbieter.

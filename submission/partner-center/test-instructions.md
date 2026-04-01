@@ -232,7 +232,7 @@ detected at runtime.
 | **Card layout** (Auto / Full / Compact) | Switch between options | Card grid changes in Demo Mode view |
 | **Show business phone** / **mobile** | Toggle off | Field disappears from the contact popover |
 | **Show work location** / address fields | Toggle off | Location row disappears from the popover |
-| **External map provider** (Bing / Google / Apple / OSM / HERE) | Change selection | Map link updates accordingly |
+| **External map provider** (Bing / Google / Apple / OSM ) | Change selection | Map link updates accordingly |
 
 ### Advanced display group
 
