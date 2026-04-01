@@ -31,8 +31,8 @@ details. The layout matches the built-in SharePoint People web part.
 |---|---|
 | SharePoint Online | Modern team or communication site |
 | Microsoft Entra | Guest accounts with one or more sponsors assigned |
-| Microsoft Graph permissions | `User.Read` · `User.ReadBasic.All` (· `Presence.Read.All` optional) |
 | Azure subscription | Required to host the included Guest Sponsor API (Azure Function) |
+| Azure Function Graph permissions | `User.Read.All` granted to the Function's Managed Identity; optional: `Presence.Read.All` · `MailboxSettings.Read` · `TeamMember.Read.All` |
 
 ## Features
 
@@ -124,9 +124,9 @@ The web part is available in the
    app to the desired site via **Site Contents → Add an app → Guest Sponsor
    Info** before the web part appears in the page editor.
 
-The required Microsoft Graph permissions (`User.Read`, `User.ReadBasic.All`,
-`Presence.Read.All`) are pre-authorized by Microsoft — the **API access**
-queue will be empty and no manual consent is needed.
+The web part requests no Microsoft Graph permissions of its own — the
+**API access** queue will remain empty. All Graph data is fetched
+server-side by the companion Azure Function using its Managed Identity.
 
 **Enable the Office 365 Public CDN** so that guest users can load the web part
 bundle. By default, the Tenant App Catalog asset library is not accessible to

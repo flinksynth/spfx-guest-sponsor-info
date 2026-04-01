@@ -47,10 +47,10 @@ Administrator must first add the app to the desired site:
 This is intentional — it prevents the web part from being accidentally placed
 on unintended sites.
 
-The required Microsoft Graph permissions (`User.Read`, `User.ReadBasic.All`,
-`Presence.Read.All`) are pre-authorized by Microsoft for SharePoint Online.
-The **SharePoint Admin Center → Advanced → API access** queue will be empty —
-no manual consent action is needed.
+The web part requests no Microsoft Graph permissions of its own — the
+**SharePoint Admin Center → Advanced → API access** queue will remain empty.
+All Graph data is fetched server-side by the companion Azure Function using
+its Managed Identity.
 
 ---
 

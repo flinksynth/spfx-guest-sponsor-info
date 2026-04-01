@@ -240,25 +240,19 @@ Toggles for showing the sponsor's manager, presence status, and photos.
 
 ---
 
-## Microsoft Graph Permissions Verification
+## API Permissions Verification
 
-The web part uses only two **delegated** permissions, both granted automatically
-from the standard Microsoft 365 user entitlements — no admin consent required.
+The web part requests **no Microsoft Graph permissions** of its own. No
+`webApiPermissionRequests` are declared in the solution package.
 
-| Permission | Scope | Usage |
-|---|---|---|
-| `User.Read` | Delegated | Read the signed-in user's login name to detect `#EXT#` |
-| `User.ReadBasic.All` | Delegated | Read sponsor profile data and photos |
+To verify: open **SharePoint Admin Center → Advanced → API access**. There are
+no pending or approved permissions originating from this solution — the queue
+remains empty.
 
-To verify: open browser DevTools → Network tab while viewing the page as the
-guest user. All `graph.microsoft.com` calls use:
-
-- `/me` (own profile)
-- `/me/sponsors` (sponsor list)
-- `/users/{id}/photo/$value` (profile photos)
-
-No calls to `/users` with `$filter`, no admin-scope endpoints, no data
-leaving the tenant.
+All Graph calls are made server-side by the companion Azure Function using its
+Managed Identity. The web part authenticates exclusively against the Azure
+Function's App Registration — there are no outbound requests to
+`graph.microsoft.com` from the browser.
 
 ---
 
