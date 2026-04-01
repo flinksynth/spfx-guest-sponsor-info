@@ -271,7 +271,8 @@ Feature requests are evaluated against the project goals described in
 
 Please report security issues privately via
 [GitHub Security Advisories](https://github.com/workoho/spfx-guest-sponsor-info/security/advisories/new)
-or by emailing the maintainers directly. We aim to respond within 72 hours.
+or by emailing [security@workoho.com](mailto:security@workoho.com).
+This is a volunteer-maintained project — responses are best effort.
 
-See [docs/security-assessment.md](docs/security-assessment.md) for the
-project's threat model and known limitations.
+See [SECURITY.md](SECURITY.md) and [docs/security-assessment.md](docs/security-assessment.md)
+for the full policy, scope, and threat model.
