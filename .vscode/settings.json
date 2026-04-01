@@ -56,6 +56,11 @@
   "[powershell]": {
     "editor.defaultFormatter": "ms-vscode.powershell"
   },
+  // ── GitLens ────────────────────────────────────────────────────────────────
+  // Disable the GitLens rebase editor so that automatic rebases (e.g. during
+  // git push) run through without opening an interactive GUI window.
+  "gitlens.rebaseEditor.enabled": false,
+
   // ── GitHub Copilot ─────────────────────────────────────────────────────────
   "github.copilot.chat.commitMessageGeneration.instructions": [
     {
