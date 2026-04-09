@@ -311,7 +311,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
       }
     );
 
-    ReactDom.render(element, this.domElement);
+    this._renderReactTree(element, this.domElement);
   }
 
   protected async onInit(): Promise<void> {
@@ -519,7 +519,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
 
   protected onDispose(): void {
     this._themeProvider?.themeChangedEvent.remove(this, this._handleThemeChanged);
-    ReactDom.unmountComponentAtNode(this.domElement);
+    this._unmountReactTree(this.domElement);
   }
 
   protected get dataVersion(): Version {
@@ -600,6 +600,16 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     return strings.LocationDisplayHintSeparateRows;
   }
 
+  /** Thin wrapper so the file has exactly one `ReactDom.render` call site (ESLint pair-react-dom-render-unmount). */
+  private _renderReactTree(tree: React.ReactElement, container: Element): void {
+    ReactDom.render(tree, container);
+  }
+
+  /** Thin wrapper so the file has exactly one `ReactDom.unmountComponentAtNode` call site (ESLint pair-react-dom-render-unmount). */
+  private _unmountReactTree(container: Element): void {
+    ReactDom.unmountComponentAtNode(container);
+  }
+
   /**
    * Renders a Fluent UI MessageBar info/warning box into a property pane custom
    * field container. Re-uses the same shared Griffel renderer and FluentProvider
@@ -612,7 +622,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     intent: 'info' | 'warning' | 'success' | 'error' = 'info'
   ): void {
     if (!element) return;
-    ReactDom.render(
+    this._renderReactTree(
       React.createElement(RendererProvider, { renderer: griffelRenderer } as React.ComponentProps<typeof RendererProvider>,
         React.createElement(FluentProvider,
           {
@@ -698,7 +708,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     return PropertyPaneCustomField({
       key,
       onRender: (el: HTMLElement | undefined) => this._renderInfoBox(el, key, text, intent),
-      onDispose: (el: HTMLElement | undefined) => { if (el) ReactDom.unmountComponentAtNode(el); },
+      onDispose: (el: HTMLElement | undefined) => { if (el) this._unmountReactTree(el); },
     }) as unknown as IPropertyPaneField<unknown>;
   }
 
@@ -725,7 +735,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     return PropertyPaneCustomField({
       key,
       onRender: (el: HTMLElement | undefined) => this._renderLabelWithInlineInfo(el, key, label, tooltipText),
-      onDispose: (el: HTMLElement | undefined) => { if (el) ReactDom.unmountComponentAtNode(el); },
+      onDispose: (el: HTMLElement | undefined) => { if (el) this._unmountReactTree(el); },
     }) as unknown as IPropertyPaneField<unknown>;
   }
 
@@ -759,7 +769,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
     row.appendChild(iconHost);
     element.appendChild(row);
 
-    ReactDom.render(
+    this._renderReactTree(
       React.createElement(RendererProvider, { renderer: griffelRenderer } as React.ComponentProps<typeof RendererProvider>,
         React.createElement(FluentProvider,
           {
@@ -1629,7 +1639,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                       const text = status === 'ok' ? strings.ProxyStatusOk
                         : status === 'error' ? strings.ProxyStatusError
                         : strings.ProxyStatusChecking;
-                      ReactDom.render(
+                      this._renderReactTree(
                         React.createElement(RendererProvider, { renderer: griffelRenderer } as React.ComponentProps<typeof RendererProvider>,
                           React.createElement(FluentProvider,
                             { theme: this._theme ? createV9Theme(this._theme as unknown as Parameters<typeof createV9Theme>[0], this._theme.isInverted ? webDarkTheme : webLightTheme) : undefined, id: `gsi-pp-${this.context.instanceId}` },
@@ -1643,7 +1653,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                       );
                     },
                     onDispose: (element: HTMLElement | undefined) => {
-                      if (element) ReactDom.unmountComponentAtNode(element);
+                      if (element) this._unmountReactTree(element);
                     },
                   }) as unknown as IPropertyPaneField<unknown>
                 ] : [])
@@ -1699,7 +1709,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                     this._renderInfoBox(element, 'diagAssetSource', text, intent);
                   },
                   onDispose: (element: HTMLElement | undefined) => {
-                    if (element) ReactDom.unmountComponentAtNode(element);
+                    if (element) this._unmountReactTree(element);
                   },
                 }) as unknown as IPropertyPaneField<unknown>,
                 // ── Check 2: Site Everyone access ───────────────────────────
@@ -1731,7 +1741,7 @@ export default class GuestSponsorInfoWebPart extends BaseClientSideWebPart<IGues
                     this._renderInfoBox(element, 'diagSiteEveryone', text, intent);
                   },
                   onDispose: (element: HTMLElement | undefined) => {
-                    if (element) ReactDom.unmountComponentAtNode(element);
+                    if (element) this._unmountReactTree(element);
                   },
                 }) as unknown as IPropertyPaneField<unknown>,
               ]
