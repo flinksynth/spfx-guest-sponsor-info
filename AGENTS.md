@@ -71,10 +71,21 @@ cat src/webparts/guestSponsorInfo/GuestSponsorInfo.tsx
 
 ### Pre-commit Hook
 
-The `.husky/pre-commit` hook automatically:
+The `.husky/pre-commit` hook runs `lint-staged`, which applies **targeted** fix
+and lint to staged files only (not the full suite):
 
-1. Runs `npm run fix` (auto-corrects formatting issues)
-2. Runs `npm run lint` (validates code quality)
+| Staged files | Action |
+|---|---|
+| `src/**/*.{ts,tsx}` | `eslint --fix` |
+| `azure-function/src/**/*.ts` | `eslint --fix` |
+| `**/*.md` | `markdownlint-cli2 --fix` |
+| `.github/**/*.yml`, `website/**/*.{yml,yaml}` | `prettier --write` |
+| `**/*.{json,jsonc}` | `prettier --write` |
+| `**/*.sh` | `shfmt` |
+
+Note: `lint:bicep`, `lint:ps`, `lint:actions`, `lint:sh`, `lint:loc`, and the
+test suite are **not** run by the hook — run them manually before committing
+when relevant.
 
 **Do not** skip this hook (`--no-verify`) except for meta-changes (infrastructure-only commits).
 

@@ -37,9 +37,10 @@ full suite.
 4. **Build** — `npm run build` only when the packaging artifact (`.sppkg`) is relevant,
    e.g. before a release. Not needed for regular development changes.
 
-The pre-commit hook (`lint-staged`) already runs `fix` + `lint` on staged files
-automatically, so if you followed the targeted-lint workflow above the commit
-hook will catch any remaining issues.
+The pre-commit hook (`lint-staged`) already runs targeted fix + lint on staged
+files automatically (ESLint, Prettier, Markdownlint, shfmt — not the full
+lint suite). If you followed the targeted-lint workflow above, the commit hook
+will catch any remaining issues in staged files.
 
 For interactive development use `npm start` (hosted workbench with hot-reload; requires `SPFX_SERVE_TENANT_DOMAIN` —
 set in `.env` or as a host OS env var, see `.devcontainer/devcontainer.json`).
