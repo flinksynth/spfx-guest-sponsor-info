@@ -95,10 +95,10 @@ gha_error() { _gha_emit error "$1"; }
 # Use gha_group_start / gha_group_end to wrap verbose command output so it
 # is collapsed by default in the Actions log viewer.
 gha_group_start() {
-  [[ "${GITHUB_ACTIONS:-}" == "true" ]] && printf '::group::%s\n' "$1" || true
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then printf '::group::%s\n' "$1"; fi
 }
 gha_group_end() {
-  [[ "${GITHUB_ACTIONS:-}" == "true" ]] && printf '::endgroup::\n' || true
+  if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then printf '::endgroup::\n'; fi
 }
 
 # ── Callout box helpers ──────────────────────────────────────────────────────
