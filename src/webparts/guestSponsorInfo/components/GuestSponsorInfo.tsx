@@ -193,15 +193,16 @@ interface ISponsorListProps {
   /** Propagated from ISponsorsResult — false shows disabled buttons in each card. */
   guestHasTeamsAccess?: boolean;
   /**
-   * When true, sponsor tiles are shown as static visuals only — no hover popup,
-   * no keyboard activation. Used when all sponsors are unavailable.
+   * Set of sponsor IDs that should be rendered as read-only tiles (no popup,
+   * no keyboard activation). Used for disabled/resource-account sponsors that
+   * are shown for context but cannot be interacted with.
    */
-  readOnly?: boolean;
+  readOnlyIds?: ReadonlySet<string>;
   /** Fluent v9 theme to forward into SponsorCard portal FluentProviders. */
   v9Theme?: Theme;
 }
 
-const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, compact, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showStreetAddress, showPostalCode, showState, azureMapsSubscriptionKey, externalMapProvider, showManager, showPresence, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, showSponsorPhoto, showManagerPhoto, useInformalAddress, onActiveCardChange, guestHasTeamsAccess, readOnly, v9Theme }) => {
+const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, compact, showBusinessPhones, showMobilePhone, showWorkLocation, showCity, showCountry, showStreetAddress, showPostalCode, showState, azureMapsSubscriptionKey, externalMapProvider, showManager, showPresence, showSponsorJobTitle, showManagerJobTitle, showSponsorDepartment, showManagerDepartment, showSponsorPhoto, showManagerPhoto, useInformalAddress, onActiveCardChange, guestHasTeamsAccess, readOnlyIds, v9Theme }) => {
   const [activeId, setActiveId] = React.useState<string | null>(null);
   const showTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -279,18 +280,20 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, comp
 
   return (
     <ul className={compact ? classes.sponsorGridCompact : classes.sponsorGrid}>
-      {sponsors.map(sponsor => (
+      {sponsors.map(sponsor => {
+        const isReadOnly = readOnlyIds?.has(sponsor.id) ?? false;
+        return (
         <li key={sponsor.id} className={classes.sponsorItem}>
           <SponsorCard
             sponsor={sponsor}
             hostTenantId={hostTenantId}
             compact={compact}
-            isActive={!readOnly && activeId === sponsor.id}
-            onActivate={readOnly ? () => undefined : () => activate(sponsor.id)}
-            onActivateNow={readOnly ? () => undefined : () => activateNow(sponsor.id)}
-            onScheduleDeactivate={readOnly ? () => undefined : scheduleDeactivate}
-            onForceDeactivate={readOnly ? () => undefined : forceDeactivate}
-            readOnly={readOnly}
+            isActive={!isReadOnly && activeId === sponsor.id}
+            onActivate={isReadOnly ? () => undefined : () => activate(sponsor.id)}
+            onActivateNow={isReadOnly ? () => undefined : () => activateNow(sponsor.id)}
+            onScheduleDeactivate={isReadOnly ? () => undefined : scheduleDeactivate}
+            onForceDeactivate={isReadOnly ? () => undefined : forceDeactivate}
+            readOnly={isReadOnly}
             showBusinessPhones={showBusinessPhones}
             showMobilePhone={showMobilePhone}
             showWorkLocation={showWorkLocation}
@@ -314,7 +317,8 @@ const SponsorList: React.FC<ISponsorListProps> = ({ sponsors, hostTenantId, comp
             v9Theme={v9Theme}
           />
         </li>
-      ))}
+        );
+      })}
     </ul>
   );
 };
@@ -843,7 +847,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
             useInformalAddress={useInformalAddress}
             onActiveCardChange={() => undefined}
             guestHasTeamsAccess={mockSimulatedHint === 'teamsAccessPending' ? false : undefined}
-            readOnly={mockSimulatedHint === 'sponsorUnavailable'}
+            readOnlyIds={mockSimulatedHint === 'sponsorUnavailable' ? new Set(visibleMockSponsors.map(s => s.id)) : undefined}
             v9Theme={v9Theme}
           />
           )}
@@ -946,11 +950,11 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
             </MessageBarBody>
           </MessageBar>
         )}
-        {!loading && !error && visibleActive.length > 0 && (
+        {!loading && !error && (visibleActive.length > 0 || someUnavailable) && (
           <SponsorList
-            sponsors={visibleActive}
+            sponsors={[...visibleActive, ...visibleUnavailable]}
             hostTenantId={hostTenantId}
-            compact={cardLayout === 'compact' || (cardLayout === 'auto' && visibleActive.length >= cardLayoutAutoThreshold)}
+            compact={cardLayout === 'compact' || (cardLayout === 'auto' && (visibleActive.length + visibleUnavailable.length) >= cardLayoutAutoThreshold)}
             showBusinessPhones={showBusinessPhones}
             showMobilePhone={showMobilePhone}
             showWorkLocation={showWorkLocation}
@@ -972,39 +976,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
             useInformalAddress={useInformalAddress}
             onActiveCardChange={setHasActiveCard}
             guestHasTeamsAccess={guestHasTeamsAccess}
-            v9Theme={v9Theme}
-          />
-        )}
-        {/* Unavailable sponsors: show tiles read-only (no hover popup) so the guest
-            can still see who their sponsors are, even if the accounts are currently
-            disabled or deleted. Shown whenever there are unavailable sponsors in the
-            visible set — not only when all sponsors are unavailable. */}
-        {!loading && !error && someUnavailable && (
-          <SponsorList
-            sponsors={visibleUnavailable}
-            hostTenantId={hostTenantId}
-            compact={cardLayout === 'compact' || (cardLayout === 'auto' && visibleUnavailable.length >= cardLayoutAutoThreshold)}
-            showBusinessPhones={showBusinessPhones}
-            showMobilePhone={showMobilePhone}
-            showWorkLocation={showWorkLocation}
-            showCity={showCity}
-            showCountry={showCountry}
-            showStreetAddress={showStreetAddress}
-            showPostalCode={showPostalCode}
-            showState={showState}
-            azureMapsSubscriptionKey={azureMapsSubscriptionKey}
-            externalMapProvider={externalMapProvider}
-            showManager={showManager}
-            showPresence={showPresence}
-            showSponsorJobTitle={showSponsorJobTitle}
-            showManagerJobTitle={showManagerJobTitle}
-            showSponsorDepartment={showSponsorDepartment}
-            showManagerDepartment={showManagerDepartment}
-            showSponsorPhoto={showSponsorPhoto}
-            showManagerPhoto={showManagerPhoto}
-            useInformalAddress={useInformalAddress}
-            onActiveCardChange={() => undefined}
-            readOnly
+            readOnlyIds={someUnavailable ? new Set(visibleUnavailable.map(s => s.id)) : undefined}
             v9Theme={v9Theme}
           />
         )}

@@ -1353,7 +1353,7 @@ export async function getGuestSponsors(
       //
       //   exists = false         — sponsor account exists but is disabled or is a
       //     resource account (Teams Room, Common Area Phone, …).  Shown as a
-      //     read-only tile so the guest can still see who their sponsors are.
+      //     read-only tigeminile so the guest can still see who their sponsors are.
       //
       //   filterMismatch = true  — sponsor is completely excluded from the response:
       //     • Hard-deleted (Graph 404): no display name available; nothing useful
