@@ -62,12 +62,15 @@ function buildDeployToAzureUrl(semver: string | undefined): string {
 }
 
 /**
- * Builds a versioned GitHub release download URL for a setup script.
- * Falls back to `releases/latest/download` when the version is unavailable.
+ * Builds a versioned raw.githubusercontent.com URL for a setup script.
+ * Falls back to the main branch when the version is unavailable.
  */
 function buildScriptUrl(semver: string | undefined, scriptName: string): string {
-  const ref = semver ? `download/v${semver}` : 'latest/download';
-  return `https://github.com/workoho/spfx-guest-sponsor-info/releases/${ref}/${scriptName}`;
+  // Use raw.githubusercontent.com so PowerShell receives plain text, not a
+  // binary octet-stream. Pin to the matching version tag when available;
+  // fall back to main for pre-release or unknown versions.
+  const ref = semver ? `v${semver}` : 'main';
+  return `https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/${ref}/azure-function/infra/${scriptName}`;
 }
 
 /** Builds the PowerShell one-liner for the App Registration setup script. */

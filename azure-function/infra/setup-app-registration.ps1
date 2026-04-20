@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Creates or updates the Entra App Registration needed for the Azure Function
     proxy (EasyAuth).

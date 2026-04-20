@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Grants the Function App's Managed Identity the required Microsoft Graph application roles
     and configures the App Registration so the SharePoint web part can silently acquire tokens.

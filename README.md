@@ -204,7 +204,7 @@ Create the App Registration
 required — no clone needed):
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-app-registration.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-app-registration.ps1')))
 ```
 
 Then click the button to deploy to Azure:
@@ -214,7 +214,7 @@ Then click the button to deploy to Azure:
 After deployment, grant Graph permissions and configure the App Registration:
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://github.com/workoho/spfx-guest-sponsor-info/releases/latest/download/setup-graph-permissions.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-graph-permissions.ps1')))
 ```
 
 In the web part property pane, open the **Guest Sponsor API** section and enter
