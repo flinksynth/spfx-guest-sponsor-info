@@ -1346,10 +1346,24 @@ export async function getGuestSponsors(
         hasUserMailbox = assignedPlansHaveExchange(assignedPlans);
       }
 
-      // Treat missing, soft-deleted, disabled, resource, insufficiently-licensed,
-      // or wrong-mailbox-type sponsors as unavailable.
-      const exists = existsResponse?.status === 404 ? false
-        : sponsorEnabled !== false && !isResourceAccount && meetsLicenseFilter && hasUserMailbox;
+      // Distinguish between three outcomes:
+      //
+      //   exists = true          — sponsor is active and meets all filters.
+      //                            Shown as a full interactive card.
+      //
+      //   exists = false         — sponsor account exists but is disabled or is a
+      //     resource account (Teams Room, Common Area Phone, …).  Shown as a
+      //     read-only tile so the guest can still see who their sponsors are.
+      //
+      //   filterMismatch = true  — sponsor is completely excluded from the response:
+      //     • Hard-deleted (Graph 404): no display name available; nothing useful
+      //       to show the guest.  The [BROKEN_SPONSOR_REF] warning already alerts
+      //       admins via Application Insights.
+      //     • License/mailbox filter not met (e.g. no Teams plan when
+      //       sponsorFilter=teams): sponsor intentionally out-of-scope.
+      const is404 = existsResponse?.status === 404;
+      const filterMismatch = is404 || !meetsLicenseFilter || !hasUserMailbox;
+      const exists = !filterMismatch && sponsorEnabled !== false && !isResourceAccount;
 
       // Emit a throttled warn for hard-deleted sponsors (Graph 404).  A persistent
       // 404 indicates a broken sponsor reference — the Entra object no longer exists
@@ -1403,6 +1417,7 @@ export async function getGuestSponsors(
           hasTeams,
         },
         exists,
+        filterMismatch,
       };
     });
 
@@ -1443,9 +1458,11 @@ export async function getGuestSponsors(
         if (photo !== undefined)                  out.photoUrl = photo;
         return out;
       });
-    const unavailableCount = perSponsorResults.filter(r => !r.exists).length;
+    // Only include account-level unavailable sponsors (disabled / deleted / resource).
+    // Sponsors excluded by the license or mailbox filter are omitted entirely.
+    const unavailableCount = perSponsorResults.filter(r => !r.exists && !r.filterMismatch).length;
     const unavailableSponsors: ISponsor[] = perSponsorResults
-      .filter(r => !r.exists)
+      .filter(r => !r.exists && !r.filterMismatch)
       .map(r => {
         const s = r.sponsor;
         const out: ISponsor = {
