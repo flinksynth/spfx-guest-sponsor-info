@@ -28,6 +28,10 @@ param functionAppName string
 @description('Client ID of the App Registration created for EasyAuth.')
 param functionClientId string
 
+@metadata({ category: 'Basics' })
+@description('Application (Client) ID of the "SharePoint Online Web Client Extensibility" enterprise app in the tenant. Used to validate the appid/azp claim — ensures only SPFx web parts (via AadHttpClient) can call this API.')
+param spoClientExtensibilityAppId string
+
 @metadata({ category: 'Hosting' })
 @description('Hosting plan for the Function App. "Consumption" = Y1/Dynamic (free tier included, cold starts after ~20 min idle, ZIP served directly from GitHub package URL). "FlexConsumption" = FC1/Linux-only (no free tier, cold starts greatly reduced — alwaysReadyInstances=1 eliminates them; ZIP is uploaded to blob storage by the provisioning script automatically during ARM deployment; "Deploy to Azure" button is supported). Not all Azure regions support Flex Consumption — check https://aka.ms/flex-region before choosing.')
 @allowed([
@@ -458,6 +462,10 @@ var sharedAppSettings = [
   {
     name: 'ALLOWED_AUDIENCE'
     value: functionClientId
+  }
+  {
+    name: 'ALLOWED_CLIENT_APP_ID'
+    value: spoClientExtensibilityAppId
   }
   {
     name: 'CORS_ALLOWED_ORIGIN'
