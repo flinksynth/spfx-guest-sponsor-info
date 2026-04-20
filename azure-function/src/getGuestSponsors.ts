@@ -598,7 +598,7 @@ function getPrincipalClaim(principal: IEasyAuthPrincipal, claimTypes: string[]):
  * Checks performed on EasyAuth principal claims:
  * 1. tid claim matches our tenant ID
  * 2. aud claim matches our API's audience URI
- * 3. appid claim matches ALLOWED_CLIENT_APP_ID
+ * 3. appid claim matches the well-known SPFx "SharePoint Online Web Client Extensibility" App ID
  *
  * Check 3 ensures that only a specific Entra application (e.g. the "SharePoint
  * Online Web Client Extensibility" app used by SPFx AadHttpClient) can call
@@ -662,14 +662,11 @@ function validateClientAuthorization(
   // Check 3: Calling application must match the expected client app.
   // The appid (v1 tokens) or azp (v2 tokens) claim identifies the Entra
   // application that acquired the token. For SPFx web parts the calling app is
-  // the tenant-specific "SharePoint Online Web Client Extensibility" enterprise
-  // application — find its Application (client) ID in Entra admin center →
-  // Identity → Applications → Enterprise applications.
-  const allowedClientAppId = process.env.ALLOWED_CLIENT_APP_ID;
-  if (!allowedClientAppId) {
-    context.error('ALLOWED_CLIENT_APP_ID environment variable not configured');
-    return { authorized: false, reasonCode: 'AUTH_CONFIG_APPID_MISSING', reason: 'Server configuration error: ALLOWED_CLIENT_APP_ID not set' };
-  }
+  // always the Microsoft-managed "SharePoint Online Web Client Extensibility"
+  // multi-tenant app — its App ID is globally fixed and identical in every
+  // Entra tenant.  No env-var is needed; the constant is the authoritative value.
+  // Source: https://www.eliostruyf.com/fix-admin-consent-sp-token-retrieval-flows-spfx/
+  const allowedClientAppId = '08e18876-6177-487e-b8b5-cf950c1e598c';
   const appid = getPrincipalClaim(principal, [
     'appid',
     'azp',

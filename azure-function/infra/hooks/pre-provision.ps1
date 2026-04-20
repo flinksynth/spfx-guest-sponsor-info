@@ -9,8 +9,6 @@
 #   2. Detect or prompt for the SharePoint tenant name.
 #   3. Create (or reuse) the Entra App Registration required for EasyAuth,
 #      and store its client ID as AZURE_FUNCTION_CLIENT_ID in the azd environment.
-#   4. Discover the "SharePoint Online Web Client Extensibility" enterprise app ID
-#      for appid/azp claim validation (AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID).
 #
 # All operations are idempotent — safe to re-run on 'azd provision' or 'azd up'.
 
@@ -99,37 +97,3 @@ if ($appObj -ne '2') {
 
 azd env set AZURE_FUNCTION_CLIENT_ID $clientId
 Write-Host "AZURE_FUNCTION_CLIENT_ID set to $clientId"
-
-# ── 4. Discover SharePoint Online Web Client Extensibility app ID ─────────────
-# SPFx's AadHttpClient acquires tokens through this Microsoft first-party Entra
-# application.  The Function validates the appid/azp claim to ensure only SPFx
-# solutions (not arbitrary Entra clients) can call the API.
-$envValues = azd env get-values
-if ($envValues -notmatch 'AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID=') {
-  Write-Host "Looking up 'SharePoint Online Web Client Extensibility' enterprise app..."
-  $spoExtAppId = $null
-  try {
-    $spoExtAppId = az ad sp list `
-      --filter "displayName eq 'SharePoint Online Web Client Extensibility'" `
-      --query '[0].appId' `
-      -o tsv 2>$null
-  }
-  catch {
-    Write-Verbose "Service principal lookup failed: $_"
-  }
-
-  if (-not $spoExtAppId) {
-    Write-Warning "Could not find 'SharePoint Online Web Client Extensibility' in this tenant."
-    Write-Host "You can set AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID manually via:"
-    Write-Host "  azd env set AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID <app-id>"
-    $spoExtAppId = Read-Host "Enter the Application (Client) ID, or press Enter to skip"
-  }
-
-  if ($spoExtAppId) {
-    azd env set AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID $spoExtAppId
-    Write-Host "AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID set to $spoExtAppId"
-  }
-  else {
-    Write-Warning "Skipped — ALLOWED_CLIENT_APP_ID will not be set. The Function will reject all requests until configured."
-  }
-}

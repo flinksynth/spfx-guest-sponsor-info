@@ -14,9 +14,6 @@
     "functionClientId": {
       "value": "${AZURE_FUNCTION_CLIENT_ID}"
     },
-    "spoClientExtensibilityAppId": {
-      "value": "${AZURE_SPO_CLIENT_EXTENSIBILITY_APP_ID}"
-    },
     "deployAzureMaps": {
       "value": true
     },
