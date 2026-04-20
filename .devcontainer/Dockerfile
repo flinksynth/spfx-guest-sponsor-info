@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/base:bookworm
+FROM mcr.microsoft.com/devcontainers/base:trixie
 
 ARG NODE_VERSION=22.14.0
 ARG TARGETARCH
