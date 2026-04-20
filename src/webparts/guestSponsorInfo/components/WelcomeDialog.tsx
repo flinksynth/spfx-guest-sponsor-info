@@ -76,18 +76,18 @@ function buildScriptUrl(semver: string | undefined, scriptName: string): string 
 /** Builds the PowerShell one-liner for the App Registration setup script. */
 function buildStep1Command(semver: string | undefined): string {
   const url = buildScriptUrl(semver, 'setup-app-registration.ps1');
-  return `& ([scriptblock]::Create((iwr '${url}')))`;
+  return `& ([scriptblock]::Create((iwr '${url}').Content))`;
 }
 
 /** Builds the PowerShell one-liner for the Graph permissions setup script. */
 function buildStep3Command(semver: string | undefined): string {
   const url = buildScriptUrl(semver, 'setup-graph-permissions.ps1');
-  return `& ([scriptblock]::Create((iwr '${url}')))`;
+  return `& ([scriptblock]::Create((iwr '${url}').Content))`;
 }
 
 // ── PowerShell syntax tokenizer ───────────────────────────────────────────────
 // Handles the specific one-liner pattern used in the setup commands:
-//   & ([scriptblock]::Create((iwr 'URL')))
+//   & ([scriptblock]::Create((iwr 'URL').Content))
 // No external dependency — keeps the bundle lean.
 type PsTokenType = 'op' | 'type' | 'method' | 'cmdlet' | 'str' | 'punct' | 'default';
 interface IPsToken { t: PsTokenType; v: string; }

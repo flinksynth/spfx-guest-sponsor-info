@@ -2005,8 +2005,8 @@ app.http('ping', {
  * the function's Managed Identity (User.Read.All).
  *
  * This allows the SPFx web part to lazy-load manager photos without making direct
- * Microsoft Graph calls, which is required when isDomainIsolated: true is set on
- * the solution package (isolated iFrames cannot acquire Graph tokens for guest callers).
+ * Microsoft Graph calls. All data fetching is centralised in the Azure Function
+ * so the web part needs no Graph permissions of its own.
  *
  * Query parameter:
  *   userId - Entra object ID of the user whose photo to return.

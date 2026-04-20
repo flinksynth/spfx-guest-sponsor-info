@@ -173,7 +173,7 @@ EasyAuth benötigt eine Entra App-Registrierung als Identitätsanbieter.
 ([PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)):
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-app-registration.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-app-registration.ps1').Content))
 ```
 
 **Option B — aus einem lokalen Klon:**
@@ -243,7 +243,7 @@ Nach dem Setup: **Ressourcengruppe → Bereitstellungen → Ausgaben**:
 **Option A — direkt aus dem Web ausführen:**
 
 ```powershell
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-graph-permissions.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-graph-permissions.ps1').Content))
 ```
 
 **Option B — aus einem lokalen Klon:**

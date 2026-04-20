@@ -7,7 +7,7 @@
     "version": "0.22.0.0",
     "includeClientSideAssets": true,
     "skipFeatureDeployment": false,
-    "isDomainIsolated": true,
+    "isDomainIsolated": false,
     "iconPath": "images/icon.png",
     "supportedLocales": [
       "cs-CZ",

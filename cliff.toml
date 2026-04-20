@@ -40,17 +40,17 @@ footer = """
 ```powershell
 # 1. Create the App Registration
 {% if version -%}
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/{{ version }}/azure-function/infra/setup-app-registration.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/{{ version }}/azure-function/infra/setup-app-registration.ps1').Content))
 {% else -%}
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-app-registration.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-app-registration.ps1').Content))
 {% endif %}
 # 2. Deploy to Azure (use the azuredeploy.json from this release)
 
 # 3. Grant Graph permissions
 {% if version -%}
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/{{ version }}/azure-function/infra/setup-graph-permissions.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/{{ version }}/azure-function/infra/setup-graph-permissions.ps1').Content))
 {% else -%}
-& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-graph-permissions.ps1')))
+& ([scriptblock]::Create((iwr 'https://raw.githubusercontent.com/workoho/spfx-guest-sponsor-info/main/azure-function/infra/setup-graph-permissions.ps1').Content))
 {% endif %}
 ```
 

@@ -591,7 +591,7 @@ const GuestSponsorInfo: React.FC<IGuestSponsorInfoProps> = ({
     // Only fetch sponsors when in view mode, the user is a guest, and a data source is ready.
     if (!isGuest) return;
 
-    // All Graph calls go through the Azure Function proxy (isDomainIsolated: true).
+    // All Graph calls go through the Azure Function proxy.
     if (functionUrl === undefined || aadHttpClient === undefined) return;
 
     let cancelled = false;
