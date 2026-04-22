@@ -596,19 +596,19 @@ if ($sp.Notes -ne $spNotes) {
 else {
   Write-Host "  $_chk Enterprise App notes already set." -ForegroundColor Yellow
 }
-# Service Management Reference — shown under Enterprise App → Properties.
+# Service Management Reference — shown under App Registration → Properties.
 # Points to the GitHub Issues tracker so Ops teams know where to file tickets.
-# Note: serviceManagementReference is not in the default Get-MgServicePrincipal
-# property set, so fetch it explicitly. Update-MgServicePrincipal also does not
-# expose it as a named parameter, so use Invoke-MgGraphRequest PATCH instead.
+# Note: serviceManagementReference is a property of the Application object (not the
+# ServicePrincipal). The Graph API silently rejects PATCH on the SP endpoint with 404,
+# so we read and write via the /applications/ endpoint using $app.Id.
 $desiredSmRef = 'https://github.com/workoho/spfx-guest-sponsor-info/issues'
 $currentSmRef = (Invoke-MgGraphRequest -Method GET `
-    -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.Id)?`$select=serviceManagementReference" `
+    -Uri "https://graph.microsoft.com/v1.0/applications/$($app.Id)?`$select=serviceManagementReference" `
     -ErrorAction Stop).serviceManagementReference
 if ($currentSmRef -ne $desiredSmRef) {
   Write-Host "  Setting Service Management Reference ..." -ForegroundColor Cyan
   Invoke-MgGraphRequest -Method PATCH `
-    -Uri "https://graph.microsoft.com/v1.0/servicePrincipals/$($sp.Id)" `
+    -Uri "https://graph.microsoft.com/v1.0/applications/$($app.Id)" `
     -Body @{ serviceManagementReference = $desiredSmRef } -ErrorAction Stop
   Write-Host "  $_chk Service Management Reference set." -ForegroundColor Green
 }
