@@ -568,9 +568,9 @@ This script:
 
 In the property pane (**Guest Sponsor API** group):
 
-- **Guest Sponsor API Base URL** — e.g.
+- **Base URL** — e.g.
   `https://guest-sponsor-info-xyz.azurewebsites.net`
-- **Guest Sponsor API Client ID (App Registration)** — the Client ID from the
+- **Application (client) ID** — the Client ID from the
   App Registration named **"Guest Sponsor Info - SharePoint Web Part Auth"**
   in your Entra tenant (created in the pre-step)
 
