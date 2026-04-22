@@ -25,8 +25,7 @@ param tenantName string
 param functionAppName string
 
 @metadata({ category: 'Basics' })
-@description('Client ID of the EasyAuth App Registration. The web part acquires delegated tokens
-against this audience on behalf of the signed-in guest user.')
+@description('Client ID of the EasyAuth App Registration. The web part acquires delegated tokens against this audience on behalf of the signed-in guest user.')
 param webPartClientId string
 
 @metadata({ category: 'Hosting' })
