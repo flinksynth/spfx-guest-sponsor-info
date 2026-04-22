@@ -1124,8 +1124,8 @@ if (-not $_whatIf) {
     if ($_miSpResp -and $_miSpResp.alternativeNames) {
       # System-assigned MI: one entry in alternativeNames begins with /subscriptions/
       $_resourceId = $_miSpResp.alternativeNames |
-        Where-Object { $_ -match '^/subscriptions/' } |
-        Select-Object -First 1
+      Where-Object { $_ -match '^/subscriptions/' } |
+      Select-Object -First 1
       if ($_resourceId -match
         '^/subscriptions/([^/]+)/resourceGroups/([^/]+)/providers/Microsoft\.Web/sites/([^/]+)') {
         $_appName = $Matches[3]
@@ -1176,7 +1176,7 @@ if ($newlyAssignedRoles.Count -gt 0 -and -not $_whatIf) {
   )
   if ($_functionAppPortalUrl) {
     Write-Link -Url $_functionAppPortalUrl `
-               -Text 'Azure portal — Function App (use Restart in the toolbar)'
+      -Text 'Azure portal — Function App (use Restart in the toolbar)'
   }
   if ($_functionAppUrl) {
     Write-Link -Url $_functionAppUrl -Text "Function App: $_functionAppUrl"

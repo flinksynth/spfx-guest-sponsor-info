@@ -937,7 +937,7 @@ $_deployUrl = 'https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%
 $_importantLines = @(
   'Copy this Client ID — you will need it in the next step:'
   ''
-  "  functionClientId:  $clientId"
+  "  Function Client ID (functionClientId):  $clientId"
 )
 if ($clientId -ne '<not-created-in-WhatIf-mode>') {
   $_importantLines += ''
