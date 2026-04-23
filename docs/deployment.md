@@ -16,8 +16,8 @@ For security and telemetry details, see
 ## Table of Contents
 
 - [SharePoint Deployment](#sharepoint-deployment)
-  - [Install the Webpart](#step-1--Installation)
-  - [Make the web part accessible to guest users](#step-2--make-the-web-part-accessible-to-guest-users)
+  - [Install the Webpart](#step-1-Installation)
+  - [Make the web part accessible to guest users](#step-2-make-the-web-part-accessible-to-guest-users)
   - [Verify guest access to the landing page site](#verify-guest-access-to-the-landing-page-site)
   - [External sharing](#external-sharing)
 - [Guest Sponsor API](#guest-sponsor-api)
