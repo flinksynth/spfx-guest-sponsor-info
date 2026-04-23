@@ -16,11 +16,15 @@ For security and telemetry details, see
 ## Table of Contents
 
 - [SharePoint Deployment](#sharepoint-deployment)
-  - [Install the Webpart](#step-1---installation)
-  - [Make the web part accessible to guest users](#step-2-make-the-web-part-accessible-to-guest-users)
-  - [Verify guest access to the landing page site](#verify-guest-access-to-the-landing-page-site)
-  - [External sharing](#external-sharing)
+  - [Step 1 - Install the Webpart](#step-1---installation)
+  - [Step 2 - Make the web part accessible to guest users](#step-2---make-the-web-part-accessible-to-guest-users)
+  - [Step 3 - Verify guest access to the landing page site](#step-3---verify-guest-access-to-the-landing-page-site)
+  - [Step 4 - Ensure external sharing is enabled](#step-4---ensure-external-sharing-is-enabled)
 - [Guest Sponsor API](#guest-sponsor-api)
+  - [Pre-step: create the App Registration](#pre-step-create-the-app-registration)
+  - [Step 1 - Deploy to Azure](#step-1---deploy-to-azure)
+  - [Step 2 - Note deployment outputs](#step-2---note-deployment-outputs)
+  - [Step 3 - Grant Graph permissions and configure the app registration](#step-3---grant-graph-permissions-and-configure-the-app-registration)
 - [Administration and Operations](#administration-and-operations)
 
 ---
@@ -389,7 +393,7 @@ dependency on that resolution path even though it is normally fast.
 > the author of this web part, is a Platinum
 > implementation partner of EasyLife 365.
 
-### Step 4 - Ensure External sharing is enabled
+### Step 4 - Ensure external sharing is enabled
 
 SharePoint's tenant-level sharing setting acts as a **ceiling**: individual
 sites cannot be more permissive than the tenant allows, but they can be
@@ -564,7 +568,7 @@ troubleshooting, then removed automatically.
 | Cost guard | `dailyMemoryTimeQuota` | `maximumFlexInstances` |
 | Estimated cost | Free (within grant) | ~€2-5/month with 1 warm instance |
 
-### Step 3 - Note Deployment outputs
+### Step 2 - Note Deployment outputs
 
 After deployment, open **Resource Group → Deployments → select deployment template →
 Outputs**:
@@ -575,7 +579,7 @@ Outputs**:
 | `functionAppUrl` | Web part property pane → **Guest Sponsor API Base URL** |
 | `sponsorApiUrl` | Full endpoint URL (for curl/Postman health checks) |
 
-### Step 4 - Grant Graph permissions and configure the App Registration
+### Step 3 - Grant Graph permissions and configure the App Registration
 
 **Option A — run directly from the web** (no clone required,
 [PowerShell 7+](https://learn.microsoft.com/powershell/scripting/install/installing-powershell)):
